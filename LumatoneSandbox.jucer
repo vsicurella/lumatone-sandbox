@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="PsWpPE" name="LumatoneSandbox" projectType="guiapp" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+  <MAINGROUP id="FFUeXY" name="LumatoneSandbox">
+    <GROUP id="{3F4FD429-7D78-0484-6686-93B34AB9D2D5}" name="Source">
+      <FILE id="AtPeUL" name="EditorEmitter.h" compile="0" resource="0" file="Source/EditorEmitter.h"/>
+      <FILE id="tabjeT" name="LumatoneEventManager.cpp" compile="1" resource="0"
+            file="Source/LumatoneEventManager.cpp"/>
+      <FILE id="BCpZLK" name="LumatoneEventManager.h" compile="0" resource="0"
+            file="Source/LumatoneEventManager.h"/>
+      <GROUP id="{80423E88-F60A-027C-EC05-4C1618A600D5}" name="lumatone_midi_driver">
+        <FILE id="IQbQ13" name="firmware_definitions.h" compile="0" resource="0"
+              file="Source/lumatone_midi_driver/firmware_definitions.h"/>
+        <FILE id="HswhWB" name="lumatone_midi_driver.cpp" compile="1" resource="0"
+              file="Source/lumatone_midi_driver/lumatone_midi_driver.cpp"/>
+        <FILE id="Xfa2za" name="lumatone_midi_driver.h" compile="0" resource="0"
+              file="Source/lumatone_midi_driver/lumatone_midi_driver.h"/>
+        <FILE id="Y8gsTT" name="midi-driver.cpp" compile="1" resource="0" file="Source/lumatone_midi_driver/midi-driver.cpp"/>
+        <FILE id="NKrIoi" name="midi_driver.h" compile="0" resource="0" file="Source/lumatone_midi_driver/midi_driver.h"/>
+      </GROUP>
+      <FILE id="KrLqOx" name="LumatoneController.cpp" compile="1" resource="0"
+            file="Source/LumatoneController.cpp"/>
+      <FILE id="alTB61" name="LumatoneController.h" compile="0" resource="0"
+            file="Source/LumatoneController.h"/>
+      <FILE id="oYu2tl" name="ApplicationListeners.h" compile="0" resource="0"
+            file="Source/ApplicationListeners.h"/>
+      <FILE id="M3K2SQ" name="SandboxState.cpp" compile="1" resource="0"
+            file="Source/SandboxState.cpp"/>
+      <FILE id="pXyJEY" name="SandboxState.h" compile="0" resource="0" file="Source/SandboxState.h"/>
+      <FILE id="Tyuauo" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="WYnuWf" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="aftNdh" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+      <FILE id="lN1W5n" name="DeviceActivityMonitor.h" compile="0" resource="0"
+            file="Source/DeviceActivityMonitor.h"/>
+      <FILE id="JWLNEi" name="DeviceActivityMonitor.cpp" compile="1" resource="0"
+            file="Source/DeviceActivityMonitor.cpp"/>
+    </GROUP>
+    <GROUP id="{2BE260F4-2DBA-AC94-860B-1F02223B41D4}" name="game"/>
+    <GROUP id="{422339CB-3A6A-697A-4974-ADAC2726688C}" name="color"/>
+    <GROUP id="{55B08FD4-0AD4-DFA0-43DE-428122D2066E}" name="gui">
+      <FILE id="xS8FQe" name="connection_status.cpp" compile="1" resource="0"
+            file="Source/gui/connection_status.cpp"/>
+      <FILE id="gxGvUr" name="connection_status.h" compile="0" resource="0"
+            file="Source/gui/connection_status.h"/>
+    </GROUP>
+    <GROUP id="{F315DA9E-E82C-A8F7-EF23-472F1CD76CEC}" name="midi"/>
+    <GROUP id="{42FFB12E-C138-DD7E-AEBC-85873E6823E9}" name="hex">
+      <FILE id="gqJfiQ" name="hex_geometry.cpp" compile="1" resource="0"
+            file="Source/hex/hex_geometry.cpp"/>
+      <FILE id="SxhlB2" name="hex_geometry.h" compile="0" resource="0" file="Source/hex/hex_geometry.h"/>
+    </GROUP>
+    <GROUP id="{F5F75B03-2AC7-D99D-60FB-16414900ED8D}" name="lumatone">
+      <FILE id="ewEKpA" name="LumatoneKeyComponent.cpp" compile="1" resource="0"
+            file="Source/lumatone/LumatoneKeyComponent.cpp"/>
+      <FILE id="qWQJV4" name="LumatoneKeyComponent.h" compile="0" resource="0"
+            file="Source/lumatone/LumatoneKeyComponent.h"/>
+      <GROUP id="{EDBB9590-0210-A074-64FD-97DD3A6DDA14}" name="ImageResampling">
+        <FILE id="DM1quf" name="ImageResampler.h" compile="0" resource="0"
+              file="Source/lumatone/ImageResampling/ImageResampler.h"/>
+        <FILE id="b6ZsOt" name="resampler.cpp" compile="1" resource="0" file="Source/lumatone/ImageResampling/resampler.cpp"/>
+        <FILE id="MMi4QQ" name="resampler.h" compile="0" resource="0" file="Source/lumatone/ImageResampling/resampler.h"/>
+      </GROUP>
+      <FILE id="cNrRBF" name="LumatoneKeyboardComponent.cpp" compile="1"
+            resource="0" file="Source/lumatone/LumatoneKeyboardComponent.cpp"/>
+      <FILE id="g9SIh6" name="LumatoneKeyboardComponent.h" compile="0" resource="0"
+            file="Source/lumatone/LumatoneKeyboardComponent.h"/>
+      <FILE id="SZlzG3" name="HexagonTilingGeometry.cpp" compile="1" resource="0"
+            file="Source/lumatone/HexagonTilingGeometry.cpp"/>
+      <FILE id="HTM3I4" name="HexagonTilingGeometry.h" compile="0" resource="0"
+            file="Source/lumatone/HexagonTilingGeometry.h"/>
+      <FILE id="Yb5t5T" name="ViewComponents.h" compile="0" resource="0"
+            file="Source/lumatone/ViewComponents.h"/>
+      <FILE id="SyWbWN" name="ViewConstants.h" compile="0" resource="0" file="Source/lumatone/ViewConstants.h"/>
+      <FILE id="F7zcPJ" name="KeyboardDataStructure.cpp" compile="1" resource="0"
+            file="Source/lumatone/KeyboardDataStructure.cpp"/>
+      <FILE id="zr12OD" name="KeyboardDataStructure.h" compile="0" resource="0"
+            file="Source/lumatone/KeyboardDataStructure.h"/>
+      <FILE id="GUpCe0" name="ViewComponents.cpp" compile="1" resource="0"
+            file="Source/lumatone/ViewComponents.cpp"/>
+      <FILE id="DNOFBi" name="BoardGeometry.cpp" compile="1" resource="0"
+            file="Source/lumatone/BoardGeometry.cpp"/>
+      <FILE id="cUhcQs" name="BoardGeometry.h" compile="0" resource="0" file="Source/lumatone/BoardGeometry.h"/>
+      <FILE id="lDKZ80" name="lumatone_state.cpp" compile="1" resource="0"
+            file="Source/lumatone/lumatone_state.cpp"/>
+      <FILE id="LG8caI" name="lumatone_state.h" compile="0" resource="0"
+            file="Source/lumatone/lumatone_state.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <VS2022 targetFolder="Builds/VisualStudio2022">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="NewProject"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="NewProject"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../juce-framework/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../juce-framework/JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2022>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+</JUCERPROJECT>
