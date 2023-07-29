@@ -24,7 +24,7 @@ class LumatoneController :  public LumatoneState,
                             private TerpstraMidiDriver::Collector,
                             public LumatoneEditor::StatusListener,
                             public LumatoneEditor::StatusEmitter,
-                            protected LumatoneEditor::EditorEmitter,
+                            public LumatoneEditor::EditorEmitter,
                             protected LumatoneEditor::FirmwareListener,
                             private juce::Timer
                             //private juce::ChangeListener

@@ -30,9 +30,9 @@ namespace LumatoneEditor
 
         virtual ~EditorEmitter() { editorListeners.clear(); }
 
-        virtual void addListener(LumatoneEditor::EditorListener* listenerIn) { editorListeners.add(listenerIn); }
+        virtual void addEditorListener(LumatoneEditor::EditorListener* listenerIn) { editorListeners.add(listenerIn); }
 
-        virtual void removeListener(LumatoneEditor::EditorListener* listenerIn) { editorListeners.remove(listenerIn); }
+        virtual void removeEditorListener(LumatoneEditor::EditorListener* listenerIn) { editorListeners.remove(listenerIn); }
 
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EditorEmitter)

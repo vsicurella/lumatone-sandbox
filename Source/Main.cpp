@@ -8,6 +8,7 @@
 
 #include <JuceHeader.h>
 #include "MainComponent.h"
+#include "SandboxMenu.h"
 #include "lumatone_editor_library/DeviceActivityMonitor.h"
 
 //==============================================================================
@@ -34,12 +35,34 @@ public:
 
         mainWindow.reset (new MainWindow (getApplicationName(), controller.get()));
 
+        commandManager = std::make_unique<juce::ApplicationCommandManager>();
+        commandManager->registerAllCommandsForTarget(this);
+
+        menuModel = std::make_unique<LumatoneSandbox::Menu::Model>(commandManager.get());
+
+    #if JUCE_MAC
+        LumatoneSandbox::Menu::Model::setMacMainMenu(menuModel.get());
+    #endif
+
+        mainWindow->setMenuBar(menuModel.get(), 32);
+        // mainWindow->getMenuBarComponent()->getProperties().set(LumatoneEditorStyleIDs::popupMenuBackgroundColour, 
+        // 	lookAndFeel.findColour(LumatoneEditorColourIDs::MenuBarBackground).toString());
+
+
         monitor->initializeDeviceDetection();
     }
 
     void shutdown() override
     {
         // Add your application's shutdown code here..
+        
+    #if JUCE_MAC
+        LumatoneSandbox::Menu::Model::setMacMainMenu(nullptr);
+    #endif
+        mainWindow->setMenuBarComponent(nullptr);
+
+        menuModel = nullptr;
+        commandManager = nullptr;
 
         mainWindow = nullptr; // (deletes our window)
 
@@ -62,6 +85,125 @@ public:
         // this method is invoked, and the commandLine parameter tells you what
         // the other instance's command-line arguments were.
     }
+
+    //==============================================================================
+
+    void getAllCommands(juce::Array <juce::CommandID>& commands) override
+    {
+        JUCEApplication::getAllCommands(commands);
+
+        const juce::CommandID ids[] = {
+            LumatoneSandbox::Menu::commandIDs::openSysExMapping,
+            LumatoneSandbox::Menu::commandIDs::saveSysExMapping,
+            LumatoneSandbox::Menu::commandIDs::saveSysExMappingAs,
+            LumatoneSandbox::Menu::commandIDs::resetSysExMapping,
+
+            LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard,
+            LumatoneSandbox::Menu::commandIDs::copyOctaveBoard,
+            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard,
+            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardChannels,
+            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes,
+            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours,
+            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes,
+            
+            LumatoneSandbox::Menu::commandIDs::undo,
+            LumatoneSandbox::Menu::commandIDs::redo,
+
+            LumatoneSandbox::Menu::commandIDs::aboutSysEx
+        };
+
+        commands.addArray(ids, 14);
+    }
+
+	void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result) override
+    {
+        result.setActive(false);
+
+        switch (commandID)
+            {
+            case LumatoneSandbox::Menu::commandIDs::openSysExMapping:
+                result.setInfo("Load file mapping", "Open a Lumatone key mapping", "File", 0);
+                result.addDefaultKeypress('o', juce::ModifierKeys::commandModifier);
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::saveSysExMapping:
+                result.setInfo("Save mapping", "Save the current mapping to file", "File", 0);
+                result.addDefaultKeypress('s', juce::ModifierKeys::commandModifier);
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::saveSysExMappingAs:
+                result.setInfo("Save mapping as...", "Save the current mapping to new file", "File", 0);
+                result.addDefaultKeypress('a', juce::ModifierKeys::commandModifier);
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::resetSysExMapping:
+                result.setInfo("New", "Start new mapping. Clear all edit fields, do not save current edits.", "File", 0);
+                result.addDefaultKeypress('n', juce::ModifierKeys::commandModifier);
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard:
+                result.setInfo("Delete", "Delete section data", "Edit", 0);
+                result.addDefaultKeypress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers);
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::copyOctaveBoard:
+                result.setInfo("Copy section", "Copy current octave board data", "Edit", 0);
+                result.addDefaultKeypress('c', juce::ModifierKeys::commandModifier);
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard:
+                result.setInfo("Paste section", "Paste copied section data", "Edit", 0);
+                result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier);
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes:
+                result.setInfo("Paste notes", "Paste copied section notes", "Edit", 0);
+                result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier);
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardChannels:
+                result.setInfo("Paste channels", "Paste copied section channels", "Edit", 0);
+                result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier);
+                break;
+                    
+            case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours:
+                result.setInfo("Paste colours", "Paste copied section colours", "Edit", 0);
+                result.addDefaultKeypress('v', juce::ModifierKeys::altModifier);
+                break;
+                    
+            case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes:
+                result.setInfo("Paste types", "Paste copied section key types", "Edit", 0);
+                result.addDefaultKeypress('v', juce::ModifierKeys::altModifier | juce::ModifierKeys::shiftModifier);
+                break;
+                    
+            case LumatoneSandbox::Menu::commandIDs::undo:
+                result.setInfo("Undo", "Undo latest edit", "Edit", 0);
+                result.addDefaultKeypress('z', juce::ModifierKeys::commandModifier);
+                // result.setActive(undoManager.canUndo());
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::redo:
+                result.setInfo("Redo", "Redo latest edit", "Edit", 0);
+                result.addDefaultKeypress('y', juce::ModifierKeys::commandModifier);
+                result.addDefaultKeypress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier);
+                // result.setActive(undoManager.canRedo());
+                break;
+
+            case LumatoneSandbox::Menu::commandIDs::aboutSysEx:
+                result.setInfo("About Lumatone Editor", "Shows version and copyright", "Help", 0);
+                break;
+
+            default:
+                JUCEApplication::getCommandInfo(commandID, result);
+                break;
+            }
+    }
+
+	bool perform(const juce::ApplicationCommandTarget::InvocationInfo& info) override
+    {
+        return JUCEApplication::perform(info);
+    }
+
 
     //==============================================================================
     /*
@@ -110,13 +252,17 @@ public:
     };
 
 private:
+    std::unique_ptr<juce::ApplicationCommandManager> commandManager;
     std::unique_ptr<MainWindow> mainWindow;
 
     juce::ValueTree treeState;
 
+    std::unique_ptr<LumatoneSandbox::Menu::Model> menuModel;
+
     std::unique_ptr<TerpstraMidiDriver> midiDriver;
     std::unique_ptr<LumatoneController> controller;
     std::unique_ptr<DeviceActivityMonitor> monitor;
+
 };
 
 //==============================================================================

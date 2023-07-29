@@ -8,15 +8,21 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
     controller->addStatusListener(connectionStatus.get());
     addAndMakeVisible(*connectionStatus);
     
-    setSize (600, 400);
+    lumatoneComponent = std::make_unique<LumatoneKeyboardComponent>((LumatoneState)*controller);
+    controller->addEditorListener(lumatoneComponent.get());
+    addAndMakeVisible(*lumatoneComponent);
 
     connectionStatus->handleStatus(ConnectionState::DISCONNECTED);
+
+    setSize (600, 400);
 }
 
 MainComponent::~MainComponent()
 {
     controller->removeStatusListener(connectionStatus.get());
+    controller->removeEditorListener(lumatoneComponent.get());
 
+    lumatoneComponent = nullptr;
     connectionStatus = nullptr;
     controller = nullptr;
 }
@@ -34,9 +40,8 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    // This is called when the MainComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    const float connectionStatusHeight = proportionOfHeight(connectionStatusHeightRatio);
+    connectionStatus->setBounds(0, 0, getWidth(), connectionStatusHeight);
 
-    connectionStatus->setBounds(0, 0, getWidth(), proportionOfHeight(0.1));
+    lumatoneComponent->setBounds(getLocalBounds().withTop(connectionStatus->getBottom()));
 }

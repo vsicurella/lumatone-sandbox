@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "lumatone_editor_library/LumatoneController.h"
+#include "lumatone_editor_library/LumatoneKeyboardComponent.h"
 
 #include "gui/connection_status.h"
 
@@ -29,6 +30,10 @@ private:
     LumatoneController* controller;
 
     std::unique_ptr<ConnectionStatus> connectionStatus;
+    std::unique_ptr<LumatoneKeyboardComponent> lumatoneComponent;
+
+    // UI helpers
+    float connectionStatusHeightRatio = 0.1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
