@@ -9,18 +9,22 @@
 */
 
 #include <JuceHeader.h>
+
+#include "ApplicationListeners.h"
 #include "LumatoneKeyboardComponent.h"
 
 LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneState stateIn)
 	: state(stateIn)
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
+	resetOctaveSize();
+
 	tilingGeometry.setColumnAngle(LUMATONEGRAPHICCOLUMNANGLE);
 	tilingGeometry.setRowAngle(LUMATONEGRAPHICROWANGLE);
 
-	//TerpstraSysExApplication::getApp().getLumatoneController()->addStatusListener(this);
-	//TerpstraSysExApplication::getApp().getLumatoneController()->addFirmwareListener(this);
+	juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase_png,   BinaryData::KeyboardBase_pngSize),   LumatoneEditorAssets::LumatoneGraphic);
+	juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows_png,  BinaryData::KeybedShadows_pngSize),  LumatoneEditorAssets::KeybedShadows);
+	juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape2x_png,     BinaryData::KeyShape2x_pngSize),     LumatoneEditorAssets::KeyShape);
+	juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow2x_png,    BinaryData::KeyShadow2x_pngSize),    LumatoneEditorAssets::KeyShadow);
 }
 
 LumatoneKeyboardComponent::~LumatoneKeyboardComponent()
@@ -39,7 +43,7 @@ void LumatoneKeyboardComponent::paint (juce::Graphics& g)
 		selectionMarkPath.startNewSubPath(octaveBoards[currentSetSelection]->leftPos, octaveLineY);
 		selectionMarkPath.lineTo(octaveBoards[currentSetSelection]->rightPos, octaveLineY);
 
-		juce::Colour lineColour = findColour(LumatoneKeyEdit::outlineColourId);
+		juce::Colour lineColour = juce::Colours::white;// findColour(LumatoneKeyEdit::outlineColourId);
 		g.setColour(lineColour);
 		g.strokePath(selectionMarkPath, juce::PathStrokeType(1.0f));
 	}
@@ -56,7 +60,7 @@ void LumatoneKeyboardComponent::resized()
 		graphicWidth, graphicHeight
 	);
 
-	int btnHeight = juce::roundToInt(getHeight() * saveLoadH);
+	// int btnHeight = juce::roundToInt(getHeight() * saveLoadH);
 	//int btnMargin = juce::roundToInt(getWidth() * saveloadMarginW);
 	//int saveLoadWidth = juce::roundToInt(getWidth() * saveLoadW);
 	//int btnY = lumatoneBounds.getY() - juce::roundToInt(getHeight() * btnYFromImageTop);
@@ -73,7 +77,7 @@ void LumatoneKeyboardComponent::resized()
 	//buttonReceive->setBounds(lumatoneBounds.getRight() - importWidth, importY, importWidth, btnHeight);
 
 	//resizeLabelWithHeight(lblFirmwareVersion.get(), btnHeight * 0.6f);
-	lblFirmwareVersion->setTopLeftPosition(lumatoneBounds.getX(), lumatoneBounds.getY() - btnHeight * 0.6f);
+	// lblFirmwareVersion->setTopLeftPosition(lumatoneBounds.getX(), lumatoneBounds.getY() - btnHeight * 0.6f);
 
 	int keyWidth = juce::roundToInt(lumatoneBounds.getWidth() * keyW);
 	int keyHeight = juce::roundToInt(lumatoneBounds.getHeight() * keyH);
@@ -124,8 +128,7 @@ void LumatoneKeyboardComponent::resized()
 
 void LumatoneKeyboardComponent::resetOctaveSize()
 {
-	// TODO get from state
-	const int octaveBoardSize = 56;
+	const int octaveBoardSize = state.getOctaveBoardSize();
 	if (currentOctaveSize != octaveBoardSize)
 	{
 		boardGeometry = TerpstraBoardGeometry();

@@ -34,7 +34,8 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
 	jassert(getParentComponent() != nullptr);
 	bool boardIsSelected = false;// boardIndex == dynamic_cast<AllKeysOverview*>(getParentComponent())->getCurrentSetSelection();
 
-	juce::Colour hexagonColour = findColour(LumatoneKeyEdit::backgroundColourId).overlaidWith(getKeyColour());
+	juce::Colour hexagonColour = juce::Colours::slategrey.overlaidWith(getKeyColour());
+	// juce::Colour hexagonColour = findColour(LumatoneKeyEdit::backgroundColourId).overlaidWith(getKeyColour());
 	if (hexagonColour.getPerceivedBrightness() >= 0.6)
 		hexagonColour = hexagonColour.darker((1.0 - hexagonColour.getPerceivedBrightness()));
 
@@ -144,7 +145,8 @@ juce::Colour LumatoneKeyDisplay::getKeyColour() const
 	if (keyData != nullptr)
 		return keyData->colour;
 	else
-		return findColour(LumatoneKeyEdit::backgroundColourId);
+		// return findColour(LumatoneKeyEdit::backgroundColourId);
+		return juce::Colours::slategrey;
 }
 
 void LumatoneKeyDisplay::setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn)

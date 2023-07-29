@@ -34,7 +34,8 @@ enum LumatoneEditorAssets
 //==============================================================================
 /*
 */
-class LumatoneKeyboardComponent : public juce::Component
+class LumatoneKeyboardComponent : public juce::Component,
+								  public LumatoneEditor::EditorListener
 {
 public:
     LumatoneKeyboardComponent(LumatoneState stateIn);
@@ -66,7 +67,7 @@ private:
 	juce::Image keyColourLayer;
 	juce::Image keyShadowLayer;
 
-    std::unique_ptr<juce::Label> lblFirmwareVersion;
+    // std::unique_ptr<juce::Label> lblFirmwareVersion;
 
 	//==============================================================================
 	// Style helpers
