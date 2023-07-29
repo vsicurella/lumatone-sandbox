@@ -478,7 +478,7 @@ struct FirmwareSupport
 		return msg.getSysExData()[CMD_ID];
 	}
     
-    juce::String serialIdentityToString(int* serialBytes)
+    juce::String serialIdentityToString(const int* serialBytes)
     {
         return juce::String::toHexString(serialBytes, 6);
     }

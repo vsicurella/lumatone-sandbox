@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "KeyboardDataStructure.h"
+#include "LumatoneDataStructures.h"
 #include "ViewComponents.h"
 #include "ImageResampling/ImageResampler.h"
 #include "HexagonTilingGeometry.h"

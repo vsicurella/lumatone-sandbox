@@ -1,14 +1,14 @@
 /*
   ==============================================================================
 
-    KeyboardDataStructure.cpp
+    LumatoneDataStructures.cpp
     Created: 1 Jul 2014 9:26:39pm
     Author:  hsstraub
 
   ==============================================================================
 */
 
-#include "KeyboardDataStructure.h"
+#include "LumatoneDataStructures.h"
 
 /*
 ==============================================================================
@@ -243,7 +243,12 @@ void LumatoneLayout::clearVelocityIntervalTable()
     memmove(table, DefaultVelocityIntervalTable, sizeof(DefaultVelocityIntervalTable));
 }
 
-const LumatoneBoard* LumatoneLayout::getBoard(int index)
+const LumatoneBoard* LumatoneLayout::readBoard(int index) const
+{
+    return &boards[index];
+}
+
+LumatoneBoard* LumatoneLayout::getBoard(int index)
 {
     return &boards[index];
 }
@@ -509,3 +514,5 @@ LumatoneConfigTable* LumatoneLayout::getConfigTable(LumatoneConfigTable::TableTy
 		return nullptr;
 	}
 }
+
+

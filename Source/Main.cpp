@@ -8,7 +8,7 @@
 
 #include <JuceHeader.h>
 #include "MainComponent.h"
-#include "DeviceActivityMonitor.h"
+#include "lumatone_editor_library/DeviceActivityMonitor.h"
 
 //==============================================================================
 class LumatoneSandboxApp  : public juce::JUCEApplication
@@ -16,7 +16,7 @@ class LumatoneSandboxApp  : public juce::JUCEApplication
 public:
     //==============================================================================
     LumatoneSandboxApp()
-        : treeState(juce::ValueTree(LumatoneSandboxProperty::StateTree)) {}
+        : treeState(juce::ValueTree(LumatoneEditorProperty::StateTree)) {}
 
     const juce::String getApplicationName() override       { return ProjectInfo::projectName; }
     const juce::String getApplicationVersion() override    { return ProjectInfo::versionString; }

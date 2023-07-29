@@ -1,7 +1,7 @@
 /*
 ==============================================================================
 
-KeyboardDataStructure.h
+LumatoneDataStructures.h
 Created: XXX
 Author:  hsstraub
 
@@ -11,7 +11,7 @@ Author:  hsstraub
 #pragma once
 
 #include <JuceHeader.h>
-#include "../lumatone_midi_driver/firmware_definitions.h"
+#include "lumatone_midi_driver/firmware_definitions.h"
 
 // Mapping of one key
 class LumatoneKey
@@ -125,9 +125,12 @@ public:
 
 	LumatoneConfigTable* getConfigTable(LumatoneConfigTable::TableType tableType);
 
-public:
 	// Key configuration
-	const LumatoneBoard* getBoard(int index);
+	const LumatoneBoard* readBoard(int index) const;
+	LumatoneBoard* getBoard(int index);
+
+
+public:
 
 	// General options
 	bool afterTouchActive;

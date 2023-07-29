@@ -1,7 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "LumatoneController.h"
+#include "lumatone_editor_library/LumatoneController.h"
 
 #include "gui/connection_status.h"
 

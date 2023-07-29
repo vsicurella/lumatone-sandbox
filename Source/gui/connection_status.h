@@ -11,8 +11,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../ApplicationListeners.h"
-#include "../SandboxState.h"
+#include "../lumatone_editor_library/ApplicationListeners.h"
+#include "../lumatone_editor_library/lumatone_state.h"
 
 //==============================================================================
 /*
@@ -27,7 +27,7 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
-    void handleStatus(LumatoneSandboxProperty::ConnectionState state);
+    void handleStatus(ConnectionState state);
 
     //==============================================================================
     // LumatoneEditor::StatusListener
@@ -38,8 +38,8 @@ public:
 
 private:
 
-    juce::String stateToMessage(LumatoneSandboxProperty::ConnectionState state);
-    juce::Colour stateToColour(LumatoneSandboxProperty::ConnectionState state);
+    juce::String stateToMessage(ConnectionState state);
+    juce::Colour stateToColour(ConnectionState state);
 
 private:
 

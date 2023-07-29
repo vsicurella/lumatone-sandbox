@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include "LumatoneKeyboardComponent.h"
 
-LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneSandboxState stateIn)
+LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneState stateIn)
 	: state(stateIn)
 {
     // In your constructor, you should add any child components, and

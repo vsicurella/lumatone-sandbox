@@ -10,7 +10,7 @@
 
 #pragma once
 #include "BoardGeometry.h"
-#include "KeyboardDataStructure.h"
+#include "LumatoneDataStructures.h"
 
 //==============================================================================
 // Used to calculate the center point coordinates for a hexagon tiling.

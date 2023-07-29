@@ -51,59 +51,59 @@ void ConnectionStatus::resized()
                                          messageHeight);
 }
 
-void ConnectionStatus::handleStatus(LumatoneSandboxProperty::ConnectionState state)
+void ConnectionStatus::handleStatus(ConnectionState state)
 {
     message = stateToMessage(state);
     statusColour = stateToColour(state);
     repaint();
 }
 
-juce::String ConnectionStatus::stateToMessage(LumatoneSandboxProperty::ConnectionState state)
+juce::String ConnectionStatus::stateToMessage(ConnectionState state)
 {
     switch (state)
     {
-    case LumatoneSandboxProperty::ConnectionState::DISCONNECTED:
+    case ConnectionState::DISCONNECTED:
         return "No Device Present";
 
-    case LumatoneSandboxProperty::ConnectionState::SEARCHING:
+    case ConnectionState::SEARCHING:
         return "Searching...";
 
-    case LumatoneSandboxProperty::ConnectionState::OFFLINE:
+    case ConnectionState::OFFLINE:
         return "Offline";
 
-    case LumatoneSandboxProperty::ConnectionState::ONLINE:
+    case ConnectionState::ONLINE:
         return "Online";
 
-    case LumatoneSandboxProperty::ConnectionState::BUSY:
+    case ConnectionState::BUSY:
         return "Busy";
 
-    case LumatoneSandboxProperty::ConnectionState::ERROR:
+    case ConnectionState::ERROR:
         return "Error";
     }
 
     return juce::String();
 }
 
-juce::Colour ConnectionStatus::stateToColour(LumatoneSandboxProperty::ConnectionState state)
+juce::Colour ConnectionStatus::stateToColour(ConnectionState state)
 {
     switch (state)
     {
-    case LumatoneSandboxProperty::ConnectionState::DISCONNECTED:
+    case ConnectionState::DISCONNECTED:
         return juce::Colours::grey;
 
-    case LumatoneSandboxProperty::ConnectionState::SEARCHING:
+    case ConnectionState::SEARCHING:
         return juce::Colours::orange;
 
-    case LumatoneSandboxProperty::ConnectionState::OFFLINE:
+    case ConnectionState::OFFLINE:
         return juce::Colours::darkgreen;
 
-    case LumatoneSandboxProperty::ConnectionState::ONLINE:
+    case ConnectionState::ONLINE:
         return juce::Colours::green;
 
-    case LumatoneSandboxProperty::ConnectionState::BUSY:
+    case ConnectionState::BUSY:
         return juce::Colours::yellow;
 
-    case LumatoneSandboxProperty::ConnectionState::ERROR:
+    case ConnectionState::ERROR:
         return juce::Colours::red;
     }
 
@@ -115,16 +115,16 @@ juce::Colour ConnectionStatus::stateToColour(LumatoneSandboxProperty::Connection
 
 void ConnectionStatus::connectionFailed()
 {
-    handleStatus(LumatoneSandboxProperty::ConnectionState::DISCONNECTED);
+    handleStatus(ConnectionState::DISCONNECTED);
 }
 
 void ConnectionStatus::connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId)
 {
-    handleStatus(LumatoneSandboxProperty::ConnectionState::ONLINE);
+    handleStatus(ConnectionState::ONLINE);
 }
 
 void ConnectionStatus::connectionLost()
 {
-    handleStatus(LumatoneSandboxProperty::ConnectionState::ERROR);
+    handleStatus(ConnectionState::ERROR);
 }
 

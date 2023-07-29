@@ -9,7 +9,7 @@
 */
 
 #include "BoardGeometry.h"
-#include "KeyboardDataStructure.h"
+#include "LumatoneDataStructures.h"
 
 
 //==============================================================================

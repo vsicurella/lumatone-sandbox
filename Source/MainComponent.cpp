@@ -10,7 +10,7 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
     
     setSize (600, 400);
 
-    connectionStatus->handleStatus(LumatoneSandboxProperty::ConnectionState::DISCONNECTED);
+    connectionStatus->handleStatus(ConnectionState::DISCONNECTED);
 }
 
 MainComponent::~MainComponent()

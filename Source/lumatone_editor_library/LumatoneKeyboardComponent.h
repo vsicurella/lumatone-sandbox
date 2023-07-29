@@ -11,12 +11,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "KeyboardDataStructure.h"
-#include "ViewComponents.h"
-#include "ImageResampling/ImageResampler.h"
-#include "HexagonTilingGeometry.h"
 #include "LumatoneKeyComponent.h"
-#include "../SandboxState.h"
+#include "lumatone_state.h"
 
 // Hash codes for use with ImageCache::getFromHashCode()
 enum LumatoneEditorAssets
@@ -41,7 +37,7 @@ enum LumatoneEditorAssets
 class LumatoneKeyboardComponent : public juce::Component
 {
 public:
-    LumatoneKeyboardComponent(LumatoneSandboxState stateIn);
+    LumatoneKeyboardComponent(LumatoneState stateIn);
     ~LumatoneKeyboardComponent() override;
 
     void paint (juce::Graphics&) override;
@@ -51,19 +47,19 @@ public:
 
 private:
 
-	LumatoneSandboxState state;
+	LumatoneState state;
 
 	struct OctaveBoard
 	{
-		juce::OwnedArray<LumatoneKeyDisplay>	keyMiniDisplay;
+		juce::OwnedArray<LumatoneKeyDisplay> keyMiniDisplay;
 		int leftPos;
 		int rightPos;
 	};
 
 	juce::OwnedArray<OctaveBoard> octaveBoards;
 
-	int			currentOctaveSize = 0;
-	int			currentSetSelection;
+	int	currentOctaveSize = 0;
+	int currentSetSelection;
 
 	HexagonTilingGeometry tilingGeometry;
 
