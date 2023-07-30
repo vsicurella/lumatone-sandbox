@@ -17,6 +17,13 @@
           <FILE id="VPF7oL" name="midi-driver.cpp" compile="1" resource="0" file="Source/lumatone_editor_library/lumatone_midi_driver/midi-driver.cpp"/>
           <FILE id="Za7CGe" name="midi_driver.h" compile="0" resource="0" file="Source/lumatone_editor_library/lumatone_midi_driver/midi_driver.h"/>
         </GROUP>
+        <GROUP id="{F07E044B-28E7-7070-EC4D-8CF146CD1BD7}" name="actions">
+          <FILE id="uzJ82R" name="edit_actions.cpp" compile="1" resource="0"
+                file="Source/lumatone_editor_library/actions/edit_actions.cpp"/>
+          <FILE id="edawVh" name="edit_actions.h" compile="0" resource="0" file="Source/lumatone_editor_library/actions/edit_actions.h"/>
+          <FILE id="YisBNr" name="lumatone_action.h" compile="0" resource="0"
+                file="Source/lumatone_editor_library/actions/lumatone_action.h"/>
+        </GROUP>
         <GROUP id="{E5675079-813D-9347-BFA4-92F0F3CF8378}" name="assets">
           <GROUP id="{AB6008DA-182A-C7ED-EF8C-0A3ED605E8BA}" name="fonts">
             <FILE id="IX639r" name="framd.ttf" compile="0" resource="1" file="Source/lumatone_editor_library/assets/fonts/framd.ttf"/>
@@ -159,7 +166,17 @@
               file="Source/lumatone_editor_library/ViewComponents.h"/>
         <FILE id="HKPRgv" name="ViewConstants.h" compile="0" resource="0" file="Source/lumatone_editor_library/ViewConstants.h"/>
       </GROUP>
-      <GROUP id="{2BE260F4-2DBA-AC94-860B-1F02223B41D4}" name="game"/>
+      <GROUP id="{2BE260F4-2DBA-AC94-860B-1F02223B41D4}" name="game">
+        <GROUP id="{A8866079-963B-89EF-61D1-A8CA3676A790}" name="random_colors">
+          <FILE id="tMkWYs" name="random_colors.cpp" compile="1" resource="0"
+                file="Source/game/random_colors/random_colors.cpp"/>
+          <FILE id="YkoYSK" name="random_colors.h" compile="0" resource="0" file="Source/game/random_colors/random_colors.h"/>
+        </GROUP>
+        <FILE id="KBAm2D" name="game_base.cpp" compile="1" resource="0" file="Source/game/game_base.cpp"/>
+        <FILE id="DLDCyK" name="game_base.h" compile="0" resource="0" file="Source/game/game_base.h"/>
+        <FILE id="rKxMh8" name="game_engine.cpp" compile="1" resource="0" file="Source/game/game_engine.cpp"/>
+        <FILE id="Uadxb5" name="game_engine.h" compile="0" resource="0" file="Source/game/game_engine.h"/>
+      </GROUP>
       <GROUP id="{422339CB-3A6A-697A-4974-ADAC2726688C}" name="color"/>
       <GROUP id="{55B08FD4-0AD4-DFA0-43DE-428122D2066E}" name="gui">
         <FILE id="xS8FQe" name="connection_status.cpp" compile="1" resource="0"
