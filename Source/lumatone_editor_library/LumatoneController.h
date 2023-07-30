@@ -49,6 +49,10 @@ public:
     void setMidiInput(int deviceIndex, bool test = true);
     void setMidiOutput(int deviceIndex, bool test = true);
 
+public:
+
+    bool performUndoableAction(juce::UndoableAction* undoableAction);
+
 private:
     bool connectionConfirmed() const { return midiDriver.hasDevicesDefined() && currentDevicePairConfirmed; }
 
@@ -198,10 +202,10 @@ public:
     void resetPresetToFactoryDefault(int presetIndex);
 
     // Get interaction flags of current preset
-    void getPresetFlags();
+    void requestPresetFlags();
 
     // Get sensitivity setting of expression pedal
-    void getExpressionPedalSensitivity();
+    void requestExpressionPedalSensitivity();
 
 public:
 
@@ -226,6 +230,10 @@ protected:
     void serialIdentityReceived(const int* serialBytes) override;
 
     void firmwareRevisionReceived(FirmwareVersion version) override;
+
+    void octaveColourConfigReceived(int boardId, juce::uint8 rgbFlag, const int* colourData) override;
+    void octaveChannelConfigReceived(int octaveIndex, const int* channelData) override;
+    void octaveNoteConfigReceived(int octaveIndex, const int* noteData) override;
 
     //============================================================================
     // Test functions

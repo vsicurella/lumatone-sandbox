@@ -63,22 +63,9 @@ void LumatoneKeyboardComponent::resized()
                              graphicWidthUsed, 
                              graphicHeightUsed);
 
-    // int btnHeight = juce::roundToInt(getHeight() * saveLoadH);
-    //int btnMargin = juce::roundToInt(getWidth() * saveloadMarginW);
-    //int saveLoadWidth = juce::roundToInt(getWidth() * saveLoadW);
-    //int btnY = lumatoneBounds.getY() - juce::roundToInt(getHeight() * btnYFromImageTop);
-
-    //int halfWidthX = juce::roundToInt(getWidth() * 0.5f);
-
-    //btnLoadFile->setBounds(halfWidthX - btnMargin - saveLoadWidth, btnY, saveLoadWidth, btnHeight);
-    //btnSaveFile->setBounds(halfWidthX + btnMargin, btnY, saveLoadWidth, btnHeight);
-
     octaveLineY = lumatoneBounds.getBottom() + juce::roundToInt(getHeight() * octaveLineYRatio);
 
-    //int importY = lumatoneBounds.getY() - juce::roundToInt(getHeight() * importYFromImageTop);
-    //int importWidth = juce::roundToInt(getWidth() * importW);
-    //buttonReceive->setBounds(lumatoneBounds.getRight() - importWidth, importY, importWidth, btnHeight);
-
+    // int btnHeight = juce::roundToInt(getHeight() * saveLoadH);
     //resizeLabelWithHeight(lblFirmwareVersion.get(), btnHeight * 0.6f);
     // lblFirmwareVersion->setTopLeftPosition(lumatoneBounds.getX(), lumatoneBounds.getY() - btnHeight * 0.6f);
 
@@ -97,7 +84,6 @@ void LumatoneKeyboardComponent::resized()
     tilingGeometry.fitSkewedTiling(oct1Key1, oct1Key56, 10, oct5Key7, 24, false);
 
     juce::Array<juce::Point<float>> keyCentres = tilingGeometry.getHexagonCentresSkewed(boardGeometry, 0, NUMBEROFBOARDS);
-    //juce::jassert(keyCentres.size() == TerpstraSysExApplication::getApp().getOctaveBoardSize() * NUMBEROFBOARDS);
 
     int octaveIndex = 0;
     octaveBoards[octaveIndex]->leftPos = keyCentres[0].getX() - keyWidth * 0.5;

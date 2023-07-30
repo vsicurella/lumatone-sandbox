@@ -54,7 +54,7 @@ private:
 
     juce::OwnedArray<OctaveBoard> octaveBoards;
 
-    int    currentOctaveSize = 0;
+    int currentOctaveSize = 0;
     int currentSetSelection;
 
     HexagonTilingGeometry tilingGeometry;
@@ -86,16 +86,7 @@ private:
     const float imageY      = 1.0f / 7.0f;
     const float imageHeight = 5.0f / 7.0f;
 
-    //const float importYFromImageTop = 0.0752688f;
-    //const float importH             = 0.0526882f;
-    //const float importW             = 0.132f;
-
-    //const float btnYFromImageTop    = 0.04172043f;
-    //const float saveLoadW           = 0.07416f;
-    const float saveLoadH           = 0.0537634f;
-    //const float saveloadMarginW     = 0.0034f;
-
-    //const float filenameBaselineY   = 0.1221505f;
+    //const float saveLoadH           = 0.0537634f;
 
     const float octaveLineYRatio    = 0.0236559f;
 

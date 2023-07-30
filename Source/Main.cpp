@@ -11,6 +11,9 @@
 #include "SandboxMenu.h"
 #include "lumatone_editor_library/DeviceActivityMonitor.h"
 
+#include "game/game_engine.h"
+#include "game/random_colors/random_colors.h"
+
 //==============================================================================
 class LumatoneSandboxApp  : public juce::JUCEApplication
 {
@@ -28,8 +31,10 @@ public:
     {
         // This method is where you should put your application's initialisation code..
 
+        undoManager = std::make_unique<juce::UndoManager>();
+
         midiDriver = std::make_unique<TerpstraMidiDriver>();
-        controller = std::make_unique<LumatoneController>(treeState, *midiDriver, nullptr);
+        controller = std::make_unique<LumatoneController>(treeState, *midiDriver, undoManager.get());
 
         monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), controller.get());
 
@@ -49,12 +54,15 @@ public:
         // 	lookAndFeel.findColour(LumatoneEditorColourIDs::MenuBarBackground).toString());
 
         monitor->initializeDeviceDetection();
+
+        gameEngine = std::make_unique<LumatoneSandboxGameEngine>(controller.get(), 30);
     }
 
     void shutdown() override
     {
         // Add your application's shutdown code here..
 
+        gameEngine = nullptr;
         fileChooser = nullptr;
         
     #if JUCE_MAC
@@ -70,6 +78,8 @@ public:
         monitor = nullptr;
         controller = nullptr;
         midiDriver = nullptr;
+
+        undoManager = nullptr;
     }
 
     //==============================================================================
@@ -277,6 +287,7 @@ public:
 
 private:
 
+    std::unique_ptr<juce::UndoManager> undoManager;
     std::unique_ptr<juce::ApplicationCommandManager> commandManager;
     std::unique_ptr<MainWindow> mainWindow;
 
@@ -289,6 +300,8 @@ private:
     std::unique_ptr<DeviceActivityMonitor> monitor;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
+
+    std::unique_ptr<LumatoneSandboxGameEngine> gameEngine;
 
 };
 

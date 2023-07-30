@@ -87,6 +87,14 @@ void LumatoneController::setMidiOutput(int deviceIndex, bool test)
         testCurrentDeviceConnection();
 }
 
+bool LumatoneController::performUndoableAction(juce::UndoableAction* undoableAction)
+{
+    if (undoManager == nullptr)
+        return false;
+
+    undoManager->perform(undoableAction);
+}
+
 void LumatoneController::refreshAvailableMidiDevices() 
 { 
     if (midiDriver.refreshDeviceLists() && midiDriver.testIsIncomplete())
@@ -113,6 +121,8 @@ Combined (hi-level) commands
 
 void LumatoneController::sendAllParamsOfBoard(int boardIndex, const LumatoneBoard* boardData, bool signalEditorListeners)
 {
+    *getEditBoard(boardIndex) = *boardData;
+
     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
     {
         for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
@@ -268,6 +278,7 @@ void LumatoneController::sendTableConfig(LumatoneConfigTable::TableType velocity
 // Send note, channel, cc, and fader polarity data
 void LumatoneController::sendKeyConfig(int boardIndex, int keyIndex, const LumatoneKey& keyData, bool signalEditorListeners)
 {
+    *getEditKey(boardIndex, keyIndex) = keyData;
     midiDriver.sendKeyFunctionParameters(boardIndex, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
 
     if (signalEditorListeners)
@@ -276,6 +287,8 @@ void LumatoneController::sendKeyConfig(int boardIndex, int keyIndex, const Lumat
 
 void LumatoneController::sendKeyColourConfig(int boardIndex, int keyIndex, juce::Colour colour, bool signalEditorListeners)
 {
+    getEditKey(boardIndex, keyIndex)->colour = colour;
+
     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
         midiDriver.sendKeyLightParameters(boardIndex, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
     else
@@ -294,6 +307,7 @@ void LumatoneController::sendKeyColourConfig(int boardIndex, int keyIndex, const
 // Send expression pedal sensivity
 void LumatoneController::sendExpressionPedalSensivity(unsigned char value)
 {
+    setExpressionSensitivity(value);
     midiDriver.sendExpressionPedalSensivity(value); 
     editorListeners.call(&LumatoneEditor::EditorListener::expressionPedalSensitivityChanged, value);
 }
@@ -301,6 +315,7 @@ void LumatoneController::sendExpressionPedalSensivity(unsigned char value)
 // Send parametrization of foot controller
 void LumatoneController::sendInvertFootController(bool value)
 {
+    setInvertExpression(value);
     midiDriver.sendInvertFootController(value);
     editorListeners.call(&LumatoneEditor::EditorListener::invertFootControllerChanged, value);
 }
@@ -509,6 +524,8 @@ void LumatoneController::getPeripheralChannels()
 
 void LumatoneController::invertSustainPedal(bool setInverted)
 {
+    setInvertSustain(setInverted);
+
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), INVERT_SUSTAIN_PEDAL))
         midiDriver.sendInvertSustainPedal(setInverted);
 }
@@ -528,14 +545,14 @@ void LumatoneController::resetPresetToFactoryDefault(int presetIndex)
 }
 
 // Get interaction flags of current preset
-void LumatoneController::getPresetFlags()
+void LumatoneController::requestPresetFlags()
 {
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), GET_PRESET_FLAGS))
         midiDriver.sendGetPresetFlagsReset();
 }
 
 // Get sensitivity setting of expression pedal
-void LumatoneController::getExpressionPedalSensitivity()
+void LumatoneController::requestExpressionPedalSensitivity()
 {
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), GET_EXPRESSION_PEDAL_SENSITIVIY))
         midiDriver.sendGetExpressionPedalSensitivity();
@@ -568,6 +585,61 @@ void LumatoneController::firmwareRevisionReceived(FirmwareVersion version)
 {
     setFirmwareVersion(version, true);
 }
+
+void LumatoneController::octaveColourConfigReceived(int boardId, juce::uint8 rgbFlag, const int* colourData) 
+{
+    auto octaveSize = getOctaveBoardSize();
+    auto numBoards = getNumBoards();
+
+    for (int keyIndex = 0; keyIndex < octaveSize; keyIndex++)
+    {
+        LumatoneKey* keyData = getEditKey(boardId - 1, keyIndex);
+        auto newValue = colourData[keyIndex];
+
+        if (rgbFlag == 0)
+        {
+            keyData->colour = juce::Colour(newValue, keyData->colour.getGreen(), keyData->colour.getBlue());
+        }
+        else if (rgbFlag == 1)
+        {
+            keyData->colour = juce::Colour(keyData->colour.getRed(), newValue, keyData->colour.getBlue());
+        }
+        else if (rgbFlag == 2)
+        {
+            keyData->colour = juce::Colour(keyData->colour.getRed(), keyData->colour.getGreen(), newValue);
+        }
+        else
+        {
+            jassertfalse;
+        }
+    }
+
+    editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *getBoard(boardId - 1));
+};
+
+
+void LumatoneController::octaveChannelConfigReceived(int boardId, const int* channelData)
+{
+    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+    {
+        // Check channel values?
+        getEditKey(boardId-1, keyIndex)->channelNumber = channelData[keyIndex];
+    }
+
+    editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *getBoard(boardId - 1));
+}
+
+void LumatoneController::octaveNoteConfigReceived(int boardId, const int* noteData)
+{
+    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+    {
+        // Check note values?
+        getEditKey(boardId - 1, keyIndex)->noteNumber = noteData[keyIndex];
+    }
+
+    editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *getBoard(boardId - 1));
+}
+
 
 //FirmwareSupport::Error LumatoneController::handlePingResponse(const juce::MidiMessage& midiMessage)
 //{
