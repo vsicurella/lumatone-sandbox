@@ -253,6 +253,11 @@ LumatoneBoard* LumatoneLayout::getBoard(int index)
     return &boards[index];
 }
 
+const LumatoneKey* LumatoneLayout::readKey(int boardIndex, int keyIndex) const
+{
+    return &boards[boardIndex].theKeys[keyIndex];
+}
+
 void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)
 {
     auto newKeyType = (initializeWithNoteKeyType) ? LumatoneKeyType::noteOnNoteOff : LumatoneKeyType::disabled;

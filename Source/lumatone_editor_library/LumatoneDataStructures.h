@@ -129,6 +129,7 @@ public:
 	const LumatoneBoard* readBoard(int index) const;
 	LumatoneBoard* getBoard(int index);
 
+	const LumatoneKey* readKey(int boardIndex, int keyIndex) const;
 
 public:
 

@@ -140,7 +140,8 @@ void LumatoneKeyboardComponent::resetOctaveSize()
 
 			for (int keyIndex = 0; keyIndex < octaveBoardSize; keyIndex++)
 			{
-				auto key = board->keyMiniDisplay.add(new LumatoneKeyDisplay(subBoardIndex, keyIndex));
+				auto keyData = state.getKey(subBoardIndex, keyIndex);
+				auto key = board->keyMiniDisplay.add(new LumatoneKeyDisplay(subBoardIndex, keyIndex, *keyData));
 				addAndMakeVisible(key);
 			}
 
@@ -151,4 +152,19 @@ void LumatoneKeyboardComponent::resetOctaveSize()
 	}
 
 	jassert(octaveBoards.size() == NUMBEROFBOARDS);
+}
+
+void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData)
+{
+	for (int boardIndex = 0; boardIndex < octaveBoards.size(); boardIndex++)
+	{
+		auto board = octaveBoards[boardIndex];
+
+		for (int keyIndex = 0; keyIndex < board->keyMiniDisplay.size(); keyIndex++)
+		{
+			auto key = board->keyMiniDisplay[keyIndex];
+			key->setLumatoneKey(*mappingData.readKey(boardIndex, keyIndex));
+			key->repaint();
+		}
+	}
 }

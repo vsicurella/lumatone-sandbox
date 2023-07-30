@@ -13,7 +13,7 @@
 
 //==============================================================================
 
-LumatoneKeyDisplay::LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex)
+LumatoneKeyDisplay::LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, LumatoneKey keyDataIn)
 	: Component("AllKeysOverview_Key" + juce::String(newKeyIndex) + "," + juce::String(newBoardIndex))
 {
 	// In your constructor, you should add any child components, and
@@ -21,6 +21,7 @@ LumatoneKeyDisplay::LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex)
 	boardIndex = newBoardIndex;
 	keyIndex = newKeyIndex;
 
+	keyData = keyDataIn;
 	//	TerpstraSysExApplication::getApp().getLumatoneController()->addMidiListener(this);
 }
 
@@ -136,7 +137,7 @@ const LumatoneKey* LumatoneKeyDisplay::getKeyData() const
 	//		->getMappingInEdit().sets[boardIndex].theKeys[keyIndex];
 	//}
 
-	return nullptr;
+	return &keyData;
 }
 
 juce::Colour LumatoneKeyDisplay::getKeyColour() const
@@ -147,6 +148,11 @@ juce::Colour LumatoneKeyDisplay::getKeyColour() const
 	else
 		// return findColour(LumatoneKeyEdit::backgroundColourId);
 		return juce::Colours::slategrey;
+}
+
+void LumatoneKeyDisplay::setLumatoneKey(const LumatoneKey& lumatoneKey)
+{
+	keyData = lumatoneKey;
 }
 
 void LumatoneKeyDisplay::setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn)

@@ -46,6 +46,11 @@ public:
 
     void resetOctaveSize();
 
+public:
+
+	// LumatoneEditor::EditorListener Implementation
+	void completeMappingLoaded(LumatoneLayout mappingData) override;
+
 private:
 
 	LumatoneState state;

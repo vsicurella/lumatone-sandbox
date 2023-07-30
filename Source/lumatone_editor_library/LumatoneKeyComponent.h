@@ -20,7 +20,7 @@
 class LumatoneKeyDisplay : public juce::Component
 {
 public:
-	LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex);
+	LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, LumatoneKey keyData=LumatoneKey());
 	~LumatoneKeyDisplay();
 
 	void paint(juce::Graphics&) override;
@@ -28,6 +28,7 @@ public:
 	void mouseDown(const juce::MouseEvent& e) override;
 	void mouseUp(const juce::MouseEvent& e) override;
 
+	void setLumatoneKey(const LumatoneKey& lumatoneKey);
 
 	void setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn);
 
@@ -43,6 +44,8 @@ private:
 
 	const LumatoneKey* getKeyData() const;
 	juce::Colour getKeyColour() const;
+
+	LumatoneKey keyData;
 
 	int boardIndex = -1;
 	int keyIndex = -1;
