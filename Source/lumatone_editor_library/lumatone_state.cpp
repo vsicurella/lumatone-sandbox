@@ -31,11 +31,23 @@ LumatoneState::LumatoneState(juce::ValueTree stateIn, juce::UndoManager* undoMan
 { 
     state = loadStateProperties(stateIn);
     state.addListener(this);
+
+    if (mappingData == nullptr)
+    {
+        mappingData = std::make_shared<LumatoneLayout>();
+    }
 }
 
 LumatoneState::LumatoneState(const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn)
     : LumatoneState(stateToCopy.state, undoManagerIn)
 {
+    mappingData = stateToCopy.mappingData;
+}
+
+LumatoneState::~LumatoneState()
+{
+    state.removeListener(this);
+    mappingData = nullptr;
 }
 
 juce::ValueTree LumatoneState::loadStateProperties(juce::ValueTree stateIn)
@@ -84,7 +96,7 @@ void LumatoneState::convertStateMemberValue(juce::ValueTree stateIn, const juce:
 
         if (!loadedLayout.isEmpty())
         {
-            mappingData = loadedLayout;
+            mappingData.reset(new LumatoneLayout(loadedLayout));
         }
     }
 }
@@ -163,25 +175,25 @@ int LumatoneState::getOctaveBoardSize() const
 
 const LumatoneLayout* LumatoneState::getMappingData() const
 {
-    return &mappingData;
+    return mappingData.get();
 }
 const LumatoneBoard* LumatoneState::getBoard(int boardIndex) const
 {
-    return mappingData.readBoard(boardIndex);
+    return mappingData->readBoard(boardIndex);
 }
 const LumatoneKey* LumatoneState::getKey(int boardIndex, int keyIndex) const
 {
-    return &mappingData.readBoard(boardIndex)->theKeys[keyIndex];
+    return &mappingData->readBoard(boardIndex)->theKeys[keyIndex];
 }
 
 LumatoneBoard* LumatoneState::getEditBoard(int boardIndex)
 {
-    return mappingData.getBoard(boardIndex);
+    return mappingData->getBoard(boardIndex);
 }
 
 LumatoneKey* LumatoneState::getEditKey(int boardIndex, int keyIndex)
 {
-    return &mappingData.getBoard(boardIndex)->theKeys[keyIndex];
+    return &mappingData->getBoard(boardIndex)->theKeys[keyIndex];
 }
 
 const FirmwareSupport& LumatoneState::getFirmwareSupport() const
@@ -189,3 +201,36 @@ const FirmwareSupport& LumatoneState::getFirmwareSupport() const
     return firmwareSupport;
 }
 
+bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
+{
+    if (layoutFile.existsAsFile())
+    {
+        // XXX StringArray format: platform-independent?
+        juce::StringArray stringArray;
+        layoutFile.readLines(stringArray);
+
+        LumatoneLayout newLayout;
+        newLayout.fromStringArray(stringArray);
+
+        mappingData.reset(new LumatoneLayout(newLayout));
+
+        // Mark file as unchanged
+        //setHasChangesToSave(false);
+
+        // Clear undo history
+        //undoManager.clearUndoHistory();
+
+        // Add file to recent files list
+        //recentFiles.addFile(currentFile);
+
+        return true;
+    }
+    else
+    {
+        // Show error message
+        juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::AlertIconType::WarningIcon, "Open File Error", "The file " + layoutFile.getFullPathName() + " could not be opened.");
+
+        // XXX Update Window title in any case? Make file name empty/make data empty in case of error?
+        return false;
+    }
+}

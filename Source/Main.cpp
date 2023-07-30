@@ -55,6 +55,8 @@ public:
     void shutdown() override
     {
         // Add your application's shutdown code here..
+
+        fileChooser = nullptr;
         
     #if JUCE_MAC
         LumatoneSandbox::Menu::Model::setMacMainMenu(nullptr);
@@ -201,7 +203,25 @@ public:
 
 	bool perform(const juce::ApplicationCommandTarget::InvocationInfo& info) override
     {
-        return JUCEApplication::perform(info);
+        switch (info.commandID)
+        {
+        case LumatoneSandbox::Menu::commandIDs::openSysExMapping:
+        {
+            fileChooser.reset(new juce::FileChooser("Open .LTN file", juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory), "*.ltn"));
+            fileChooser->launchAsync(
+                juce::FileBrowserComponent::FileChooserFlags::openMode,
+                [&](const juce::FileChooser& chooser)
+                {
+                    auto file = chooser.getResult();
+                    controller->loadLayoutFromFile(file);
+                    
+                });
+            return true;
+        }
+
+        default:
+            return JUCEApplication::perform(info);
+        }
     }
 
 
@@ -262,6 +282,8 @@ private:
     std::unique_ptr<TerpstraMidiDriver> midiDriver;
     std::unique_ptr<LumatoneController> controller;
     std::unique_ptr<DeviceActivityMonitor> monitor;
+
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
 };
 

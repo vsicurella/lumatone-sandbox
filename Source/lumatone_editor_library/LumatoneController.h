@@ -27,9 +27,7 @@ class LumatoneController :  public LumatoneState,
                             public LumatoneEditor::EditorEmitter,
                             protected LumatoneEditor::FirmwareListener,
                             private juce::Timer
-                            //private juce::ChangeListener
 {
-
 public:
 
     LumatoneController(juce::ValueTree state, TerpstraMidiDriver& midiDriver, juce::UndoManager* undoManager);
@@ -204,6 +202,12 @@ public:
 
     // Get sensitivity setting of expression pedal
     void getExpressionPedalSensitivity();
+
+public:
+
+    bool loadLayoutFromFile(const juce::File& file) override;
+
+public:
     
     //============================================================================
     // juce::Timer implementation

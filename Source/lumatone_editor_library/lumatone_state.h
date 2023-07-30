@@ -54,6 +54,8 @@ public:
     LumatoneState(juce::ValueTree stateIn, juce::UndoManager* undoManager=nullptr);
     LumatoneState(const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn=nullptr);
 
+    virtual ~LumatoneState();
+
     ConnectionState getConnectionState() const;
 
     LumatoneFirmwareVersion getLumatoneVersion() const;
@@ -69,6 +71,8 @@ public:
     const LumatoneKey* getKey(int boardIndex, int keyIndex) const;
 
     const FirmwareSupport& getFirmwareSupport() const;
+
+    virtual bool loadLayoutFromFile(const juce::File& layoutFile);
 
 public:
     static juce::Array<juce::Identifier> getAllProperties();
@@ -94,7 +98,8 @@ protected:
     
     FirmwareSupport firmwareSupport;
 
-    LumatoneLayout mappingData;
+    //LumatoneLayout mappingData;
+    std::shared_ptr<LumatoneLayout> mappingData;
 
     LumatoneBoard* getEditBoard(int boardIndex);
     LumatoneKey* getEditKey(int boardIndex, int keyIndex);

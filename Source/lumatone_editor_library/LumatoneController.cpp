@@ -541,6 +541,19 @@ void LumatoneController::getExpressionPedalSensitivity()
         midiDriver.sendGetExpressionPedalSensitivity();
 }
 
+
+bool LumatoneController::loadLayoutFromFile(const juce::File& file)
+{
+    const bool loaded = LumatoneState::loadLayoutFromFile(file);
+    if (loaded)
+    {
+        sendCompleteMapping(*mappingData);
+    }
+
+    return loaded;
+}
+
+
 // LumatoneEditor::FirmwareListener Implementation
 
 void LumatoneController::serialIdentityReceived(const int* serialBytes)
