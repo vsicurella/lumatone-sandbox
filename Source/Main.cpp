@@ -208,7 +208,7 @@ public:
         {
             fileChooser.reset(new juce::FileChooser("Open .LTN file", juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory), "*.ltn"));
             fileChooser->launchAsync(
-                juce::FileBrowserComponent::FileChooserFlags::openMode,
+                juce::FileBrowserComponent::FileChooserFlags::canSelectFiles + juce::FileBrowserComponent::FileChooserFlags::openMode,
                 [&](const juce::FileChooser& chooser)
                 {
                     auto file = chooser.getResult();
