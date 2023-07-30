@@ -45,6 +45,10 @@ namespace LumatoneEditorProperty
 
     static const juce::Identifier MappingData = juce::Identifier("MappingData");
 
+    static const juce::Identifier InvertExpression = juce::Identifier("InvertExpression");
+    static const juce::Identifier InvertSustain = juce::Identifier("InvertSustain");
+    static const juce::Identifier ExpressionSensitivity = juce::Identifier("ExpressionSensitivity");
+
 };
 
 class LumatoneState : public LumatoneStateBase, private juce::ValueTree::Listener
@@ -72,6 +76,10 @@ public:
 
     const FirmwareSupport& getFirmwareSupport() const;
 
+    bool getInvertExpression() const { return invertExpression; }
+    bool getInvertSustain() const { return invertSustain; }
+    juce::uint8 getExpressionSensitivity() const { return expressionSensitivity; }
+
     virtual bool loadLayoutFromFile(const juce::File& layoutFile);
 
 public:
@@ -82,6 +90,10 @@ protected:
     void setConnectedSerialNumber(juce::String serialNumberIn);
 
     void setFirmwareVersion(FirmwareVersion& versionIn, bool writeToState=false);
+
+    void setInvertExpression(bool invert);
+    void setInvertSustain(bool invert);
+    void setExpressionSensitivity(juce::uint8 sensitivity);
 
 private:
 
@@ -95,6 +107,8 @@ private:
 
 
 protected:
+
+    juce::UndoManager* undoManager;
     
     FirmwareSupport firmwareSupport;
 
@@ -106,7 +120,9 @@ protected:
 
 private:
 
-    juce::UndoManager* undoManager;
+    bool    invertExpression = false;
+    bool    invertSustain = false;
+    juce::uint8     expressionSensitivity = 0;
 
     ConnectionState connectionState = ConnectionState::DISCONNECTED;
 

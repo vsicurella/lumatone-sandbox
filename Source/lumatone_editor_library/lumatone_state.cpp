@@ -99,6 +99,18 @@ void LumatoneState::convertStateMemberValue(juce::ValueTree stateIn, const juce:
             mappingData.reset(new LumatoneLayout(loadedLayout));
         }
     }
+    else if (property == LumatoneEditorProperty::InvertExpression)
+    {
+        invertExpression = (bool)stateIn.getProperty(property, false);
+    }    
+    else if (property == LumatoneEditorProperty::InvertSustain)
+    {
+        invertSustain = (bool)stateIn.getProperty(property, false);
+    }
+    else if (property == LumatoneEditorProperty::ExpressionSensitivity)
+    {
+        expressionSensitivity = juce::uint8((int)stateIn.getProperty(property, 127));
+    }
 }
 
 void LumatoneState::setConnectedSerialNumber(juce::String serialNumberIn)
@@ -200,6 +212,25 @@ const FirmwareSupport& LumatoneState::getFirmwareSupport() const
 {
     return firmwareSupport;
 }
+
+void LumatoneState::setInvertExpression(bool invert)
+{
+    state.setPropertyExcludingListener(this, LumatoneEditorProperty::InvertExpression, invert, undoManager);
+    invertExpression = invert;
+}
+
+void LumatoneState::setInvertSustain(bool invert)
+{
+    state.setPropertyExcludingListener(this, LumatoneEditorProperty::InvertSustain, invert, undoManager);
+    invertSustain = invert;
+}
+
+void LumatoneState::setExpressionSensitivity(juce::uint8 sensitivity)
+{
+    state.setPropertyExcludingListener(this, LumatoneEditorProperty::ExpressionSensitivity, (int)sensitivity, undoManager);
+    expressionSensitivity = sensitivity;
+}
+
 
 bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
 {
