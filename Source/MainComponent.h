@@ -33,7 +33,8 @@ private:
     std::unique_ptr<LumatoneKeyboardComponent> lumatoneComponent;
 
     // UI helpers
-    float connectionStatusHeightRatio = 0.1;
+    const float connectionStatusHeightRatio = 0.1f;
+    const float lumatoneComponentWidthMarginRatio = 0.0667f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

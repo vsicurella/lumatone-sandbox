@@ -8,163 +8,172 @@
   ==============================================================================
 */
 
-#include <JuceHeader.h>
-
-#include "ApplicationListeners.h"
 #include "LumatoneKeyboardComponent.h"
 
 LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneState stateIn)
-	: state(stateIn)
+    : state(stateIn)
 {
-	resetOctaveSize();
+    resetOctaveSize();
 
-	tilingGeometry.setColumnAngle(LUMATONEGRAPHICCOLUMNANGLE);
-	tilingGeometry.setRowAngle(LUMATONEGRAPHICROWANGLE);
+    tilingGeometry.setColumnAngle(LUMATONEGRAPHICCOLUMNANGLE);
+    tilingGeometry.setRowAngle(LUMATONEGRAPHICROWANGLE);
 
-	juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase_png,   BinaryData::KeyboardBase_pngSize),   LumatoneEditorAssets::LumatoneGraphic);
-	juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows_png,  BinaryData::KeybedShadows_pngSize),  LumatoneEditorAssets::KeybedShadows);
-	juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape2x_png,     BinaryData::KeyShape2x_pngSize),     LumatoneEditorAssets::KeyShape);
-	juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow2x_png,    BinaryData::KeyShadow2x_pngSize),    LumatoneEditorAssets::KeyShadow);
+    LumatoneAssets::LoadAssets(LumatoneAssets::ID::LumatoneGraphic);
+    //LumatoneAssets::LoadAssets(LumatoneAssets::ID::KeybedShadows);
+    LumatoneAssets::LoadAssets(LumatoneAssets::ID::KeyShape);
+    LumatoneAssets::LoadAssets(LumatoneAssets::ID::KeyShadow);
 }
 
 LumatoneKeyboardComponent::~LumatoneKeyboardComponent()
 {
-    	imageProcessor = nullptr;
+    imageProcessor = nullptr;
 }
 
 void LumatoneKeyboardComponent::paint (juce::Graphics& g)
 {
-	g.drawImageAt(lumatoneGraphic, lumatoneBounds.getX(), lumatoneBounds.getY());
+    g.drawImageAt(lumatoneGraphic, lumatoneBounds.getX(), lumatoneBounds.getY());
 
-	// Draw a line under the selected sub board
-	if (currentSetSelection >= 0 && currentSetSelection < NUMBEROFBOARDS)
-	{
-		juce::Path selectionMarkPath;
-		selectionMarkPath.startNewSubPath(octaveBoards[currentSetSelection]->leftPos, octaveLineY);
-		selectionMarkPath.lineTo(octaveBoards[currentSetSelection]->rightPos, octaveLineY);
+    // Draw a line under the selected sub board
+    if (currentSetSelection >= 0 && currentSetSelection < NUMBEROFBOARDS)
+    {
+        juce::Path selectionMarkPath;
+        selectionMarkPath.startNewSubPath(octaveBoards[currentSetSelection]->leftPos, octaveLineY);
+        selectionMarkPath.lineTo(octaveBoards[currentSetSelection]->rightPos, octaveLineY);
 
-		juce::Colour lineColour = juce::Colours::white;// findColour(LumatoneKeyEdit::outlineColourId);
-		g.setColour(lineColour);
-		g.strokePath(selectionMarkPath, juce::PathStrokeType(1.0f));
-	}
+        juce::Colour lineColour = juce::Colours::white;// findColour(LumatoneKeyEdit::outlineColourId);
+        g.setColour(lineColour);
+        g.strokePath(selectionMarkPath, juce::PathStrokeType(1.0f));
+    }
 }
 
 void LumatoneKeyboardComponent::resized()
 {
-	// Prepare position helpers for graphics
-	int graphicHeight = juce::roundToInt(getHeight() * imageHeight);
-	int graphicWidth = juce::roundToInt(imageAspect * graphicHeight);
+    graphicWidthUsed = getWidth();
+    graphicHeightUsed = getWidth() / imageAspect;
 
-	lumatoneBounds.setBounds(
-		juce::roundToInt((getWidth() - graphicWidth) / 2.0f), juce::roundToInt(getHeight() * imageY),
-		graphicWidth, graphicHeight
-	);
+    if (graphicHeightUsed > getHeight())
+    {
+        graphicHeightUsed = getHeight();
+        graphicWidthUsed = graphicHeightUsed * imageAspect;
+    }
 
-	// int btnHeight = juce::roundToInt(getHeight() * saveLoadH);
-	//int btnMargin = juce::roundToInt(getWidth() * saveloadMarginW);
-	//int saveLoadWidth = juce::roundToInt(getWidth() * saveLoadW);
-	//int btnY = lumatoneBounds.getY() - juce::roundToInt(getHeight() * btnYFromImageTop);
+    // Prepare position helpers for graphics
+    lumatoneBounds.setBounds(juce::roundToInt((getWidth() - graphicWidthUsed) * 0.5f),
+                             juce::roundToInt((getHeight() - graphicHeightUsed) * 0.5f),
+                             graphicWidthUsed, 
+                             graphicHeightUsed);
 
-	//int halfWidthX = juce::roundToInt(getWidth() * 0.5f);
+    // int btnHeight = juce::roundToInt(getHeight() * saveLoadH);
+    //int btnMargin = juce::roundToInt(getWidth() * saveloadMarginW);
+    //int saveLoadWidth = juce::roundToInt(getWidth() * saveLoadW);
+    //int btnY = lumatoneBounds.getY() - juce::roundToInt(getHeight() * btnYFromImageTop);
 
-	//btnLoadFile->setBounds(halfWidthX - btnMargin - saveLoadWidth, btnY, saveLoadWidth, btnHeight);
-	//btnSaveFile->setBounds(halfWidthX + btnMargin, btnY, saveLoadWidth, btnHeight);
+    //int halfWidthX = juce::roundToInt(getWidth() * 0.5f);
 
-	octaveLineY = lumatoneBounds.getBottom() + juce::roundToInt(getHeight() * octaveLineYRatio);
+    //btnLoadFile->setBounds(halfWidthX - btnMargin - saveLoadWidth, btnY, saveLoadWidth, btnHeight);
+    //btnSaveFile->setBounds(halfWidthX + btnMargin, btnY, saveLoadWidth, btnHeight);
 
-	//int importY = lumatoneBounds.getY() - juce::roundToInt(getHeight() * importYFromImageTop);
-	//int importWidth = juce::roundToInt(getWidth() * importW);
-	//buttonReceive->setBounds(lumatoneBounds.getRight() - importWidth, importY, importWidth, btnHeight);
+    octaveLineY = lumatoneBounds.getBottom() + juce::roundToInt(getHeight() * octaveLineYRatio);
 
-	//resizeLabelWithHeight(lblFirmwareVersion.get(), btnHeight * 0.6f);
-	// lblFirmwareVersion->setTopLeftPosition(lumatoneBounds.getX(), lumatoneBounds.getY() - btnHeight * 0.6f);
+    //int importY = lumatoneBounds.getY() - juce::roundToInt(getHeight() * importYFromImageTop);
+    //int importWidth = juce::roundToInt(getWidth() * importW);
+    //buttonReceive->setBounds(lumatoneBounds.getRight() - importWidth, importY, importWidth, btnHeight);
 
-	int keyWidth = juce::roundToInt(lumatoneBounds.getWidth() * keyW);
-	int keyHeight = juce::roundToInt(lumatoneBounds.getHeight() * keyH);
+    //resizeLabelWithHeight(lblFirmwareVersion.get(), btnHeight * 0.6f);
+    // lblFirmwareVersion->setTopLeftPosition(lumatoneBounds.getX(), lumatoneBounds.getY() - btnHeight * 0.6f);
 
-	// Scale key graphics once
-	lumatoneGraphic = imageProcessor->resizeImage(juce::ImageCache::getFromHashCode(LumatoneEditorAssets::LumatoneGraphic), lumatoneBounds.getWidth(), lumatoneBounds.getHeight());
-	keyShapeGraphic = imageProcessor->resizeImage(juce::ImageCache::getFromHashCode(LumatoneEditorAssets::KeyShape), keyWidth, keyHeight);
-	keyShadowGraphic = imageProcessor->resizeImage(juce::ImageCache::getFromHashCode(LumatoneEditorAssets::KeyShadow), keyWidth, keyHeight);
+    int keyWidth = juce::roundToInt(lumatoneBounds.getWidth() * keyW);
+    int keyHeight = juce::roundToInt(lumatoneBounds.getHeight() * keyH);
 
-	oct1Key1 = juce::Point<float>(oct1Key1X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct1Key1Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
-	oct1Key56 = juce::Point<float>(oct1Key56X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct1Key56Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
-	oct5Key7 = juce::Point<float>(oct5Key7X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct5Key7Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
+    // Scale key graphics once
+    lumatoneGraphic = getResizedImage(LumatoneAssets::ID::LumatoneGraphic, lumatoneBounds.getWidth(), lumatoneBounds.getHeight());
+    keyShapeGraphic = getResizedImage(LumatoneAssets::ID::KeyShape, keyWidth, keyHeight);
+    keyShadowGraphic = getResizedImage(LumatoneAssets::ID::KeyShadow, keyWidth, keyHeight);
 
-	tilingGeometry.fitSkewedTiling(oct1Key1, oct1Key56, 10, oct5Key7, 24, false);
+    oct1Key1 = juce::Point<float>(oct1Key1X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct1Key1Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
+    oct1Key56 = juce::Point<float>(oct1Key56X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct1Key56Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
+    oct5Key7 = juce::Point<float>(oct5Key7X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct5Key7Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
 
-	juce::Array<juce::Point<float>> keyCentres = tilingGeometry.getHexagonCentresSkewed(boardGeometry, 0, NUMBEROFBOARDS);
-	//juce::jassert(keyCentres.size() == TerpstraSysExApplication::getApp().getOctaveBoardSize() * NUMBEROFBOARDS);
+    tilingGeometry.fitSkewedTiling(oct1Key1, oct1Key56, 10, oct5Key7, 24, false);
 
-	int octaveIndex = 0;
-	octaveBoards[octaveIndex]->leftPos = keyCentres[0].getX() - keyWidth * 0.5;
+    juce::Array<juce::Point<float>> keyCentres = tilingGeometry.getHexagonCentresSkewed(boardGeometry, 0, NUMBEROFBOARDS);
+    //juce::jassert(keyCentres.size() == TerpstraSysExApplication::getApp().getOctaveBoardSize() * NUMBEROFBOARDS);
 
-	// TODO get from state
-	const int octaveBoardSize = 56;
+    int octaveIndex = 0;
+    octaveBoards[octaveIndex]->leftPos = keyCentres[0].getX() - keyWidth * 0.5;
 
-	for (int keyIndex = 0; keyIndex < keyCentres.size(); keyIndex++)
-	{
-		int keyOctaveIndex = keyIndex % octaveBoardSize;
+    // TODO get from state
+    const int octaveBoardSize = 56;
 
-		// Apply rotational transform
-		juce::Point<int> centre = keyCentres[keyIndex].roundToInt();
+    for (int keyIndex = 0; keyIndex < keyCentres.size(); keyIndex++)
+    {
+        int keyOctaveIndex = keyIndex % octaveBoardSize;
 
-		auto key = octaveBoards[octaveIndex]->keyMiniDisplay[keyOctaveIndex];
-		key->setSize(keyWidth, keyHeight);
-		key->setCentrePosition(centre);
-		key->setKeyGraphics(keyShapeGraphic, keyShadowGraphic);
+        // Apply rotational transform
+        juce::Point<int> centre = keyCentres[keyIndex].roundToInt();
+
+        auto key = octaveBoards[octaveIndex]->keyMiniDisplay[keyOctaveIndex];
+        key->setSize(keyWidth, keyHeight);
+        key->setCentrePosition(centre);
+        key->setKeyGraphics(keyShapeGraphic, keyShadowGraphic);
 
 
-		if (keyOctaveIndex + 1 == octaveBoardSize)
-		{
-			octaveBoards[octaveIndex]->rightPos = key->getRight();
-			octaveIndex++;
+        if (keyOctaveIndex + 1 == octaveBoardSize)
+        {
+            octaveBoards[octaveIndex]->rightPos = key->getRight();
+            octaveIndex++;
 
-			if (octaveIndex < NUMBEROFBOARDS)
-				octaveBoards[octaveIndex]->leftPos = key->getX();
-		}
-	}
+            if (octaveIndex < NUMBEROFBOARDS)
+                octaveBoards[octaveIndex]->leftPos = key->getX();
+        }
+    }
 }
 
 void LumatoneKeyboardComponent::resetOctaveSize()
 {
-	const int octaveBoardSize = state.getOctaveBoardSize();
-	if (currentOctaveSize != octaveBoardSize)
-	{
-		boardGeometry = TerpstraBoardGeometry();
-		octaveBoards.clear();
+    const int octaveBoardSize = state.getOctaveBoardSize();
+    if (currentOctaveSize != octaveBoardSize)
+    {
+        boardGeometry = TerpstraBoardGeometry();
+        octaveBoards.clear();
 
-		for (int subBoardIndex = 0; subBoardIndex < NUMBEROFBOARDS; subBoardIndex++)
-		{
-			OctaveBoard* board = octaveBoards.add(new OctaveBoard());
+        for (int subBoardIndex = 0; subBoardIndex < NUMBEROFBOARDS; subBoardIndex++)
+        {
+            OctaveBoard* board = octaveBoards.add(new OctaveBoard());
 
-			for (int keyIndex = 0; keyIndex < octaveBoardSize; keyIndex++)
-			{
-				auto keyData = state.getKey(subBoardIndex, keyIndex);
-				auto key = board->keyMiniDisplay.add(new LumatoneKeyDisplay(subBoardIndex, keyIndex, *keyData));
-				addAndMakeVisible(key);
-			}
+            for (int keyIndex = 0; keyIndex < octaveBoardSize; keyIndex++)
+            {
+                auto keyData = state.getKey(subBoardIndex, keyIndex);
+                auto key = board->keyMiniDisplay.add(new LumatoneKeyDisplay(subBoardIndex, keyIndex, *keyData));
+                addAndMakeVisible(key);
+            }
 
-			jassert(board->keyMiniDisplay.size() == octaveBoardSize);
-		}
+            jassert(board->keyMiniDisplay.size() == octaveBoardSize);
+        }
 
-		currentOctaveSize = octaveBoardSize;
-	}
+        currentOctaveSize = octaveBoardSize;
+    }
 
-	jassert(octaveBoards.size() == NUMBEROFBOARDS);
+    jassert(octaveBoards.size() == NUMBEROFBOARDS);
 }
 
 void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData)
 {
-	for (int boardIndex = 0; boardIndex < octaveBoards.size(); boardIndex++)
-	{
-		auto board = octaveBoards[boardIndex];
+    for (int boardIndex = 0; boardIndex < octaveBoards.size(); boardIndex++)
+    {
+        auto board = octaveBoards[boardIndex];
 
-		for (int keyIndex = 0; keyIndex < board->keyMiniDisplay.size(); keyIndex++)
-		{
-			auto key = board->keyMiniDisplay[keyIndex];
-			key->setLumatoneKey(*mappingData.readKey(boardIndex, keyIndex));
-			key->repaint();
-		}
-	}
+        for (int keyIndex = 0; keyIndex < board->keyMiniDisplay.size(); keyIndex++)
+        {
+            auto key = board->keyMiniDisplay[keyIndex];
+            key->setLumatoneKey(*mappingData.readKey(boardIndex, keyIndex));
+            key->repaint();
+        }
+    }
+}
+
+juce::Image LumatoneKeyboardComponent::getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight)
+{
+    auto cachedImage = LumatoneAssets::getImage(assetId, targetHeight, targetWidth);
+    return imageProcessor->resizeImage(cachedImage, targetWidth, targetHeight);
 }

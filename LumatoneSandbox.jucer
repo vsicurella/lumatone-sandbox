@@ -77,6 +77,14 @@
                   file="Source/lumatone_editor_library/assets/png/KeyboardBase.png"/>
             <FILE id="jopjBn" name="KeyboardBase@2x.png" compile="0" resource="1"
                   file="Source/lumatone_editor_library/assets/png/KeyboardBase@2x.png"/>
+            <FILE id="gPeS5R" name="KeybedShadows@4x.png" compile="0" resource="1"
+                  file="Source/lumatone_editor_library/assets/png/KeybedShadows@4x.png"/>
+            <FILE id="I5PMK1" name="KeybedShadows@8x.png" compile="0" resource="1"
+                  file="Source/lumatone_editor_library/assets/png/KeybedShadows@8x.png"/>
+            <FILE id="gcjf5Z" name="KeyboardBase@8x.png" compile="0" resource="1"
+                  file="Source/lumatone_editor_library/assets/png/KeyboardBase@8x.png"/>
+            <FILE id="VU7AIR" name="KeyboardBase@4x.png" compile="0" resource="1"
+                  file="Source/lumatone_editor_library/assets/png/KeyboardBase@4x.png"/>
             <FILE id="QTvPsO" name="KeyShadow.png" compile="0" resource="1" file="Source/lumatone_editor_library/assets/png/KeyShadow.png"/>
             <FILE id="klNlmQ" name="KeyShadow@2x.png" compile="0" resource="1"
                   file="Source/lumatone_editor_library/assets/png/KeyShadow@2x.png"/>
@@ -105,6 +113,8 @@
           <FILE id="GlkfHc" name="resampler.cpp" compile="1" resource="0" file="Source/lumatone_editor_library/ImageResampling/resampler.cpp"/>
           <FILE id="fM501L" name="resampler.h" compile="0" resource="0" file="Source/lumatone_editor_library/ImageResampling/resampler.h"/>
         </GROUP>
+        <FILE id="aOmmj7" name="lumatone_assets.h" compile="1" resource="0"
+              file="Source/lumatone_editor_library/lumatone_assets.h"/>
         <FILE id="FmXi4D" name="ApplicationListeners.h" compile="0" resource="0"
               file="Source/lumatone_editor_library/ApplicationListeners.h"/>
         <FILE id="jUF4rV" name="BoardGeometry.cpp" compile="1" resource="0"

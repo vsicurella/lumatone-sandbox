@@ -48,7 +48,6 @@ public:
         // mainWindow->getMenuBarComponent()->getProperties().set(LumatoneEditorStyleIDs::popupMenuBackgroundColour, 
         // 	lookAndFeel.findColour(LumatoneEditorColourIDs::MenuBarBackground).toString());
 
-
         monitor->initializeDeviceDetection();
     }
 
@@ -239,18 +238,21 @@ public:
                                                           .findColour (juce::ResizableWindow::backgroundColourId),
                               DocumentWindow::allButtons)
         {
-            setUsingNativeTitleBar (true);
+            setUsingNativeTitleBar (false);
             setContentOwned (new MainComponent(controller), true);
 
-           #if JUCE_IOS || JUCE_ANDROID
-            setFullScreen(true);
-           #else
-            setResizable (true, true);
+            setResizable(true, true);
+
+           //#if JUCE_IOS || JUCE_ANDROID
+           // setFullScreen(true);
+           //#else
             centreWithSize (getWidth(), getHeight());
-           #endif
+           //#endif
 
             setVisible (true);
         }
+
+        juce::BorderSize<int> getBorderThickness() override { return juce::BorderSize<int>(1); }
 
         void closeButtonPressed() override
         {
@@ -268,10 +270,13 @@ public:
         */
 
     private:
+        std::unique_ptr<juce::ComponentBoundsConstrainer> constrainer;
+
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
     };
 
 private:
+
     std::unique_ptr<juce::ApplicationCommandManager> commandManager;
     std::unique_ptr<MainWindow> mainWindow;
 

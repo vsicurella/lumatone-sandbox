@@ -40,8 +40,9 @@ void MainComponent::paint (juce::Graphics& g)
 
 void MainComponent::resized()
 {
-    const float connectionStatusHeight = proportionOfHeight(connectionStatusHeightRatio);
+    const float connectionStatusHeight = 32.0f;// proportionOfHeight(connectionStatusHeightRatio);
     connectionStatus->setBounds(0, 0, getWidth(), connectionStatusHeight);
 
-    lumatoneComponent->setBounds(getLocalBounds().withTop(connectionStatus->getBottom()));
+    const float widthMargin = proportionOfWidth(lumatoneComponentWidthMarginRatio * 0.5f);
+    lumatoneComponent->setBounds(widthMargin, connectionStatus->getBottom(), getWidth() - widthMargin * 2, getHeight() - connectionStatusHeight * 2);
 }
