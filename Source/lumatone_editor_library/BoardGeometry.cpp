@@ -13,9 +13,9 @@
 
 
 //==============================================================================
-// TerpstraBoardGeometry class
+// LumatoneGeometry class
 
-TerpstraBoardGeometry::TerpstraBoardGeometry(LumatoneBoardSize boardSize)
+LumatoneGeometry::LumatoneGeometry(LumatoneBoardSize boardSize)
 {
 	if (boardSize == LumatoneBoardSize::PROTOTYPE)
 	{
@@ -78,6 +78,8 @@ TerpstraBoardGeometry::TerpstraBoardGeometry(LumatoneBoardSize boardSize)
 		this->rightUpwardLines.add(StraightLine({ 54, 52, 48, 42 }));
 		this->rightUpwardLines.add(StraightLine({ 55, 53 }));
 
+		this->rowVerticalOriginLineIndex = { 0, 3, 8, 14, 21, 27, 34, 40, 47, 52, 55 };
+
 		this->firstColumnOffsets = juce::Array<int>({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4 });
 		this->rowOffsets = juce::Array<int>({-4, -3, -3, -2, -2, -1, -1, 0, 0, 2, 5});
 		this->boardXOffset = 7;
@@ -95,7 +97,7 @@ TerpstraBoardGeometry::TerpstraBoardGeometry(LumatoneBoardSize boardSize)
 // Given a board number and key index, compute Cartesian coordinates for the given key,
 // the x axis is the shallow diagonal, and the y axis is the right-upward diagonal.
 // (0,0) is at the top left, so most coordinates are negative, but that's okay for our purposes.
-juce::Point<int> TerpstraBoardGeometry::coordinatesForKey (int boardIndex, int keyIndex) const {
+juce::Point<int> LumatoneGeometry::coordinatesForKey (int boardIndex, int keyIndex) const {
 	for (int lineIx = 0; lineIx < this->horizontalLines.size(); lineIx++) {
 		int rowIx = this->horizontalLines[lineIx].indexOf(keyIndex);
 		if (rowIx != -1) {
@@ -108,7 +110,7 @@ juce::Point<int> TerpstraBoardGeometry::coordinatesForKey (int boardIndex, int k
 }
 
 // returns the unique straight line that contains the given field
-TerpstraBoardGeometry::StraightLine TerpstraBoardGeometry::getLineOfField(int fieldIndex, StraightLineSet lineSet) const
+LumatoneGeometry::StraightLine LumatoneGeometry::getLineOfField(int fieldIndex, StraightLineSet lineSet) const
 {
 	for (auto line: lineSet)
 	{
@@ -122,7 +124,7 @@ TerpstraBoardGeometry::StraightLine TerpstraBoardGeometry::getLineOfField(int fi
 }
 
 // Returns the line that is a continuation of the given horizontal line in another octave board
-TerpstraBoardGeometry::StraightLine TerpstraBoardGeometry::continuationOfHorizontalLine(StraightLine line, int octaveBoardOffset) const
+LumatoneGeometry::StraightLine LumatoneGeometry::continuationOfHorizontalLine(StraightLine line, int octaveBoardOffset) const
 {
     int currentLineIndex = this->horizontalLines.indexOf(line);
     if ( currentLineIndex < 0)
@@ -142,7 +144,7 @@ TerpstraBoardGeometry::StraightLine TerpstraBoardGeometry::continuationOfHorizon
 }
 
 // Returns the line that is a continuation of the given horizontal line in another octave board
-TerpstraBoardGeometry::StraightLine TerpstraBoardGeometry::continuationOfRightUpwardLine(StraightLine line, int octaveBoardOffset) const
+LumatoneGeometry::StraightLine LumatoneGeometry::continuationOfRightUpwardLine(StraightLine line, int octaveBoardOffset) const
 {
 	int currentLineIndex = this->rightUpwardLines.indexOf(line);
 	if (currentLineIndex < 0)
@@ -162,7 +164,7 @@ TerpstraBoardGeometry::StraightLine TerpstraBoardGeometry::continuationOfRightUp
 }
 
 // Returns the unique horizontal line that contains the given field, over all octave boards
-TerpstraBoardGeometry::StraightLineSet TerpstraBoardGeometry::globalHorizontalLineOfField(int setSelection, int fieldIndex) const
+LumatoneGeometry::StraightLineSet LumatoneGeometry::globalHorizontalLineOfField(int setSelection, int fieldIndex) const
 {
     jassert(setSelection >= 0 && setSelection < NUMBEROFBOARDS);
 
@@ -202,7 +204,7 @@ TerpstraBoardGeometry::StraightLineSet TerpstraBoardGeometry::globalHorizontalLi
 }
 
 // Returns the unique right upward line that contains the given field, over all octave boards
-TerpstraBoardGeometry::StraightLineSet TerpstraBoardGeometry::globalRightUpwardLineOfField(int setSelection, int fieldIndex) const
+LumatoneGeometry::StraightLineSet LumatoneGeometry::globalRightUpwardLineOfField(int setSelection, int fieldIndex) const
 {
 	jassert(setSelection >= 0 && setSelection < NUMBEROFBOARDS);
 
@@ -242,7 +244,7 @@ TerpstraBoardGeometry::StraightLineSet TerpstraBoardGeometry::globalRightUpwardL
 }
 
 // Returns the horizontal lines that have a continuation (right or left)
-TerpstraBoardGeometry::StraightLineSet TerpstraBoardGeometry::getHorizontalLinesWithContinuation(int octaveBoardOffset) const
+LumatoneGeometry::StraightLineSet LumatoneGeometry::getHorizontalLinesWithContinuation(int octaveBoardOffset) const
 {
 	StraightLineSet result;
 
@@ -255,12 +257,12 @@ TerpstraBoardGeometry::StraightLineSet TerpstraBoardGeometry::getHorizontalLines
 	return result;
 }
 
-int TerpstraBoardGeometry::getMaxHorizontalLineSize() const
+int LumatoneGeometry::getMaxHorizontalLineSize() const
 {
 	return maxHorizontalLineSize;
 }
 
-juce::Array<juce::Point<int>> TerpstraBoardGeometry::getOctaveCoordinates(int boardIndex) const
+juce::Array<juce::Point<int>> LumatoneGeometry::getOctaveCoordinates(int boardIndex) const
 {
 	juce::Array<juce::Point<int>> pointsOut;
 
@@ -279,4 +281,14 @@ juce::Array<juce::Point<int>> TerpstraBoardGeometry::getOctaveCoordinates(int bo
 	}
 
 	return pointsOut;
+}
+
+int LumatoneGeometry::getLastIndexForRow(int rowIndex) const
+{
+	return horizontalLines[rowIndex].getLast();
+}
+
+int LumatoneGeometry::getVerticalOriginLineIndexForRow(int rowIndex) const
+{
+	return rowVerticalOriginLineIndex[rowIndex];
 }

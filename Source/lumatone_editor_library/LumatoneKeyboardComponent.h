@@ -114,7 +114,7 @@ private:
     juce::Point<float>  oct5Key7;
 
     // Geometry settings
-    TerpstraBoardGeometry    boardGeometry;
+    LumatoneGeometry    lumatoneGeometry;
 
     //[/UserVariables]
 

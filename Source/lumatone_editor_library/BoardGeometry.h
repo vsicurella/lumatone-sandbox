@@ -22,7 +22,7 @@ enum class LumatoneBoardSize
 
 //==============================================================================
 // Manages the geometry of the board - used to create isomorphic key mappings
-class TerpstraBoardGeometry
+class LumatoneGeometry
 {
 	// Types
 public:
@@ -31,7 +31,7 @@ public:
 
 	// Construction
 public:
-	TerpstraBoardGeometry(LumatoneBoardSize boardSize=LumatoneBoardSize::LM56);
+	LumatoneGeometry(LumatoneBoardSize boardSize=LumatoneBoardSize::LM56);
 
 	// Methods
 public:
@@ -57,14 +57,21 @@ public:
 
 	juce::Array<juce::Point<int>> getOctaveCoordinates(int boardIndex) const;
 
+	int getLastIndexForRow(int rowIndex) const;
+	int getVerticalOriginLineIndexForRow(int rowIndex) const;
+
 	juce::Point<int> coordinatesForKey (int boardIndex, int keyIndex) const;
 
 	// Attributes
 private:
 	StraightLineSet	horizontalLines;
 	StraightLineSet	rightUpwardLines;
+	
 	juce::Array<int> firstColumnOffsets;
 	juce::Array<int> rowOffsets; // Horizonal offset of each horizontal line on the board, relative to the lower left key.
+	
+	juce::Array<int> rowVerticalOriginLineIndex;	// Key index for the key in a vertical line with the board's 0th key, for a given row
+
 	int boardXOffset; // Offset along shallow diagonals between analogous keys from one board to the next (typically 7)
 	int boardYOffset; // Offset along up/right diagonals between analogous keys from one board to the next (typically -2)
 	int maxHorizontalLineSize;

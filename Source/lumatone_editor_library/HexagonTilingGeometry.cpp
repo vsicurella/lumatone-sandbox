@@ -73,12 +73,12 @@ void HexagonTilingGeometry::fitSkewedTiling(juce::Point<float> firstKeyCentre,
 	rowYComponent    = rowUnit * rowAngleSin;
 }
 
-juce::Array<juce::Point<float>> HexagonTilingGeometry::getHexagonCentres(const TerpstraBoardGeometry& boardGeometry, int startingOctave, int numOctavesIn) const
+juce::Array<juce::Point<float>> HexagonTilingGeometry::getHexagonCentres(const LumatoneGeometry& boardGeometry, int startingOctave, int numOctavesIn) const
 {
 	return calculateCentres(boardGeometry, startingOctave, numOctavesIn);
 }
 
-juce::Array<juce::Point<float>> HexagonTilingGeometry::getHexagonCentresSkewed(const TerpstraBoardGeometry& boardGeometry, int startingOctave, int numOctavesIn) const
+juce::Array<juce::Point<float>> HexagonTilingGeometry::getHexagonCentresSkewed(const LumatoneGeometry& boardGeometry, int startingOctave, int numOctavesIn) const
 {
 	return calculateCentresSkewed(boardGeometry, startingOctave, numOctavesIn);
 }
@@ -194,7 +194,7 @@ juce::Array<juce::Point<float>> HexagonTilingGeometry::transformPointsFromOrigin
 	return pointsOut;
 }
 
-juce::Array<juce::Point<float>> HexagonTilingGeometry::calculateCentres(const TerpstraBoardGeometry& boardGeometry, int startingOctave, int numOctaves) const
+juce::Array<juce::Point<float>> HexagonTilingGeometry::calculateCentres(const LumatoneGeometry& boardGeometry, int startingOctave, int numOctaves) const
 {
 	juce::Array<juce::Point<float>> hexagonCentres;
 
@@ -251,7 +251,7 @@ int HexagonTilingGeometry::verticalToSlantOffset(int rowNum, int offsetIn)
 	return offsetIn - (rowNum / 2);
 }
 
-juce::Array<juce::Point<float>> HexagonTilingGeometry::calculateCentresSkewed(const TerpstraBoardGeometry& boardGeometry, int startingOctave, int numOctaves) const
+juce::Array<juce::Point<float>> HexagonTilingGeometry::calculateCentresSkewed(const LumatoneGeometry& boardGeometry, int startingOctave, int numOctaves) const
 {
 	juce::Array<juce::Point<float>> hexagonCentres;
 

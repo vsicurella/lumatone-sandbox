@@ -83,7 +83,7 @@ void LumatoneKeyboardComponent::resized()
 
     tilingGeometry.fitSkewedTiling(oct1Key1, oct1Key56, 10, oct5Key7, 24, false);
 
-    juce::Array<juce::Point<float>> keyCentres = tilingGeometry.getHexagonCentresSkewed(boardGeometry, 0, NUMBEROFBOARDS);
+    juce::Array<juce::Point<float>> keyCentres = tilingGeometry.getHexagonCentresSkewed(lumatoneGeometry, 0, NUMBEROFBOARDS);
 
     int octaveIndex = 0;
     octaveBoards[octaveIndex]->leftPos = keyCentres[0].getX() - keyWidth * 0.5;
@@ -120,7 +120,7 @@ void LumatoneKeyboardComponent::resetOctaveSize()
     const int octaveBoardSize = state.getOctaveBoardSize();
     if (currentOctaveSize != octaveBoardSize)
     {
-        boardGeometry = TerpstraBoardGeometry();
+        lumatoneGeometry = LumatoneGeometry();
         octaveBoards.clear();
 
         for (int subBoardIndex = 0; subBoardIndex < NUMBEROFBOARDS; subBoardIndex++)

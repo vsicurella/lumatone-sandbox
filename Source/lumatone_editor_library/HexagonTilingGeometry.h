@@ -105,9 +105,9 @@ public:
 	// TODO: Generalized hex plane for any shapes
 	//juce::Array<juce::Point<float>> getHexagonCentres(const juce::Point<float> originCentre, const juce::Array<juce::Array<int>> stepsFromCentre) const;
 
-	juce::Array<juce::Point<float>> getHexagonCentres(const TerpstraBoardGeometry& boardGeometry, int startingOctave = 0, int numOctavesIn = 1) const;
+	juce::Array<juce::Point<float>> getHexagonCentres(const LumatoneGeometry& boardGeometry, int startingOctave = 0, int numOctavesIn = 1) const;
 
-	juce::Array<juce::Point<float>> getHexagonCentresSkewed(const TerpstraBoardGeometry& boardGeometry, int startingOctave, int numOctavesIn) const;
+	juce::Array<juce::Point<float>> getHexagonCentresSkewed(const LumatoneGeometry& boardGeometry, int startingOctave, int numOctavesIn) const;
 
 	// I have a new model of this class in the TilingGeometry branch that is based on this function, but it happened to perform worse 
 	// in terms of rounding errors, so this is a quick-fix for implementing HexPalettes before I can officially clean this class up
@@ -165,11 +165,11 @@ private:
 	juce::Rectangle<float> calculateSmallestBounds(int widestRowSize, int longestColumnSize) const;
 
 	// Generalized ones
-	//juce::Array<juce::Point<float>> calculateCentres(const TerpstraBoardGeometry& boardGeometry, juce::Point<float> firstKeyCentre);
+	//juce::Array<juce::Point<float>> calculateCentres(const LumatoneGeometry& lumatoneGeometry, juce::Point<float> firstKeyCentre);
 
-	juce::Array<juce::Point<float>> calculateCentres(const TerpstraBoardGeometry& boardGeometry, int startingOctave = 0, int numOctaves = 1) const;
+	juce::Array<juce::Point<float>> calculateCentres(const LumatoneGeometry& boardGeometry, int startingOctave = 0, int numOctaves = 1) const;
 
-	juce::Array<juce::Point<float>> calculateCentresSkewed(const TerpstraBoardGeometry& boardGeometry, int startingOctave = 0, int numOctaves = 1) const;
+	juce::Array<juce::Point<float>> calculateCentresSkewed(const LumatoneGeometry& boardGeometry, int startingOctave = 0, int numOctaves = 1) const;
 
 	static int verticalToSlantOffset(int rowNum, int offsetIn);
 
