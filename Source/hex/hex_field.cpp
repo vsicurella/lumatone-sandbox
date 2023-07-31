@@ -121,6 +121,11 @@ void Hex::Point::round()
     r = cubed.r;
 }
 
+bool Hex::Point::operator==(const Hex::Point& compare) const
+{
+    return q == compare.q && r == compare.r;
+}
+
 Hex::Point Hex::Point::operator+(const Hex::Point& toAdd) const
 {
     return Hex::Point(q + toAdd.q, r + toAdd.r);

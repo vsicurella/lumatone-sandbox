@@ -192,6 +192,10 @@
       <GROUP id="{42FFB12E-C138-DD7E-AEBC-85873E6823E9}" name="hex">
         <FILE id="gqJfiQ" name="hex_field.cpp" compile="1" resource="0" file="Source/hex/hex_field.cpp"/>
         <FILE id="SxhlB2" name="hex_field.h" compile="0" resource="0" file="Source/hex/hex_field.h"/>
+        <FILE id="g7UcpP" name="lumatone_hex_map.cpp" compile="1" resource="0"
+              file="Source/hex/lumatone_hex_map.cpp"/>
+        <FILE id="YvtbjH" name="lumatone_hex_map.h" compile="0" resource="0"
+              file="Source/hex/lumatone_hex_map.h"/>
       </GROUP>
       <FILE id="Tyuauo" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="WYnuWf" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>

@@ -55,6 +55,10 @@ namespace Hex
         Point(float hex_q, float hex_r);
         Point(Hex::Cube cube);
 
+        juce::String toString() const { return juce::String(q) + "," + juce::String(r); }
+
+        bool operator==(const Hex::Point& compare) const;
+
         Hex::Point operator+(const Hex::Point& toAdd) const;
         void operator+=(const Hex::Point& toAdd);
 
