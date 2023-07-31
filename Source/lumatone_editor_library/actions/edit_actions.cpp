@@ -15,8 +15,8 @@ using namespace LumatoneEditAction;
 // Implementation of SingleNoteAssignAction
 SingleNoteAssignAction::SingleNoteAssignAction(
     LumatoneController* controller,
-    int setSelection,
-    int keySelection,
+    int boardIndexIn,
+    int keyIndexIn,
     bool setKeyType,
     bool setChannel, 
     bool setNote,
@@ -28,11 +28,11 @@ SingleNoteAssignAction::SingleNoteAssignAction(
     juce::Colour newColour,
     bool newCCFaderIsDefault)
     : LumatoneAction(controller)
-    , setSelection(setSelection), keySelection(keySelection)
+    , boardId(boardIndexIn + 1), keyIndex(keyIndexIn)
     , setKeyType(setKeyType), setChannel(setChannel), setNote(setNote), setColour(setColour), setCCFaderPolarity(setCCPolarity)
     , newData(newKeyType, newChannelNumber, newNoteNumber, newColour, newCCFaderIsDefault)
 {
-    previousData = *controller->getKey(setSelection, keySelection);
+    previousData = *controller->getKey(boardIndexIn, keyIndexIn);
 }
 
 SingleNoteAssignAction::SingleNoteAssignAction(
@@ -47,12 +47,12 @@ SingleNoteAssignAction::SingleNoteAssignAction(
 
 bool SingleNoteAssignAction::isValid() const
 {
-    return setSelection >= 0 && setSelection < NUMBEROFBOARDS && keySelection >= 0 && keySelection < octaveBoardSize;
+    return boardId > 0 && boardId <= numOctaveBoards && keyIndex >= 0 && keyIndex < octaveBoardSize;
 }
 
 bool SingleNoteAssignAction::perform()
 {
-    if (setSelection >= 0 && setSelection < NUMBEROFBOARDS && keySelection >= 0 && keySelection < octaveBoardSize)
+    if (boardId > 0 && boardId <= numOctaveBoards && keyIndex >= 0 && keyIndex < octaveBoardSize)
     {
         LumatoneKey resultKey = previousData;
         if (setKeyType || setChannel || setNote || setColour || setCCFaderPolarity)
@@ -82,8 +82,8 @@ bool SingleNoteAssignAction::perform()
             newData = resultKey;
             // Send to device
             controller->sendKeyParam(
-                setSelection + 1,
-                keySelection,
+                boardId,
+                keyIndex,
                 newData);
 
             // Notfy that there are changes: in calling function
@@ -105,7 +105,7 @@ bool SingleNoteAssignAction::perform()
 
 bool SingleNoteAssignAction::undo()
 {
-    if (setSelection >= 0 && setSelection < NUMBEROFBOARDS && keySelection >= 0 && keySelection < octaveBoardSize)
+    if (boardId > 0 && boardId <= numOctaveBoards && keyIndex >= 0 && keyIndex < octaveBoardSize)
     {
         if (setKeyType || setChannel || setNote || setColour || setCCFaderPolarity)
         {
@@ -136,8 +136,8 @@ bool SingleNoteAssignAction::undo()
 
             // Send to device
             controller->sendKeyParam(
-                setSelection + 1,
-                keySelection,
+                boardId,
+                keyIndex,
                 previousData);
 
             // Notify that there are changes: in calling function
@@ -160,25 +160,25 @@ bool SingleNoteAssignAction::undo()
 // ==============================================================================
 // Implementation of SectionEditAction
 
-SectionEditAction::SectionEditAction(LumatoneController* controller, int setSelection, const LumatoneBoard& newSectionValue)
+SectionEditAction::SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue)
     : LumatoneAction(controller)
-    , setSelection(setSelection)
+    , boardId(boardIndexIn + 1)
     , newData(newSectionValue)
 {
-    previousData = *controller->getBoard(setSelection);
+    previousData = *controller->getBoard(boardId);
 }
 
 bool SectionEditAction::isValid() const
 {
-    return setSelection >= 0 && setSelection < NUMBEROFBOARDS;
+    return boardId > 0 && boardId <= numOctaveBoards;
 }
 
 bool SectionEditAction::perform()
 {
-    if (setSelection >= 0 && setSelection < NUMBEROFBOARDS)
+    if (boardId >= 0 && boardId < NUMBEROFBOARDS)
     {
         // Send to device
-        controller->sendAllParamsOfBoard(setSelection + 1, &newData, true);
+        controller->sendAllParamsOfBoard(boardId, &newData, true);
 
         // Notify that there are changes: in calling function
         return true;
@@ -192,10 +192,10 @@ bool SectionEditAction::perform()
 
 bool SectionEditAction::undo()
 {
-    if (setSelection >= 0 && setSelection < NUMBEROFBOARDS)
+    if (boardId >= 0 && boardId <= numOctaveBoards)
     {
         // Send to device
-        controller->sendAllParamsOfBoard(setSelection + 1, &previousData, true);
+        controller->sendAllParamsOfBoard(boardId, &previousData, true);
 
         // Notify that there are changes: in calling function
         return true;

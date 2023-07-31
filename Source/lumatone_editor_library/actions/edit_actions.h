@@ -18,8 +18,8 @@ namespace LumatoneEditAction {
 	public:
 		SingleNoteAssignAction(
 			LumatoneController* controller,
-			int setSelection,
-			int keySelection,
+			int boardIndexIn,
+			int keyIndexIn,
 			bool setKeyType,
 			bool setChannel, 
 			bool setNote,
@@ -33,8 +33,8 @@ namespace LumatoneEditAction {
 
 		SingleNoteAssignAction(const SingleNoteAssignAction& second)
 			: LumatoneAction(second.controller)
-			, setSelection(second.setSelection)
-			, keySelection(second.keySelection)
+			, boardId(second.boardId)
+			, keyIndex(second.keyIndex)
 			, setKeyType(second.setKeyType)
 			, setChannel(second.setChannel)
 			, setNote(second.setNote)
@@ -46,7 +46,7 @@ namespace LumatoneEditAction {
 
 		SingleNoteAssignAction(
 			LumatoneController* controller,
-			int boardIndex,
+			int boardId,
 			int keyIndex,
 			juce::Colour newColour
 		);
@@ -59,8 +59,8 @@ namespace LumatoneEditAction {
 		int getSizeInUnits() override { return sizeof(SingleNoteAssignAction); }
 
 	private:
-		int setSelection = - 1;
-		int keySelection = -1;
+		int boardId = - 1;
+		int keyIndex = -1;
 
 		bool setKeyType = false;
 		bool setChannel = false;
@@ -75,11 +75,11 @@ namespace LumatoneEditAction {
 	class SectionEditAction : public LumatoneAction
 	{
 	public:
-		SectionEditAction(LumatoneController* controller, int setSelection, const LumatoneBoard& newSectionValue);
+		SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue);
 
 		SectionEditAction(const SectionEditAction& second)
 			: LumatoneAction(second.controller)
-			, setSelection(second.setSelection)
+			, boardId(second.boardId)
 			, previousData(second.previousData)
 			, newData(second.newData)
 		{}
@@ -91,7 +91,7 @@ namespace LumatoneEditAction {
 		int getSizeInUnits() override { return sizeof(SectionEditAction); }
 
 	private:
-		int setSelection = -1;
+		int boardId = -1;
 
 		LumatoneBoard previousData;
 		LumatoneBoard newData;

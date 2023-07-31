@@ -158,6 +158,25 @@ void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData
     }
 }
 
+void LumatoneKeyboardComponent::boardChanged(LumatoneBoard boardData)
+{
+    auto board = octaveBoards[boardData.board_idx];
+
+    for (int keyIndex = 0; keyIndex < state.getOctaveBoardSize(); keyIndex++)
+    {
+        auto key = board->keyMiniDisplay[keyIndex];
+        key->setLumatoneKey(boardData.theKeys[keyIndex]);
+        key->repaint();
+    }
+}
+
+void LumatoneKeyboardComponent::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
+{
+    auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
+    key->setLumatoneKey(lumatoneKey);
+    key->repaint();
+}
+
 juce::Image LumatoneKeyboardComponent::getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight)
 {
     auto cachedImage = LumatoneAssets::getImage(assetId, targetHeight, targetWidth);

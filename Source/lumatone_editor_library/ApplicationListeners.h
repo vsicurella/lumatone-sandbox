@@ -114,7 +114,7 @@ namespace LumatoneEditor
         // App Actions
         virtual void completeMappingLoaded(LumatoneLayout mappingData) {};
         virtual void boardChanged(LumatoneBoard boardData) {};
-        virtual void keyChanged(LumatoneKey lumatoneKey) {};
+        virtual void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) {};
 
         virtual void tableChanged(LumatoneConfigTable::TableType type, const juce::uint8* table, int tableSize) {};
 

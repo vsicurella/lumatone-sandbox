@@ -36,6 +36,8 @@ public:
 
     // LumatoneEditor::EditorListener Implementation
     void completeMappingLoaded(LumatoneLayout mappingData) override;
+    void boardChanged(LumatoneBoard boardData) override;
+    void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
     
 private:
 
