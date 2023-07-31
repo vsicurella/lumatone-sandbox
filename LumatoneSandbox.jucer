@@ -190,9 +190,8 @@
       </GROUP>
       <GROUP id="{F315DA9E-E82C-A8F7-EF23-472F1CD76CEC}" name="midi"/>
       <GROUP id="{42FFB12E-C138-DD7E-AEBC-85873E6823E9}" name="hex">
-        <FILE id="gqJfiQ" name="hex_geometry.cpp" compile="1" resource="0"
-              file="Source/hex/hex_geometry.cpp"/>
-        <FILE id="SxhlB2" name="hex_geometry.h" compile="0" resource="0" file="Source/hex/hex_geometry.h"/>
+        <FILE id="gqJfiQ" name="hex_field.cpp" compile="1" resource="0" file="Source/hex/hex_field.cpp"/>
+        <FILE id="SxhlB2" name="hex_field.h" compile="0" resource="0" file="Source/hex/hex_field.h"/>
       </GROUP>
       <FILE id="Tyuauo" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="WYnuWf" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
