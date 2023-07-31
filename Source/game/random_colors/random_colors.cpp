@@ -11,13 +11,15 @@
 #include "random_colors.h"
 
 RandomColors::RandomColors(LumatoneController* controllerIn, RandomColors::Options options)
-    : LumatoneSandboxGameBase(controllerIn)
+    : LumatoneSandboxGameBase(controllerIn, "Random Colors")
 {
     setOptions(options);
 }
 
 void RandomColors::reset(bool clearQueue)
 {
+    random.setSeedRandomly();
+
     if (clearQueue)
     {
         queuedActions.clear();
@@ -27,7 +29,6 @@ void RandomColors::reset(bool clearQueue)
     }
 
     ticks = 0;
-
     queuedActions.add(renderFrame());
 }
 
@@ -43,9 +44,7 @@ void RandomColors::nextTick()
 
 juce::UndoableAction* RandomColors::renderFrame()
 {
-    juce::Random random;
-
-    int boardIndex = random.nextInt(4);
+    int boardIndex = random.nextInt(5);
     int keyIndex = random.nextInt(56);
 
     auto colour = juce::Colour(
@@ -63,7 +62,17 @@ juce::UndoableAction* RandomColors::renderFrame()
 
 void RandomColors::setOptions(RandomColors::Options newOptions)
 {
+    if (ticks > newOptions.nextStepTicks)
+        ticks = newOptions.nextStepTicks - 1;
     nextStepTicks = newOptions.nextStepTicks;
+
     keyColorConstrainer = newOptions.keyColourConstrainer;
 }
 
+RandomColors::Options RandomColors::getOptions() const
+{
+    auto options = RandomColors::Options();
+    options.nextStepTicks = nextStepTicks;
+    options.keyColourConstrainer = keyColorConstrainer;
+    return options;
+}

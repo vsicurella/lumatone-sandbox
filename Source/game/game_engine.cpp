@@ -20,7 +20,7 @@ LumatoneSandboxGameEngine::LumatoneSandboxGameEngine(LumatoneController* control
 LumatoneSandboxGameEngine::~LumatoneSandboxGameEngine()
 {
     engineListeners.clear();
-
+    game = nullptr;
     controller = nullptr;
 }
 
@@ -29,11 +29,10 @@ int LumatoneSandboxGameEngine::getTimeInterval() const
     return juce::roundToInt((float)1000 / (float)desiredFps);
 }
 
-void LumatoneSandboxGameEngine::setGame(std::unique_ptr<LumatoneSandboxGameBase> newGameIn)
+void LumatoneSandboxGameEngine::setGame(LumatoneSandboxGameBase* newGameIn)
 {
     endGame();
-
-    game.swap(newGameIn);
+    game.reset(newGameIn);
 }
 
 
@@ -44,7 +43,10 @@ bool LumatoneSandboxGameEngine::startGame()
         gameIsRunning = true;
         startTimer(getTimeInterval());
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameStarted);
+        return true;
     }
+
+    return false;
 }
 
 
@@ -53,13 +55,23 @@ bool LumatoneSandboxGameEngine::endGame()
     stopTimer();
 
     gameIsRunning = false;
+    sentFirstGameMessage = false;
 
     if (game != nullptr)
     {
         game->reset(true);
 
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameEnded);
+
+        return true;
     }
+
+    return false;
+}
+
+void LumatoneSandboxGameEngine::resetGame()
+{
+    endGame();
 }
 
 void LumatoneSandboxGameEngine::timerCallback()
@@ -72,15 +84,17 @@ void LumatoneSandboxGameEngine::timerCallback()
 
     game->nextTick();
 
-    juce::Array<juce::UndoableAction*> actions;
+    juce::OwnedArray<juce::UndoableAction> actions;
     game->readQueue(actions);
 
     if (actions.size() == 0)
         return;
 
-    juce::UndoableAction* combinedAction = actions[0];
-    for (int i = 1; i < actions.size(); i++)
-        combinedAction->createCoalescedAction(actions[i]);
+    auto title = "Game Action: " + game->getName();
+    auto newTransaction = sentFirstGameMessage == false;
+    if (newTransaction)
+        sentFirstGameMessage = true;
 
-    bool performed = controller->performUndoableAction(combinedAction);
+    for (int i = 0; i < actions.size(); i++)
+        controller->performUndoableAction(actions.removeAndReturn(0), newTransaction, title);
 }

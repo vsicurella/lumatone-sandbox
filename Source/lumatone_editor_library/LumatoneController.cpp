@@ -87,12 +87,17 @@ void LumatoneController::setMidiOutput(int deviceIndex, bool test)
         testCurrentDeviceConnection();
 }
 
-bool LumatoneController::performUndoableAction(juce::UndoableAction* undoableAction)
+bool LumatoneController::performUndoableAction(juce::UndoableAction* undoableAction, bool newTransaction, juce::String actionName)
 {
-    if (undoManager == nullptr)
+    if (undoManager == nullptr || undoableAction == nullptr)
         return false;
 
-    undoManager->perform(undoableAction);
+    if (newTransaction)
+        undoManager->beginNewTransaction();
+
+    undoManager->perform(undoableAction, actionName);
+
+    return true;
 }
 
 void LumatoneController::refreshAvailableMidiDevices() 
@@ -243,11 +248,13 @@ void LumatoneController::testCurrentDeviceConnection()
 }
 
 // Send parametrization of one key to the device
-void LumatoneController::sendKeyParam(int boardIndex, int keyIndex, LumatoneKey keyData)
+void LumatoneController::sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData)
 {    
     // Default CC polarity = 1, Inverted CC polarity = 0
-    sendKeyConfig(boardIndex, keyIndex, keyData);
-    sendKeyColourConfig(boardIndex, keyIndex, keyData);
+    sendKeyConfig(boardId, keyIndex, keyData);
+    sendKeyColourConfig(boardId, keyIndex, keyData);
+
+    editorListeners.call(&LumatoneEditor::EditorListener::keyChanged, boardId - 1, keyIndex, keyData);
 }
 
 // Send configuration of a certain look up table
@@ -276,31 +283,31 @@ void LumatoneController::sendTableConfig(LumatoneConfigTable::TableType velocity
 // Mid-level firmware functions
 
 // Send note, channel, cc, and fader polarity data
-void LumatoneController::sendKeyConfig(int boardIndex, int keyIndex, const LumatoneKey& keyData, bool signalEditorListeners)
+void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& keyData, bool signalEditorListeners)
 {
-    *getEditKey(boardIndex, keyIndex) = keyData;
-    midiDriver.sendKeyFunctionParameters(boardIndex, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
+    *getEditKey(boardId - 1, keyIndex) = keyData;
+    midiDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
 
     if (signalEditorListeners)
-        editorListeners.call(&LumatoneEditor::EditorListener::keyConfigChanged, boardIndex, keyIndex, keyData);
+        editorListeners.call(&LumatoneEditor::EditorListener::keyConfigChanged, boardId - 1, keyIndex, keyData);
 }
 
-void LumatoneController::sendKeyColourConfig(int boardIndex, int keyIndex, juce::Colour colour, bool signalEditorListeners)
+void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners)
 {
-    getEditKey(boardIndex, keyIndex)->colour = colour;
+    getEditKey(boardId - 1, keyIndex)->colour = colour;
 
     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
-        midiDriver.sendKeyLightParameters(boardIndex, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
+        midiDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
     else
-        midiDriver.sendKeyLightParameters_Version_1_0_0(boardIndex, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+        midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
 
     if (signalEditorListeners)
-        editorListeners.call(&LumatoneEditor::EditorListener::keyColourChanged, boardIndex, keyIndex, colour);
+        editorListeners.call(&LumatoneEditor::EditorListener::keyColourChanged, boardId - 1, keyIndex, colour);
 }
 
-void LumatoneController::sendKeyColourConfig(int boardIndex, int keyIndex, const LumatoneKey& keyColourConfig, bool signalEditorListeners)
+void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, const LumatoneKey& keyColourConfig, bool signalEditorListeners)
 {
-    sendKeyColourConfig(boardIndex, keyIndex, keyColourConfig.colour, signalEditorListeners);
+    sendKeyColourConfig(boardId, keyIndex, keyColourConfig.colour, signalEditorListeners);
 }
 
 

@@ -36,12 +36,14 @@ public:
 
     LumatoneSandboxGameEngine(LumatoneController* controllerIn, int fps);
     ~LumatoneSandboxGameEngine();
+
+    LumatoneController* getController()  { return controller; }
    
-    void setGame(std::unique_ptr<LumatoneSandboxGameBase> newGameIn);
+    void setGame(LumatoneSandboxGameBase* newGameIn);
 
     bool startGame();
-
     bool endGame();
+    void resetGame();
 
     int getTimeInterval() const;
 
@@ -70,4 +72,5 @@ private:
     int desiredFps = 30;
 
     bool gameIsRunning = false;
+    bool sentFirstGameMessage = false;
 };

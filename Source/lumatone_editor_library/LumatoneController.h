@@ -51,7 +51,7 @@ public:
 
 public:
 
-    bool performUndoableAction(juce::UndoableAction* undoableAction);
+    bool performUndoableAction(juce::UndoableAction* undoableAction, bool newTransaction = true, juce::String actionName=juce::String());
 
 private:
     bool connectionConfirmed() const { return midiDriver.hasDevicesDefined() && currentDevicePairConfirmed; }
@@ -100,11 +100,11 @@ public:
     // Single (mid-level) commands
 
     // Send note, channel, cc, and fader polarity data
-    void sendKeyConfig(int boardIndex, int keyIndex, const LumatoneKey& noteDataConfig, bool signalEditorListeners=true);
+    void sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& noteDataConfig, bool signalEditorListeners=true);
 
     // Send RGB colour data
-    void sendKeyColourConfig(int boardIndex, int keyIndex, juce::Colour colour, bool signalEditorListeners = true);
-    void sendKeyColourConfig(int boardIndex, int keyIndex, const LumatoneKey& keyColourConfig, bool signalEditorListeners = true);
+    void sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners = true);
+    void sendKeyColourConfig(int boardId, int keyIndex, const LumatoneKey& keyColourConfig, bool signalEditorListeners = true);
 
     // Send expression pedal sensivity
     void sendExpressionPedalSensivity(unsigned char value);

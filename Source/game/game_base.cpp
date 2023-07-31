@@ -10,8 +10,8 @@
 
 #include "game_base.h"
 
-LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn)
-    : controller(controllerIn)
+LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String actionName)
+    : controller(controllerIn), name(actionName)
 {
     reset(true);
 }
@@ -24,11 +24,10 @@ void LumatoneSandboxGameBase::reset(bool clearQueue)
     }
 }
 
-void LumatoneSandboxGameBase::readQueue(juce::Array<juce::UndoableAction*>& buffer)
+void LumatoneSandboxGameBase::readQueue(juce::OwnedArray<juce::UndoableAction>& buffer)
 {
     if (queuedActions.size() == 0)
         return;
 
-    buffer.addArray(queuedActions);
-    queuedActions.clear();
+    queuedActions.swapWithArray(buffer);
 }

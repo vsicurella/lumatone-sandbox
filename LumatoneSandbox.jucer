@@ -171,6 +171,10 @@
           <FILE id="tMkWYs" name="random_colors.cpp" compile="1" resource="0"
                 file="Source/game/random_colors/random_colors.cpp"/>
           <FILE id="YkoYSK" name="random_colors.h" compile="0" resource="0" file="Source/game/random_colors/random_colors.h"/>
+          <FILE id="InB4UW" name="random_colors_launcher.cpp" compile="1" resource="0"
+                file="Source/game/random_colors/random_colors_launcher.cpp"/>
+          <FILE id="Kzp9EP" name="random_colors_launcher.h" compile="0" resource="0"
+                file="Source/game/random_colors/random_colors_launcher.h"/>
         </GROUP>
         <FILE id="KBAm2D" name="game_base.cpp" compile="1" resource="0" file="Source/game/game_base.cpp"/>
         <FILE id="DLDCyK" name="game_base.h" compile="0" resource="0" file="Source/game/game_base.h"/>

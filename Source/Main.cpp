@@ -12,7 +12,7 @@
 #include "lumatone_editor_library/DeviceActivityMonitor.h"
 
 #include "game/game_engine.h"
-#include "game/random_colors/random_colors.h"
+#include "game/random_colors/random_colors_launcher.h"
 
 //==============================================================================
 class LumatoneSandboxApp  : public juce::JUCEApplication
@@ -61,7 +61,6 @@ public:
     void shutdown() override
     {
         // Add your application's shutdown code here..
-
         gameEngine = nullptr;
         fileChooser = nullptr;
         
@@ -116,14 +115,16 @@ public:
             LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes,
             LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours,
             LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes,
-            
+
             LumatoneSandbox::Menu::commandIDs::undo,
             LumatoneSandbox::Menu::commandIDs::redo,
 
-            LumatoneSandbox::Menu::commandIDs::aboutSysEx
+            LumatoneSandbox::Menu::commandIDs::aboutSysEx,
+
+            LumatoneSandbox::Menu::commandIDs::openRandomColorsGame
         };
 
-        commands.addArray(ids, 14);
+        commands.addArray(ids, 15);
     }
 
 	void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result) override
@@ -204,6 +205,10 @@ public:
                 result.setInfo("About Lumatone Editor", "Shows version and copyright", "Help", 0);
                 break;
 
+            case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
+                result.setInfo("Random Colors", "Open launcher for Random Colors game", "Game", 0);
+                break;
+
             default:
                 JUCEApplication::getCommandInfo(commandID, result);
                 break;
@@ -226,6 +231,18 @@ public:
                     
                 });
             return true;
+        }
+
+        case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
+        {
+            auto dialogOptions = juce::DialogWindow::LaunchOptions();
+
+            auto launcher = new RandomColorsComponent(gameEngine.get());
+            launcher->setSize(300, 200);
+            dialogOptions.content = juce::OptionalScopedPointer<juce::Component>(launcher, true);
+            dialogOptions.dialogTitle = "Random Colors Launcher";
+            dialogOptions.launchAsync();
+            break;
         }
 
         default:

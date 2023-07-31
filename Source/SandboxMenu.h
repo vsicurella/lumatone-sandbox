@@ -32,7 +32,9 @@ namespace LumatoneSandbox {
 
 			recentFilesBaseID = 0x200300,
 
-			aboutSysEx = 0x200400
+			aboutSysEx = 0x200400,
+
+			openRandomColorsGame = 0x300100,
 		};
 
 		class Model : public juce::MenuBarModel
@@ -46,6 +48,7 @@ namespace LumatoneSandbox {
 
 			virtual void createFileMenu(juce::PopupMenu& menu);
 			virtual void createEditMenu(juce::PopupMenu& menu);
+			virtual void createGameMenu(juce::PopupMenu& menu);
 			virtual void createHelpMenu(juce::PopupMenu& menu);
 
 		private:

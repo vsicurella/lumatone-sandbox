@@ -31,13 +31,18 @@ class LumatoneSandboxGameBase
 {
 public:
 
-    LumatoneSandboxGameBase(LumatoneController* controllerIn);
-    virtual ~LumatoneSandboxGameBase() {}
+    LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String gameName);
+    virtual ~LumatoneSandboxGameBase()
+    {
+        queuedActions.clear();
+    }
 
     virtual void reset(bool clearQueue);
     virtual void nextTick() = 0;
 
-    void readQueue(juce::Array<juce::UndoableAction*>& buffer);
+    void readQueue(juce::OwnedArray<juce::UndoableAction>& buffer);
+
+    juce::String getName() const { return name; }
 
 protected:
 
@@ -46,4 +51,8 @@ protected:
     juce::OwnedArray<juce::UndoableAction> queuedActions;
 
     LumatoneController* controller;
+
+private:
+
+    juce::String name;
 };

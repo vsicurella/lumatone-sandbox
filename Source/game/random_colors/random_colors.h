@@ -19,7 +19,7 @@ public:
     {
         Options() {}
         
-        int nextStepTicks = 60;
+        int nextStepTicks = 15;
         KeyColorConstrainer* keyColourConstrainer = nullptr;
     };
 
@@ -34,11 +34,17 @@ public:
 
     void setOptions(RandomColors::Options newOptions);
 
+    RandomColors::Options getOptions() const;
+
+    const LumatoneLayout& getLastLayout() const { return lastLayout; }
+
 private:
 
     juce::UndoableAction* renderFrame() override;
 
 private:
+
+    juce::Random random;
 
     int ticks = 0;
 
