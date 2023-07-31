@@ -9,7 +9,6 @@
 */
 
 #pragma once
-#include <JuceHeader.h>
 #include "../lumatone_editor_library/actions/edit_actions.h"
 
 class KeyColorConstrainer
@@ -17,7 +16,7 @@ class KeyColorConstrainer
 public:
 
     KeyColorConstrainer() {}
-    ~KeyColorConstrainer() {}
+    virtual ~KeyColorConstrainer() {}
 
     virtual juce::Colour validColour(juce::Colour targetColour, int boardIndex, int keyIndex) 
     { 
@@ -31,9 +30,6 @@ public:
 class LumatoneSandboxGameBase
 {
 public:
-    using OwnedActionPtr = std::unique_ptr<juce::UndoableAction>;
-
-public:
 
     LumatoneSandboxGameBase(LumatoneController* controllerIn);
     virtual ~LumatoneSandboxGameBase() {}
@@ -41,13 +37,13 @@ public:
     virtual void reset(bool clearQueue);
     virtual void nextTick() = 0;
 
-    void readQueue(juce::Array<OwnedActionPtr>& buffer);
+    void readQueue(juce::Array<juce::UndoableAction*>& buffer);
 
 protected:
 
-    virtual OwnedActionPtr renderFrame() = 0;
+    virtual juce::UndoableAction* renderFrame() = 0;
 
-    juce::Array<OwnedActionPtr> queuedActions;
+    juce::OwnedArray<juce::UndoableAction> queuedActions;
 
     LumatoneController* controller;
 };

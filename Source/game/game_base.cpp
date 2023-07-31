@@ -20,18 +20,15 @@ void LumatoneSandboxGameBase::reset(bool clearQueue)
 {
     if (clearQueue)
     {
-        queuedActions.clearQuick();
+        queuedActions.clear();
     }
 }
 
-void LumatoneSandboxGameBase::readQueue(juce::Array<LumatoneSandboxGameBase::OwnedActionPtr>& buffer)
+void LumatoneSandboxGameBase::readQueue(juce::Array<juce::UndoableAction*>& buffer)
 {
-    buffer.clearQuick();
-
     if (queuedActions.size() == 0)
         return;
 
     buffer.addArray(queuedActions);
-    
     queuedActions.clear();
 }

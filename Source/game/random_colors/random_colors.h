@@ -17,14 +17,15 @@ public:
 
     struct Options
     {
+        Options() {}
+        
         int nextStepTicks = 60;
-
         KeyColorConstrainer* keyColourConstrainer = nullptr;
     };
 
 public:
 
-    RandomColors(LumatoneController* controllerIn, RandomColors::Options options = {});
+    RandomColors(LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
     ~RandomColors() {}
 
     void reset(bool clearQueue) override;
@@ -35,7 +36,7 @@ public:
 
 private:
 
-    LumatoneSandboxGameBase::OwnedActionPtr renderFrame() override;
+    juce::UndoableAction* renderFrame() override;
 
 private:
 

@@ -20,7 +20,7 @@ void RandomColors::reset(bool clearQueue)
 {
     if (clearQueue)
     {
-        queuedActions.clearQuick();
+        queuedActions.clear();
 
         if (lastLayout.isEmpty())
             lastLayout = *controller->getMappingData();
@@ -41,14 +41,12 @@ void RandomColors::nextTick()
     reset(false);
 }
 
-LumatoneSandboxGameBase::OwnedActionPtr RandomColors::renderFrame()
+juce::UndoableAction* RandomColors::renderFrame()
 {
     juce::Random random;
 
     int boardIndex = random.nextInt(4);
     int keyIndex = random.nextInt(56);
-
-    const LumatoneKey* currentKey = controller->getKey(boardIndex, keyIndex);
 
     auto colour = juce::Colour(
         random.nextInt(255),
@@ -60,7 +58,7 @@ LumatoneSandboxGameBase::OwnedActionPtr RandomColors::renderFrame()
         colour = keyColorConstrainer->validColour(colour, boardIndex, keyIndex);
 
     auto action = new LumatoneEditAction::SingleNoteAssignAction(controller, boardIndex, keyIndex, colour);
-    return OwnedActionPtr(action);
+    return dynamic_cast<juce::UndoableAction*>(action);
 }
 
 void RandomColors::setOptions(RandomColors::Options newOptions)

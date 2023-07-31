@@ -72,15 +72,15 @@ void LumatoneSandboxGameEngine::timerCallback()
 
     game->nextTick();
 
-    juce::Array<LumatoneSandboxGameBase::OwnedActionPtr> actions;
+    juce::Array<juce::UndoableAction*> actions;
     game->readQueue(actions);
 
     if (actions.size() == 0)
         return;
 
-    juce::UndoableAction* combinedAction = actions[0].get();
+    juce::UndoableAction* combinedAction = actions[0];
     for (int i = 1; i < actions.size(); i++)
-        combinedAction->createCoalescedAction(actions[i].get());
+        combinedAction->createCoalescedAction(actions[i]);
 
     bool performed = controller->performUndoableAction(combinedAction);
 }
