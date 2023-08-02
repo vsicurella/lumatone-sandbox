@@ -5,6 +5,10 @@
   <MAINGROUP id="FFUeXY" name="LumatoneSandbox">
     <GROUP id="{3F4FD429-7D78-0484-6686-93B34AB9D2D5}" name="Source">
       <GROUP id="{FA48A121-9193-CE31-9B55-73AB717D0BC6}" name="lumatone_editor_library">
+        <FILE id="izC62x" name="lumatone_output_map.cpp" compile="1" resource="0"
+              file="Source/lumatone_editor_library/lumatone_output_map.cpp"/>
+        <FILE id="PJFwJH" name="lumatone_output_map.h" compile="0" resource="0"
+              file="Source/lumatone_editor_library/lumatone_output_map.h"/>
         <FILE id="VVBpvO" name="state_base.h" compile="0" resource="0" file="Source/lumatone_editor_library/state_base.h"/>
         <FILE id="XgnhMl" name="state_base.cpp" compile="1" resource="0" file="Source/lumatone_editor_library/state_base.cpp"/>
         <GROUP id="{42EF1356-92B1-C817-F857-4E50A4ED69CE}" name="lumatone_midi_driver">
@@ -119,6 +123,15 @@
                 file="Source/lumatone_editor_library/ImageResampling/ImageResampler.h"/>
           <FILE id="GlkfHc" name="resampler.cpp" compile="1" resource="0" file="Source/lumatone_editor_library/ImageResampling/resampler.cpp"/>
           <FILE id="fM501L" name="resampler.h" compile="0" resource="0" file="Source/lumatone_editor_library/ImageResampling/resampler.h"/>
+        </GROUP>
+        <GROUP id="{70576913-CEE9-9AFF-ACCD-496B9E690318}" name="tuning">
+          <FILE id="OGm4dZ" name="NotationDefinition.cpp" compile="1" resource="0"
+                file="Source/lumatone_editor_library/tuning/NotationDefinition.cpp"/>
+          <FILE id="KM21mV" name="NotationDefinition.h" compile="0" resource="0"
+                file="Source/lumatone_editor_library/tuning/NotationDefinition.h"/>
+          <FILE id="PWRqks" name="NotationTable.cpp" compile="1" resource="0"
+                file="Source/lumatone_editor_library/tuning/NotationTable.cpp"/>
+          <FILE id="hcyddc" name="NotationTable.h" compile="0" resource="0" file="Source/lumatone_editor_library/tuning/NotationTable.h"/>
         </GROUP>
         <FILE id="aOmmj7" name="lumatone_assets.h" compile="1" resource="0"
               file="Source/lumatone_editor_library/lumatone_assets.h"/>
