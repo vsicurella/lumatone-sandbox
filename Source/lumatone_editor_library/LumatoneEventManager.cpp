@@ -40,14 +40,11 @@ void LumatoneEventManager::midiMessageReceived(juce::MidiInput* source, const ju
                 startTimer(bufferReadTimeoutMs);
             }
         }
-        else
-        {
-            // Lumatone midi messages
-        }
     }
-    else
+
+    if (!midiMessage.isSysEx())
     {
-        // regular midi messages
+        processNextMidiEvent(midiMessage);
     }
 }
 

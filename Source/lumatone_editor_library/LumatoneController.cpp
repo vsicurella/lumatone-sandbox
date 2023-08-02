@@ -19,6 +19,9 @@ LumatoneController::LumatoneController(juce::ValueTree state, TerpstraMidiDriver
 {
     reset(bufferReadSize);
     midiDriver.addMessageCollector(this);
+    
+    eventManager = std::make_unique<LumatoneEventManager>(midiDriver, *this);
+    eventManager->addFirmwareListener(this);
 }
 
 LumatoneController::~LumatoneController()
@@ -106,6 +109,14 @@ void LumatoneController::refreshAvailableMidiDevices()
         midiDriver.openAvailableDevicesForTesting();
 }
 
+void LumatoneController::midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage)
+{
+    if (midiMessage.isSysEx())
+    {
+
+    }
+}
+
 void LumatoneController::noAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage)
 {
     if (midiMessage.isSysEx())
@@ -116,6 +127,7 @@ void LumatoneController::noAnswerToMessage(juce::MidiInput* expectedDevice, cons
             statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
     }
 }
+
 
 
 /*
@@ -575,6 +587,16 @@ bool LumatoneController::loadLayoutFromFile(const juce::File& file)
     }
 
     return loaded;
+}
+
+void LumatoneController::addMidiListener(juce::MidiKeyboardStateListener* listener) const
+{
+    eventManager->addListener(listener);
+}
+
+void LumatoneController::removeMidiListener(juce::MidiKeyboardStateListener* listener) const
+{
+    eventManager->removeListener(listener);
 }
 
 

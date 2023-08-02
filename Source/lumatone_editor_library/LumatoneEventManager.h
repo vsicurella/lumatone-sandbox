@@ -10,17 +10,18 @@
 
 #pragma once
 
-#include "LumatoneController.h"
+#include "./lumatone_midi_driver/lumatone_midi_driver.h"
+#include "ApplicationListeners.h"
 
 class LumatoneEventManager : private TerpstraMidiDriver::Collector,
-    private juce::Timer
+                             public juce::MidiKeyboardState,
+                             private juce::Timer
 {
 
 public:
 
     LumatoneEventManager(TerpstraMidiDriver& midiDriver, LumatoneState stateIn);
     ~LumatoneEventManager() override;
-
 
 private:
 

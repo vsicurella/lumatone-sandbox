@@ -13,8 +13,7 @@
 #include "./EditorEmitter.h"
 #include "LumatoneDataStructures.h"
 #include "lumatone_state.h"
-
-#include "./lumatone_midi_driver/lumatone_midi_driver.h"
+#include "LumatoneEventManager.h"
 
 //==============================================================================
 // Helper class for parsing and comparing (todo) firmware versions
@@ -212,7 +211,11 @@ public:
     bool loadLayoutFromFile(const juce::File& file) override;
 
 public:
-    
+
+    void addMidiListener(juce::MidiKeyboardStateListener* listener) const;
+    void removeMidiListener(juce::MidiKeyboardStateListener* listener) const;
+
+public:    
     //============================================================================
     // juce::Timer implementation
 
@@ -221,7 +224,6 @@ public:
     //============================================================================
     // LumatoneEditor::Status Listener implementation
 
-    //void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
 protected:
     //============================================================================
@@ -244,7 +246,8 @@ protected:
     //============================================================================
     // Implementation of TerpstraMidiDriver::Listener
 
-    virtual void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage) override {};
+    virtual void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage) override;
+
     virtual void midiMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage) override {};
     virtual void midiSendQueueSize(int queueSize) override {};
     //virtual void generalLogMessage(juce::String textMessage, HajuErrorVisualizer::ErrorLevel errorLevel) override;
@@ -253,6 +256,8 @@ protected:
 private:
 
     TerpstraMidiDriver&         midiDriver;
+
+    std::unique_ptr<LumatoneEventManager>   eventManager;
 
     juce::CriticalSection       criticalSection;
 
