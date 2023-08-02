@@ -13,6 +13,16 @@ Author:  hsstraub
 #include <JuceHeader.h>
 #include "lumatone_midi_driver/firmware_definitions.h"
 
+struct LumatoneKeyCoord
+{
+	LumatoneKeyCoord(int boardIndexIn = -1, int keyIndexIn = -1)
+		: boardIndex(boardIndexIn)
+		, keyIndex(keyIndexIn) {}
+
+	const int boardIndex;
+	const int keyIndex;
+};
+
 // Mapping of one key
 class LumatoneKey
 {
