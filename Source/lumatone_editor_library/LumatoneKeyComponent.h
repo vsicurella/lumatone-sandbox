@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "LumatoneDataStructures.h"
+#include "./data/lumatone_layout.h"
 #include "ViewComponents.h"
 #include "ImageResampling/ImageResampler.h"
 #include "lumatone_tiling.h"
@@ -49,9 +49,12 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
+    void setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn);
+
     void setLumatoneKey(const LumatoneKey& lumatoneKey, int boardIdx, int keyIdx);
 
-    void setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn);
+    const LumatoneKey* getKeyData() const;
+    juce::Colour getKeyColour() const;
 
     int getBoardIndex() const { return boardIndex; }
     int getKeyIndex() const { return keyIndex; }
@@ -92,9 +95,6 @@ private:
 
     LumatoneKeyDisplay::UiMode uiMode;
     LumatoneKeyDisplay::NoteOffModifier noteOffMode;
-
-    const LumatoneKey* getKeyData() const;
-    juce::Colour getKeyColour() const;
 
     LumatoneKey keyData;
 

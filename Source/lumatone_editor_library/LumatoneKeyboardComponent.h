@@ -11,9 +11,9 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "lumatone_state.h"
 #include "lumatone_assets.h"
-#include "lumatone_midi_state.h"
+#include "./data/lumatone_state.h"
+#include "./data/lumatone_midi_state.h"
 #include "LumatoneKeyComponent.h"
 #include "ApplicationListeners.h"
 #include "lumatone_output_map.h"
@@ -42,6 +42,10 @@ public:
     void completeMappingLoaded(LumatoneLayout mappingData) override;
     void boardChanged(LumatoneBoard boardData) override;
     void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
+
+private:
+
+    void resetLayoutState();
 
 public:
     // Playing mode methods

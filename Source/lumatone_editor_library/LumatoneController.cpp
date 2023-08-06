@@ -117,8 +117,6 @@ Combined (hi-level) commands
 
 void LumatoneController::sendAllParamsOfBoard(int boardIndex, const LumatoneBoard* boardData, bool signalEditorListeners)
 {
-    *getEditBoard(boardIndex) = *boardData;
-
     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
     {
         for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
@@ -144,7 +142,7 @@ void LumatoneController::sendAllParamsOfBoard(int boardIndex, const LumatoneBoar
 
 void LumatoneController::sendCompleteMapping(LumatoneLayout mappingData)
 {
-    for (int boardIndex = 1; boardIndex <= NUMBEROFBOARDS; boardIndex++)
+    for (int boardIndex = 1; boardIndex <= getNumBoards(); boardIndex++)
         sendAllParamsOfBoard(boardIndex, mappingData.getBoard(boardIndex - 1));
 
     editorListeners.call(&LumatoneEditor::EditorListener::completeMappingLoaded, mappingData);
@@ -163,7 +161,7 @@ void LumatoneController::sendGetMappingOfBoardRequest(int boardIndex)
 
 void LumatoneController::sendGetCompleteMappingRequest()
 {
-    for (int boardIndex = 1; boardIndex <= NUMBEROFBOARDS; boardIndex++)
+    for (int boardIndex = 1; boardIndex <= getNumBoards(); boardIndex++)
         sendGetMappingOfBoardRequest(boardIndex);
 }
 

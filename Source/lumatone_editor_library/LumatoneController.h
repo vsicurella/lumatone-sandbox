@@ -11,8 +11,8 @@
 #pragma once
 
 #include "./EditorEmitter.h"
-#include "LumatoneDataStructures.h"
-#include "lumatone_state.h"
+#include "./data/lumatone_layout.h"
+#include "./data/lumatone_state.h"
 #include "LumatoneEventManager.h"
 
 //==============================================================================

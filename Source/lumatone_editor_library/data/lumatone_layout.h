@@ -64,7 +64,7 @@ private:
 	LumatoneBoard boards[MAXNUMBOARDS];
 
 public:
-	LumatoneLayout(int numBoards=5, int octaveBoardSize=56);
+	LumatoneLayout(int numBoards=5, int octaveBoardSize=56, bool initializeWithNotes=false);
 
 	virtual void clearVelocityIntervalTable();
 	virtual void clearAll(bool initializeWithNoteKeyType=false);

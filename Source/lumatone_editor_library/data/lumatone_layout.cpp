@@ -203,11 +203,11 @@ TerpstraKeyMapping class
 ==============================================================================
 */
 
-LumatoneLayout::LumatoneLayout(int numBoardsIn, int octaveBoardSizeIn)
+LumatoneLayout::LumatoneLayout(int numBoardsIn, int octaveBoardSizeIn, bool initWithNotes)
     : numBoards(numBoardsIn)
     , octaveBoardSize(octaveBoardSizeIn)
 {
-    clearAll();
+    clearAll(initWithNotes);
 }
 
 void LumatoneLayout::clearVelocityIntervalTable()

@@ -277,7 +277,7 @@ bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
         juce::StringArray stringArray;
         layoutFile.readLines(stringArray);
 
-        LumatoneLayout newLayout(getNumBoards(), getOctaveBoardSize());
+        LumatoneLayout newLayout(getNumBoards(), getOctaveBoardSize(), true);
         newLayout.fromStringArray(stringArray);
 
         // TODO: something if boards/size don't match?
