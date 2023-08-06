@@ -21,8 +21,10 @@
 /*
 */
 class LumatoneKeyboardComponent : public juce::Component,
+                                  public juce::KeyListener,
                                   public LumatoneEditor::EditorListener,
-                                    public juce::KeyListener
+                                  private juce::MidiKeyboardState,
+                                  private juce::MidiKeyboardState::Listener
 {
 public:
     LumatoneKeyboardComponent(LumatoneState stateIn);
@@ -32,6 +34,11 @@ public:
     void resized() override;
 
     void resetOctaveSize();
+
+    void setRealtimeKeyboardState(juce::MidiKeyboardState* realtimeState);
+
+    void addKeyboardListener(juce::MidiKeyboardState::Listener* keyboardListener);
+    void removeKeyboardListener(juce::MidiKeyboardState::Listener* keyboardListener);
 
 public:
 
@@ -49,6 +56,15 @@ public:
     void sustainStarted();
     void sustainEnded();
 
+public:
+
+    void lumatoneKeyDown(int boardIndex, int keyIndex);
+    void lumatoneKeyUp(int boardIndex, int keyIndex);
+
+protected:
+
+    void handleNoteOn(MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
+    void handleNoteOff(MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
 
 protected:
 
@@ -99,6 +115,8 @@ private:
     //==============================================================================
     // UI Data
 
+    juce::MidiKeyboardState* realtimeKeyboardState = nullptr;
+
     LumatoneKeyDisplay* lastKeyDown = nullptr;
     LumatoneKeyDisplay* lastKeyOver = nullptr;
 
@@ -115,10 +133,6 @@ private:
     //bool upHeld = false;
     //bool downHeld = false;
     //bool leftHeld = false;
-
-    // DEBUG
-    size_t dragsBeforeDebug = 400;
-    size_t drags = 0;
 
     //==============================================================================
     // Style helpers
