@@ -10,46 +10,91 @@
 
 #include "LumatoneKeyComponent.h"
 
-
 //==============================================================================
 
 LumatoneKeyDisplay::LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, LumatoneKey keyDataIn)
-	: Component("AllKeysOverview_Key" + juce::String(newKeyIndex) + "," + juce::String(newBoardIndex))
+    : Component("LumatoneKeyDisplay_" + LumatoneKeyCoord::toString(newBoardIndex, newKeyIndex))
 {
-	// In your constructor, you should add any child components, and
-	// initialise any special settings that your component needs.
-	boardIndex = newBoardIndex;
-	keyIndex = newKeyIndex;
+    uiMode = UiMode::GraphicInteractive;
 
-	keyData = keyDataIn;
-	//	TerpstraSysExApplication::getApp().getLumatoneController()->addMidiListener(this);
+    boardIndex = newBoardIndex;
+    keyIndex = newKeyIndex;
+
+    keyData = keyDataIn;
+    
+    clearUiState();
 }
 
 LumatoneKeyDisplay::~LumatoneKeyDisplay()
 {
-	//	TerpstraSysExApplication::getApp().getLumatoneController()->removeMidiListener(this);
+}
+
+void LumatoneKeyDisplay::setUiMode(LumatoneKeyDisplay::UiMode uiModeIn)
+{
+    uiMode = uiModeIn;
 }
 
 void LumatoneKeyDisplay::paint(juce::Graphics& g)
 {
-	jassert(getParentComponent() != nullptr);
-	bool boardIsSelected = false;// boardIndex == dynamic_cast<AllKeysOverview*>(getParentComponent())->getCurrentSetSelection();
+    const juce::Colour hexagonColour = juce::Colours::slategrey.overlaidWith(getKeyColour());
+    // juce::Colour hexagonColour = findColour(LumatoneKeyEdit::backgroundColourId).overlaidWith(getKeyColour());
+    //if (hexagonColour.getPerceivedBrightness() >= 0.6)
+    //    hexagonColour = hexagonColour.darker((1.0 - hexagonColour.getPerceivedBrightness()));
 
-	juce::Colour hexagonColour = juce::Colours::slategrey.overlaidWith(getKeyColour());
-	// juce::Colour hexagonColour = findColour(LumatoneKeyEdit::backgroundColourId).overlaidWith(getKeyColour());
-	if (hexagonColour.getPerceivedBrightness() >= 0.6)
-		hexagonColour = hexagonColour.darker((1.0 - hexagonColour.getPerceivedBrightness()));
+    // TODO LUMATONE MODELED COLORS
 
-	g.setColour(hexagonColour);
+    // set color
+    juce::Colour c = hexagonColour;
 
-	if (colourGraphic && shadowGraphic)
-	{
-		int x = juce::roundToInt((getWidth() - colourGraphic->getWidth()) * 0.5f);
-		int y = juce::roundToInt((getHeight() - colourGraphic->getHeight()) * 0.5f);
+    switch (uiMode)
+    {
+    default:
+        break;
 
-		g.drawImageAt(*colourGraphic, x, y, true);
-		g.drawImageAt(*shadowGraphic, x, y);
-	}
+    case UiMode::ShapeInteractive:
+    case UiMode::GraphicInteractive:
+        if(isSelected)
+        {
+            c = c.overlaidWith(juce::Colours::slateblue.withAlpha(0.2f));
+        }
+
+        if (isNoteOn || isClicked)
+        {
+            c = hexagonColour.contrasting(0.5f);
+        }
+        else if (mouseIsOver)
+        {
+            c = c.contrasting(0.25f);
+        }
+
+        break;
+    }
+
+    g.setColour(c);
+
+    // draw
+    switch (uiMode)
+    {
+    default:
+        break;
+
+    case UiMode::Shape:
+    case UiMode::ShapeInteractive:
+        break; // TODO
+
+    case UiMode::Graphic:
+    case UiMode::GraphicInteractive:
+    {
+        if (colourGraphic && shadowGraphic)
+        {
+            int x = juce::roundToInt((getWidth() - colourGraphic->getWidth()) * 0.5f);
+            int y = juce::roundToInt((getHeight() - colourGraphic->getHeight()) * 0.5f);
+
+            g.drawImageAt(*colourGraphic, x, y, true);
+            g.drawImageAt(*shadowGraphic, x, y);
+        }
+    }
+    }
 }
 
 void LumatoneKeyDisplay::resized()
@@ -57,106 +102,197 @@ void LumatoneKeyDisplay::resized()
 
 }
 
+void LumatoneKeyDisplay::parentHierarchyChanged()
+{
+    //if (getParentComponent())
+    //{
+    //    removeMouseListener(this);
+    //}
+    //else
+    //{
+    //    addMouseListener(this, true);
+    //}
+}
+
+void LumatoneKeyDisplay::mouseEnter(const juce::MouseEvent& e)
+{
+    mouseIsOver = true;
+    repaintIfInteractive();
+}
+
+void LumatoneKeyDisplay::mouseExit(const juce::MouseEvent& e)
+{
+    mouseIsOver = false;
+    repaintIfInteractive();
+}
+
 void LumatoneKeyDisplay::mouseDown(const juce::MouseEvent& e)
 {
-	Component::mouseDown(e);
+    //DBG("KEY MOUSE DOWN");
+    
+    mouseIsOver = true;
 
-	// Select this octave board
-	jassert(getParentComponent() != nullptr);
-	jassert(getParentComponent()->getParentComponent() != nullptr);
-	//dynamic_cast<MainContentComponent*>(getParentComponent()->getParentComponent())->
-	//	getOctaveBoardSelectorTab()->setCurrentTabIndex(boardIndex);
+    if (e.mods.isRightButtonDown())
+    {
+        // Right mouse click: popup menu
+        //juce::PopupMenu menu;
+        //TerpstraSysExApplication::getApp().getMainMenu()->createEditMenu(menu);
+        //menu.showMenuAsync(PopupMenu::Options());
+    }
 
-	isHighlighted = true;
-	repaint();
+    // TODO integrate interaction through LumatoneController
 
-	if (e.mods.isRightButtonDown())
-	{
-		// Right mouse click: popup menu
-		//juce::PopupMenu menu;
-		//TerpstraSysExApplication::getApp().getMainMenu()->createEditMenu(menu);
-		//menu.showMenuAsync(PopupMenu::Options());
-	}
-
-	// TODO integrate interaction through LumatoneController
-
-	//else
-	//{
-	//	// NoteOn MIDI message
-	//	auto keyData = getKeyData();
-	//	if (keyData != nullptr && keyData->channelNumber > 0)
-	//	{
-	//		if (keyData->keyType == LumatoneKeyType::velocityInterval)
-	//		{
-	//			// Send "note on" event
-	//			//TerpstraSysExApplication::getApp().getMidiDriver().sendNoteOnMessage(keyData->noteNumber, keyData->channelNumber, 60);
-	//		}
-	//		// ToDo if keyType is "continuous controller": send controller event?
-	//	}
-	//}
+    //else
+    //{
+    //    // NoteOn MIDI message
+    //    auto keyData = getKeyData();
+    //    if (keyData != nullptr && keyData->channelNumber > 0)
+    //    {
+    //        if (keyData->keyType == LumatoneKeyType::velocityInterval)
+    //        {
+    //            // Send "note on" event
+    //            //TerpstraSysExApplication::getApp().getMidiDriver().sendNoteOnMessage(keyData->noteNumber, keyData->channelNumber, 60);
+    //        }
+    //        // ToDo if keyType is "continuous controller": send controller event?
+    //    }
+    //}
 }
 
 void LumatoneKeyDisplay::mouseUp(const juce::MouseEvent& e)
 {
-	Component::mouseDown(e);
+    //DBG("KEY MOUSE UP");
+    if (!isMouseOver() && mouseIsOver)
+    {
+        mouseIsOver = false;
+    }
 
-	isHighlighted = false;
-	repaint();
-
-	// TODO integrate interaction through LumatoneController
-
-	//// NoteOff MIDI message
-	//auto keyData = getKeyData();
-	//if (keyData != nullptr && keyData->channelNumber > 0)
-	//{
-	//	if (keyData->keyType == TerpstraKey::velocityInterval)
-	//	{
-	//		// Send "note off" event
-	//		TerpstraSysExApplication::getApp().getMidiDriver().sendNoteOffMessage(keyData->noteNumber, keyData->channelNumber, 60);
-	//	}
-	//}
+    repaintIfInteractive();
 }
 
 //void LumatoneKeyDisplay::handleMidiMessage(const juce::MidiMessage& msg)
 //{
-//	auto keyData = getKeyData();
-//	if (keyData != nullptr && msg.getChannel() == keyData->channelNumber && msg.getNoteNumber() == keyData->noteNumber)
-//	{
-//		isHighlighted = msg.isNoteOn();
-//		repaint();
-//	}
+//    auto keyData = getKeyData();
+//    if (keyData != nullptr && msg.getChannel() == keyData->channelNumber && msg.getNoteNumber() == keyData->noteNumber)
+//    {
+//        isMouseOver = msg.isNoteOn();
+//        repaint();
+//    }
 //}
+
+void LumatoneKeyDisplay::mouseMove(const juce::MouseEvent& e)
+{
+    if (!mouseIsOver)
+    {
+        mouseIsOver = true;
+        repaintIfInteractive();
+    }
+}
+
+void LumatoneKeyDisplay::mouseDrag(const juce::MouseEvent& e)
+{
+    //DBG("KEY DRAG on " + getCoord().toString() + ": " + e.getPosition().toString
+    //mouseDragInternal(e);
+}
+
+void LumatoneKeyDisplay::startDrag()
+{
+    if (!isClicked)
+    {
+        isClicked = true;
+        noteOn();
+        repaintIfInteractive();
+    }
+}
+
+void LumatoneKeyDisplay::endDrag()
+{
+    if (isClicked)
+    {
+        isClicked = false;
+        
+        if (noteOffMode != NoteOffModifier::Sustain)
+        {
+            noteOff();
+            repaintIfInteractive();
+        }
+
+    }
+}
 
 const LumatoneKey* LumatoneKeyDisplay::getKeyData() const
 {
-	//if (boardIndex >= 0 && boardIndex < NUMBEROFBOARDS && keyIndex >= 0 && keyIndex < TerpstraSysExApplication::getApp().getOctaveBoardSize())
-	//{
-	//	jassert(getParentComponent() != nullptr);
-	//	jassert(getParentComponent()->getParentComponent() != nullptr);
-	//	return &dynamic_cast<MainContentComponent*>(getParentComponent()->getParentComponent())
-	//		->getMappingInEdit().sets[boardIndex].theKeys[keyIndex];
-	//}
-
-	return &keyData;
+    return &keyData;
 }
 
 juce::Colour LumatoneKeyDisplay::getKeyColour() const
 {
-	auto keyData = getKeyData();
-	if (keyData != nullptr)
-		return keyData->colour;
-	else
-		// return findColour(LumatoneKeyEdit::backgroundColourId);
-		return juce::Colours::slategrey;
+    auto keyData = getKeyData();
+    if (keyData != nullptr)
+        return keyData->colour;
+    else
+        // return findColour(LumatoneKeyEdit::backgroundColourId);
+        return juce::Colours::slategrey;
 }
 
-void LumatoneKeyDisplay::setLumatoneKey(const LumatoneKey& lumatoneKey)
+void LumatoneKeyDisplay::setLumatoneKey(const LumatoneKey& lumatoneKey, int boardIdx, int keyIdx)
 {
-	keyData = lumatoneKey;
+    keyData = lumatoneKey;
+    boardIndex = boardIdx;
+    keyIndex = keyIdx;
+    repaint();
 }
 
 void LumatoneKeyDisplay::setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn)
 {
-	colourGraphic = &colourGraphicIn;
-	shadowGraphic = &shadowGraphicIn;
+    colourGraphic = &colourGraphicIn;
+    shadowGraphic = &shadowGraphicIn;
+}
+
+void LumatoneKeyDisplay::setSelected(bool selected)
+{
+    isSelected = selected;
+    repaintIfInteractive();
+}
+
+void LumatoneKeyDisplay::clearUiState()
+{
+    isSelected = false;
+    mouseIsOver = false; // mouseMove doesn't fix this atm
+    isNoteOn = false;
+    isClicked = false;
+    repaintIfInteractive();
+}
+
+void LumatoneKeyDisplay::repaintIfInteractive()
+{
+    switch (uiMode)
+    {
+    default:
+        break;
+    case UiMode::ShapeInteractive:
+    case UiMode::GraphicInteractive:
+        if (mouseIsOver != isMouseOver())
+        {
+            mouseIsOver = isMouseOver();
+        }
+
+        repaint();
+        break;
+    }
+}
+
+void LumatoneKeyDisplay::noteOn()
+{
+    isNoteOn = true;
+    isClicked = true;
+
+    repaintIfInteractive();
+}
+
+void LumatoneKeyDisplay::noteOff()
+{
+    isNoteOn = false;
+    isClicked = false;
+
+    repaintIfInteractive();
 }

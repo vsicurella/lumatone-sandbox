@@ -20,41 +20,96 @@
 class LumatoneKeyDisplay : public juce::Component
 {
 public:
-	LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, LumatoneKey keyData=LumatoneKey());
-	~LumatoneKeyDisplay();
 
-	void paint(juce::Graphics&) override;
-	void resized() override;
-	void mouseDown(const juce::MouseEvent& e) override;
-	void mouseUp(const juce::MouseEvent& e) override;
+    enum class UiMode
+    {
+        NoDisplay = -1,
 
-	void setLumatoneKey(const LumatoneKey& lumatoneKey);
+        Shape = 0x000010,
+        ShapeInteractive = 0x000011,
 
-	void setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn);
+        Graphic = 0x000020,
+        GraphicInteractive = 0x000021
+    };
 
-	// Implementation of TerpstraNidiDriver::Listener
-	//void midiMessageReceived(const MidiMessage& midiMessage) override;
-	//void midiMessageSent(const MidiMessage& midiMessage) override {}
-	//void midiSendQueueSize(int queueSize) override {}
-	//void generalLogMessage(String textMessage, HajuErrorVisualizer::ErrorLevel errorLevel) override {}
-	//void handleMidiMessage(const MidiMessage& msg) override;
+    enum class NoteOffModifier
+    {
+        None = 0,
+        Sustain,
+        Legato
+    };
+
+public:
+    LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, LumatoneKey keyData=LumatoneKey());
+    ~LumatoneKeyDisplay();
+
+    LumatoneKeyDisplay::UiMode getUiMode() const { return uiMode; }
+    void setUiMode(LumatoneKeyDisplay::UiMode uiModeIn);
+
+    void paint(juce::Graphics&) override;
+    void resized() override;
+
+    void setLumatoneKey(const LumatoneKey& lumatoneKey, int boardIdx, int keyIdx);
+
+    void setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn);
+
+    int getBoardIndex() const { return boardIndex; }
+    int getKeyIndex() const { return keyIndex; }
+    LumatoneKeyCoord getCoord() const { return LumatoneKeyCoord(boardIndex, keyIndex); }
+
+    void setSelected(bool selected);
+
+    bool selected() const { return isSelected; }
+    bool clicked() const { return isClicked; }
+    bool mouseOver() const { return mouseIsOver; }
+
+    void startDrag();
+    void endDrag();
+    void clearUiState();
+
+    void noteOn();
+    void noteOff();
 
 private:
-	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LumatoneKeyDisplay)
 
-	const LumatoneKey* getKeyData() const;
-	juce::Colour getKeyColour() const;
+    void repaintIfInteractive();
 
-	LumatoneKey keyData;
+public:
 
-	int boardIndex = -1;
-	int keyIndex = -1;
-	bool isHighlighted = false;
+    void parentHierarchyChanged() override;
 
-	juce::Image* colourGraphic = nullptr;
-	juce::Image* shadowGraphic = nullptr;
+    void mouseEnter(const juce::MouseEvent& e) override;
+    void mouseExit(const juce::MouseEvent& e) override;
+    void mouseMove(const juce::MouseEvent& e) override;
+    
+    void mouseDown(const juce::MouseEvent& e) override;
+    void mouseUp(const juce::MouseEvent& e) override;
+    void mouseDrag(const juce::MouseEvent& e) override;
 
-	//DEBUG
-	juce::Colour keyColour;
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LumatoneKeyDisplay)
+
+
+    LumatoneKeyDisplay::UiMode uiMode;
+    LumatoneKeyDisplay::NoteOffModifier noteOffMode;
+
+    const LumatoneKey* getKeyData() const;
+    juce::Colour getKeyColour() const;
+
+    LumatoneKey keyData;
+
+    int boardIndex = -1;
+    int keyIndex = -1;
+
+    bool mouseIsOver = false;
+    bool isSelected = false;
+    bool isClicked = false;
+    bool isNoteOn = false;
+
+    juce::Image* colourGraphic = nullptr;
+    juce::Image* shadowGraphic = nullptr;
+
+    //DEBUG
+    juce::Colour keyColour;
 };
 

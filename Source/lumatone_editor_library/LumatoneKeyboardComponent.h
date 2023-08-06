@@ -21,7 +21,8 @@
 /*
 */
 class LumatoneKeyboardComponent : public juce::Component,
-                                  public LumatoneEditor::EditorListener
+                                  public LumatoneEditor::EditorListener,
+                                    public juce::KeyListener
 {
 public:
     LumatoneKeyboardComponent(LumatoneState stateIn);
@@ -39,7 +40,31 @@ public:
     void boardChanged(LumatoneBoard boardData) override;
     void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
     
+
+public:
+    // Playing mode methods
+    
+    void clearHeldNotes();
+
+    void sustainStarted();
+    void sustainEnded();
+
+
+protected:
+
+    void mouseMove(const juce::MouseEvent& e) override;
+    void mouseDown(const juce::MouseEvent& e) override;
+    void mouseUp(const juce::MouseEvent& e) override;
+    void mouseDrag(const juce::MouseEvent& e) override;
+
 private:
+    bool keyStateChanged(bool isKeyDown) override;
+    bool keyPressed(const juce::KeyPress& key, Component* originatingComponent) override;
+    void modifierKeysChanged(const juce::ModifierKeys& modifiers) override;
+
+private:
+
+    LumatoneKeyDisplay* getKeyFromMouseEvent(const juce::MouseEvent& e);
 
     juce::Image getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight);
 
@@ -68,6 +93,30 @@ private:
     juce::Image keyShadowLayer;
 
     // std::unique_ptr<juce::Label> lblFirmwareVersion;
+
+    //==============================================================================
+    // UI Data
+
+    LumatoneKeyDisplay* lastKeyDown = nullptr;
+    LumatoneKeyDisplay* lastKeyOver = nullptr;
+
+    juce::Array<LumatoneKeyCoord> keysOverPerMouse;
+    juce::Array<LumatoneKeyCoord> keysDownPerMouse; // future compatibility with touchpad
+
+    juce::Array<LumatoneKeyDisplay*> keysOn;
+
+    bool shiftHeld = false;
+    bool altHeld = false;
+    bool ctrlHeld = false;
+
+    //bool rightHeld = false;
+    //bool upHeld = false;
+    //bool downHeld = false;
+    //bool leftHeld = false;
+
+    // DEBUG
+    size_t dragsBeforeDebug = 400;
+    size_t drags = 0;
 
     //==============================================================================
     // Style helpers
