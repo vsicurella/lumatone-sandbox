@@ -9,11 +9,10 @@
 */
 
 #pragma once
-#include "lumatone_state.h"
+#include "./data/lumatone_layout.h"
 
 class LumatoneOutputMap
 {
-
     struct MidiCoord
     {
         MidiCoord(int channelNum = 0, int noteNum = -1)
@@ -25,15 +24,16 @@ class LumatoneOutputMap
 
 public:
 
-    LumatoneOutputMap(LumatoneState stateIn);
+    LumatoneOutputMap(LumatoneLayout* layout=nullptr);
 
     juce::Array<LumatoneKeyCoord> getKeysAssignedToNoteOn(int midiChannel, int noteNumber);
 
-    void renderMap();
+    void render(const LumatoneLayout& layout);
+
+public:
+    static void render(const LumatoneLayout& layout, juce::HashMap<juce::String, juce::Array<LumatoneKeyCoord>>& map);
 
 private:
-
-    LumatoneState state;
 
     juce::HashMap<juce::String, juce::Array<LumatoneKeyCoord>> midiMap;
 };

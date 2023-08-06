@@ -175,7 +175,7 @@ bool SectionEditAction::isValid() const
 
 bool SectionEditAction::perform()
 {
-    if (boardId >= 0 && boardId < NUMBEROFBOARDS)
+    if (boardId >= 0 && boardId < controller->getNumBoards())
     {
         // Send to device
         controller->sendAllParamsOfBoard(boardId, &newData, true);
