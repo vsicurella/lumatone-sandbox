@@ -24,8 +24,8 @@ void RandomColors::reset(bool clearQueue)
     {
         queuedActions.clear();
 
-        if (lastLayout.isEmpty())
-            lastLayout = *controller->getMappingData();
+        if (layoutBeforeStart.isEmpty())
+            layoutBeforeStart = *controller->getMappingData();
     }
 
     ticks = 0;

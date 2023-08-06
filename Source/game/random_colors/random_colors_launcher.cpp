@@ -44,7 +44,7 @@ RandomColorsComponent::RandomColorsComponent(LumatoneSandboxGameEngine* gameEngi
     {
         gameEngine->resetGame();
         auto controller = gameEngine->getController();
-        auto layout = game->getLastLayout();
+        auto layout = game->getLayoutBeforeStart();
         auto resetAction = new LumatoneEditAction::SectionEditAction(controller, 0, *layout.getBoard(0));
         for (int i = 1; i < controller->getNumBoards(); i++)
         {

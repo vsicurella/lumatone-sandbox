@@ -11,7 +11,10 @@
 #include "game_base.h"
 
 LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String actionName)
-    : controller(controllerIn), name(actionName)
+    : LumatoneMidiState(*controllerIn)
+    , controller(controllerIn)
+    , name(actionName)
+    , layoutBeforeStart(controller->getNumBoards(), controller->getOctaveBoardSize())
 {
     reset(true);
 }

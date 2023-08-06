@@ -27,7 +27,8 @@ public:
 };
 
 
-class LumatoneSandboxGameBase
+class LumatoneSandboxGameBase : public LumatoneMidiState, 
+                                public LumatoneMidiState::Listener
 {
 public:
 
@@ -44,13 +45,19 @@ public:
 
     juce::String getName() const { return name; }
 
+    const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
+
 protected:
+
+    LumatoneLayout layoutBeforeStart;
 
     virtual juce::UndoableAction* renderFrame() = 0;
 
     juce::OwnedArray<juce::UndoableAction> queuedActions;
 
     LumatoneController* controller;
+
+
 
 private:
 

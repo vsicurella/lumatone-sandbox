@@ -36,8 +36,6 @@ public:
 
     RandomColors::Options getOptions() const;
 
-    const LumatoneLayout& getLastLayout() const { return lastLayout; }
-
 private:
 
     juce::UndoableAction* renderFrame() override;
@@ -47,8 +45,6 @@ private:
     juce::Random random;
 
     int ticks = 0;
-
-    LumatoneLayout lastLayout;
 
     // Options
     int nextStepTicks = 60;
