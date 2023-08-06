@@ -14,16 +14,16 @@
 
 class NotationTable
 {
-    Font accidentalsFont;
+    juce::Font accidentalsFont;
     
     juce::Array<juce::String> degreeNominals;
     juce::Array<juce::String> degreeAccidentals;
 
 public:
 
-    NotationTable(juce::Array<juce::String> degreeNominalsIn, juce::Array<juce::String> degreeAccidentalsIn, Font accidentalsFontIn = Font());
+    NotationTable(juce::Array<juce::String> degreeNominalsIn, juce::Array<juce::String> degreeAccidentalsIn, juce::Font accidentalsFontIn = juce::Font());
 
-    Font getAccidentalsFont() const { return accidentalsFont; };
+    juce::Font getAccidentalsFont() const { return accidentalsFont; };
 
     juce::String getNoteNominal(int scaleDegree) const;
 

@@ -56,7 +56,7 @@ public:
         juce::Array<int> degreeToNominals,
         juce::Array<juce::String> accidentalsIn,
         juce::Array<int> degreeToAccidentals,
-        Font accidentalFontIn = Font()
+        juce::Font accidentalFontIn = juce::Font()
     );
 
     // Use generic nominals starting on A
@@ -65,7 +65,7 @@ public:
         juce::Array<int> degreeToNominalsIn,
         juce::Array<juce::String> accidentals,
         juce::Array<int> degreeToAccidentalsIn,
-        Font accidentalFontIn = Font()
+        juce::Font accidentalFontIn = juce::Font()
     );
 
     bool hasError() const { return error.isNotEmpty(); }

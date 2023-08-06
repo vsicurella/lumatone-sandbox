@@ -10,8 +10,6 @@
 
 #include "NotationDefinition.h"
 
-
-
 NotationDefinition::NotationDefinition(
     int size,
     juce::Array<juce::String> nominalsIn,
@@ -29,7 +27,7 @@ NotationDefinition::NotationDefinition(
     juce::Array<int> degreeToNominalsIn,
     juce::Array<juce::String> accidentals,
     juce::Array<int> degreeToAccidentalsIn,
-    Font accidentalFontIn
+    juce::Font accidentalFontIn
 ) : scaleSize(size), accidentalFont(accidentalFontIn)
 {
     initializeLabels(degreeToNominalsIn, accidentals, degreeToAccidentalsIn);
@@ -54,7 +52,7 @@ bool NotationDefinition::validateNominalMapping(const juce::Array<juce::String>&
         }
         else if (index < 0)
         {
-            error = juce::String("Degree") + juce::String(i) + " has invalid nominal index " + String(index);
+            error = juce::String("Degree") + juce::String(i) + " has invalid nominal index " + juce::String(index);
             return false;
         }
 
@@ -81,7 +79,7 @@ bool NotationDefinition::validateAccidentalMapping(const juce::Array<juce::Strin
         }
         else if (index < 0)
         {
-            error = juce::String("Degree") + juce::String(i) + " has invalid accidental index " + String(index);
+            error = juce::String("Degree") + juce::String(i) + " has invalid accidental index " + juce::String(index);
             return false;
         }
 
@@ -122,7 +120,7 @@ void NotationDefinition::initializeLabels(
 )
 {
     // For now just make a list of the 26 latin letters
-    auto alphabet = juce::Array<String>();
+    auto alphabet = juce::Array<juce::String>();
     for (int i = 0; i < 26; i++)
     {
         char ch = i + 26;
