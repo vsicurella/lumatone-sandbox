@@ -13,8 +13,10 @@
 #include <JuceHeader.h>
 #include "lumatone_state.h"
 #include "lumatone_assets.h"
+#include "lumatone_midi_state.h"
 #include "LumatoneKeyComponent.h"
 #include "ApplicationListeners.h"
+#include "lumatone_output_map.h"
 
 
 //==============================================================================
@@ -23,8 +25,8 @@
 class LumatoneKeyboardComponent : public juce::Component,
                                   public juce::KeyListener,
                                   public LumatoneEditor::EditorListener,
-                                  private juce::MidiKeyboardState,
-                                  private juce::MidiKeyboardState::Listener
+                                  public LumatoneMidiState,
+                                  public LumatoneMidiState::Listener
 {
 public:
     LumatoneKeyboardComponent(LumatoneState stateIn);
@@ -35,18 +37,11 @@ public:
 
     void resetOctaveSize();
 
-    void setRealtimeKeyboardState(juce::MidiKeyboardState* realtimeState);
-
-    void addKeyboardListener(juce::MidiKeyboardState::Listener* keyboardListener);
-    void removeKeyboardListener(juce::MidiKeyboardState::Listener* keyboardListener);
-
 public:
-
     // LumatoneEditor::EditorListener Implementation
     void completeMappingLoaded(LumatoneLayout mappingData) override;
     void boardChanged(LumatoneBoard boardData) override;
     void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
-    
 
 public:
     // Playing mode methods
@@ -56,18 +51,15 @@ public:
     void sustainStarted();
     void sustainEnded();
 
-public:
-
     void lumatoneKeyDown(int boardIndex, int keyIndex);
     void lumatoneKeyUp(int boardIndex, int keyIndex);
 
+private:
+    // Playing mode implementations
+    void showKeyDown(int boardIndex, int keyIndex, bool keyIsDown);
+
 protected:
-
-    void handleNoteOn(MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
-    void handleNoteOff(MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity) override;
-
-protected:
-
+    // juce::Component UI implementations
     void mouseMove(const juce::MouseEvent& e) override;
     void mouseDown(const juce::MouseEvent& e) override;
     void mouseUp(const juce::MouseEvent& e) override;
@@ -79,14 +71,26 @@ private:
     void modifierKeysChanged(const juce::ModifierKeys& modifiers) override;
 
 private:
+    // LumatoneMidiState implementations (note callbacks)
+    void noteOnInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void noteOffInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity) override;
+
+private:
+    // LumatoneMidiState::Listener implementations
+
+    void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) override;
+    void handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch) override;
+    void handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 value) override;
+
+
+private:
 
     LumatoneKeyDisplay* getKeyFromMouseEvent(const juce::MouseEvent& e);
 
     juce::Image getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight);
 
 private:
-
-    LumatoneState state;
 
     struct OctaveBoard
     {
@@ -101,8 +105,9 @@ private:
     int currentSetSelection;
 
     // Geometry settings
-    LumatoneGeometry        lumatoneGeometry;
-    LumatoneTiling   tilingGeometry;
+    LumatoneGeometry    lumatoneGeometry;
+    LumatoneTiling      tilingGeometry;
+    LumatoneOutputMap   lumatoneMidiMap;
 
     int graphicWidthUsed = 0;
     int graphicHeightUsed = 0;
@@ -117,8 +122,8 @@ private:
 
     juce::MidiKeyboardState* realtimeKeyboardState = nullptr;
 
-    LumatoneKeyDisplay* lastKeyDown = nullptr;
-    LumatoneKeyDisplay* lastKeyOver = nullptr;
+    LumatoneKeyDisplay* lastMouseKeyDown = nullptr;
+    LumatoneKeyDisplay* lastMouseKeyOver = nullptr;
 
     juce::Array<LumatoneKeyCoord> keysOverPerMouse;
     juce::Array<LumatoneKeyCoord> keysDownPerMouse; // future compatibility with touchpad

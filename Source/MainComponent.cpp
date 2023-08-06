@@ -9,9 +9,10 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
     addAndMakeVisible(*connectionStatus);
     
     lumatoneComponent = std::make_unique<LumatoneKeyboardComponent>((LumatoneState)*controller);
-    lumatoneComponent->setRealtimeKeyboardState(controller->getRealtimeKeyboardState());
-    controller->addEditorListener(lumatoneComponent.get());
     addAndMakeVisible(*lumatoneComponent);
+
+    controller->addEditorListener(lumatoneComponent.get());
+    controller->addMidiListener(lumatoneComponent.get());
 
     connectionStatus->handleStatus(ConnectionState::DISCONNECTED);
 

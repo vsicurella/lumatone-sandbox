@@ -589,19 +589,14 @@ bool LumatoneController::loadLayoutFromFile(const juce::File& file)
     return loaded;
 }
 
-//void LumatoneController::addMidiListener(juce::MidiKeyboardStateListener* listener) const
-//{
-//    eventManager->addListener(listener);
-//}
-//
-//void LumatoneController::removeMidiListener(juce::MidiKeyboardStateListener* listener) const
-//{
-//    eventManager->removeListener(listener);
-//}
-
-juce::MidiKeyboardState* LumatoneController::getRealtimeKeyboardState() const
+void LumatoneController::addMidiListener(LumatoneMidiState::Listener* listener)
 {
-    return (juce::MidiKeyboardState*)eventManager.get();
+    eventManager->addListener(listener);
+}
+
+void LumatoneController::removeMidiListener(LumatoneMidiState::Listener* listener)
+{
+    eventManager->removeListener(listener);
 }
 
 

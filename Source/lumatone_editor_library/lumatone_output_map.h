@@ -27,7 +27,6 @@ public:
 
     LumatoneOutputMap(LumatoneState stateIn);
 
-
     juce::Array<LumatoneKeyCoord> getKeysAssignedToNoteOn(int midiChannel, int noteNumber);
 
     void renderMap();

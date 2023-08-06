@@ -12,9 +12,10 @@
 
 #include "./lumatone_midi_driver/lumatone_midi_driver.h"
 #include "ApplicationListeners.h"
+#include "lumatone_midi_state.h"
 
 class LumatoneEventManager : private TerpstraMidiDriver::Collector,
-                             public juce::MidiKeyboardState,
+                             public LumatoneMidiState,
                              private juce::Timer
 {
 
@@ -116,7 +117,6 @@ private:
 private:
 
     TerpstraMidiDriver&         midiDriver;
-    LumatoneState               state;
 
     FirmwareSupport             firmwareSupport;
 

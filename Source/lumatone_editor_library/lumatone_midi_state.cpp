@@ -31,21 +31,6 @@ void LumatoneMidiState::reset()
     eventsToAdd.clear();
 }
 
-bool LumatoneMidiState::isNoteOn(int midiChannel, int midiNoteNumber) const noexcept
-{
-    return juce::MidiKeyboardState::isNoteOn(midiChannel, midiNoteNumber);
-}
-
-bool LumatoneMidiState::isNoteOnForChannels(int midiChannelMask, int midiNoteNumber) const noexcept 
-{ 
-    return juce::MidiKeyboardState::isNoteOnForChannels(midiChannelMask, midiNoteNumber);
-}
-
-void LumatoneMidiState::allNotesOff(int midiChannel) 
-{ 
-    return juce::MidiKeyboardState::allNotesOff(midiChannel); 
-}
-
 void LumatoneMidiState::processNextMidiEvent(const juce::MidiMessage& message)
 {
     if (message.isNoteOn())
@@ -176,26 +161,28 @@ void LumatoneMidiState::removeListener(LumatoneMidiState::Listener* listener)
 void LumatoneMidiState::noteOnInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity)
 {
     juce::MidiKeyboardState::processNextMidiEvent(msg);
+
     velocityStates[midiChannel - 1][midiNote] = velocity;
-    midiListeners.call(&LumatoneMidiState::Listener::handleKeyDown, midiChannel, midiNote, velocity);
+    midiListeners.call(&LumatoneMidiState::Listener::handleNoteOn, this, midiChannel, midiNote, velocity);
 }
 
 void LumatoneMidiState::noteOffInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity)
 {
     juce::MidiKeyboardState::processNextMidiEvent(msg);
+
     velocityStates[midiChannel - 1][midiNote] = velocity;
-    midiListeners.call(&LumatoneMidiState::Listener::handleKeyUp, midiChannel, midiNote, velocity);
+    midiListeners.call(&LumatoneMidiState::Listener::handleNoteOff, this,  midiChannel, midiNote);
 }
 
 void LumatoneMidiState::aftertouchInternal(int midiChannel, int midiNote, juce::uint8 aftertouch)
 {
     aftertouchStates[midiChannel - 1][midiNote] = aftertouch;
-    midiListeners.call(&LumatoneMidiState::Listener::handleAftertouch, midiChannel, midiNote, aftertouch);
+    midiListeners.call(&LumatoneMidiState::Listener::handleAftertouch, this, midiChannel, midiNote, aftertouch);
 }
 
 void LumatoneMidiState::controllerInternal(int midiChannel, int midiNote, juce::uint8 value)
 {
     controllerStates[midiChannel - 1][midiNote] = value;
-    midiListeners.call(&LumatoneMidiState::Listener::handleController, midiChannel, midiNote, value);
+    midiListeners.call(&LumatoneMidiState::Listener::handleController, this, midiChannel, midiNote, value);
 }
 

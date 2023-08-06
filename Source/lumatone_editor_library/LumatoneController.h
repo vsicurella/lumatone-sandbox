@@ -212,10 +212,9 @@ public:
 
 public:
 
-    //void addMidiListener(juce::MidiKeyboardStateListener* listener) const;
-    //void removeMidiListener(juce::MidiKeyboardStateListener* listener) const;
+    void addMidiListener(LumatoneMidiState::Listener* listener);
+    void removeMidiListener(LumatoneMidiState::Listener* listener);
 
-    juce::MidiKeyboardState* getRealtimeKeyboardState() const;
 
 public:    
     //============================================================================

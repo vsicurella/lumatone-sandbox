@@ -12,7 +12,8 @@
 
 
 LumatoneEventManager::LumatoneEventManager(TerpstraMidiDriver& midiDriverIn, LumatoneState stateIn)
-    : midiDriver(midiDriverIn), state(stateIn)
+    : LumatoneMidiState(stateIn)
+    , midiDriver(midiDriverIn)
 {
 
 }

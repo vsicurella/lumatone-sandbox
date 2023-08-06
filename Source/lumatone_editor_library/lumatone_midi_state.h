@@ -43,11 +43,10 @@ public:
     public:
         virtual ~Listener() {}
 
-        void handleKeyDown(/*LumatoneKey key, LumatoneKeyCoord keyCoord, */int midiChannel, int midiNote, juce::uint8 velocity) {}
-        void handleKeyUp(/*LumatoneKey, LumatoneKeyCoord keyCoord, */int midiChannel, int midiNote) {}
-        void handleAftertouch(/*LumatoneKey key, */juce::uint8 aftertouch) {}
-        //void handleLumatouch(LumatoneKey key, juce::uint8 aftertouch, juce::uint8 lumatouch) {}
-        void handleController(/*LumatoneKey key, */juce::uint8 controller) {}
+        virtual void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) {}
+        virtual void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) {}
+        virtual void handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch) {}
+        virtual void handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 controller) {}
     };
 
 public:
@@ -56,13 +55,13 @@ public:
 private:
     juce::ListenerList<Listener> midiListeners;
 
-private:
+protected:
 
-    void noteOnInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity);
-    void noteOffInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity);
-    void aftertouchInternal(int midiChannel, int midiNote, juce::uint8 aftertouch);
-    //void lumatouchInternal(int midiChannel, int midiNote, juce::uint8 lumatouch);
-    void controllerInternal(int midiChannel, int midiNote, juce::uint8 value);
+    virtual void noteOnInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity);
+    virtual void noteOffInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity);
+    virtual void aftertouchInternal(int midiChannel, int midiNote, juce::uint8 aftertouch);
+    // virtual void lumatouchInternal(int midiChannel, int midiNote, juce::uint8 lumatouch);
+    virtual void controllerInternal(int midiChannel, int midiNote, juce::uint8 value);
 
 protected:
     LumatoneState state;

@@ -11,7 +11,7 @@
 #include "LumatoneKeyboardComponent.h"
 
 LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneState stateIn)
-    : state(stateIn)
+    : LumatoneMidiState(stateIn), lumatoneMidiMap(stateIn)
 {
     resetOctaveSize();
     addMouseListener(this, this);
@@ -142,23 +142,6 @@ void LumatoneKeyboardComponent::resetOctaveSize()
     }
 }
 
-void LumatoneKeyboardComponent::setRealtimeKeyboardState(juce::MidiKeyboardState* realtimeState)
-{
-    realtimeKeyboardState = realtimeState;
-    realtimeKeyboardState->addListener(this);
-}
-
-void LumatoneKeyboardComponent::addKeyboardListener(juce::MidiKeyboardState::Listener* keyboardListener)
-{
-    juce::MidiKeyboardState::addListener(keyboardListener);
-}
-
-void LumatoneKeyboardComponent::removeKeyboardListener(juce::MidiKeyboardState::Listener* keyboardListener)
-{
-    juce::MidiKeyboardState::removeListener(keyboardListener);
-}
-
-
 void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData)
 {
     for (int boardIndex = 0; boardIndex < octaveBoards.size(); boardIndex++)
@@ -172,6 +155,8 @@ void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData
             key->repaint();
         }
     }
+
+    lumatoneMidiMap.renderMap();
 }
 
 void LumatoneKeyboardComponent::boardChanged(LumatoneBoard boardData)
@@ -184,6 +169,8 @@ void LumatoneKeyboardComponent::boardChanged(LumatoneBoard boardData)
         key->setLumatoneKey(boardData.theKeys[keyIndex], boardData.board_idx, keyIndex);
         key->repaint();
     }
+
+    lumatoneMidiMap.renderMap();
 }
 
 void LumatoneKeyboardComponent::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
@@ -191,6 +178,8 @@ void LumatoneKeyboardComponent::keyChanged(int boardIndex, int keyIndex, Lumaton
     auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
     key->setLumatoneKey(lumatoneKey, boardIndex, keyIndex);
     key->repaint();
+
+    lumatoneMidiMap.renderMap();
 }
 
 
@@ -233,8 +222,7 @@ void LumatoneKeyboardComponent::lumatoneKeyDown(int boardIndex, int keyIndex)
             break;
         }
 
-        auto keyComponent = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
-        keyComponent->noteOn();
+        showKeyDown(boardIndex, keyIndex, true);
     }
 }
 
@@ -248,33 +236,25 @@ void LumatoneKeyboardComponent::lumatoneKeyUp(int boardIndex, int keyIndex)
         switch (keyData->keyType)
         {
         case LumatoneKeyType::noteOnNoteOff:
-            noteOn(keyData->channelNumber, keyData->noteNumber, (juce::uint8)0x127);
+            noteOff(keyData->channelNumber, keyData->noteNumber, 0);
             break;
         default:
             break;
         }
 
-        auto keyComponent = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
+        showKeyDown(boardIndex, keyIndex, false);
+    }
+}
+
+void LumatoneKeyboardComponent::showKeyDown(int boardIndex, int keyIndex, bool keyIsDown)
+{
+    auto keyComponent = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
+
+    if (keyIsDown)
+        keyComponent->noteOn();
+    else
         keyComponent->noteOff();
-    }
 }
-
-void LumatoneKeyboardComponent::handleNoteOn(MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity)
-{
-    if (source != realtimeKeyboardState)
-    {
-        
-    }
-}
-
-void LumatoneKeyboardComponent::handleNoteOff(MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity)
-{
-    if (source != realtimeKeyboardState)
-    {
-
-    }
-}
-
 
 juce::Image LumatoneKeyboardComponent::getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight)
 {
@@ -327,7 +307,7 @@ void LumatoneKeyboardComponent::mouseDown(const juce::MouseEvent& e)
     {
 
         lumatoneKeyDown(key->getBoardIndex(), key->getKeyIndex());
-        lastKeyDown = key;
+        lastMouseKeyDown = key;
 
         keysDownPerMouse.set(e.source.getIndex(), key->getCoord());
         keysOn.addIfNotAlreadyThere(key);
@@ -340,10 +320,10 @@ void LumatoneKeyboardComponent::mouseUp(const juce::MouseEvent& e)
     {
         
     }
-    else if (lastKeyDown)
+    else if (lastMouseKeyDown)
     {
-        lumatoneKeyUp(lastKeyDown->getBoardIndex(), lastKeyDown->getKeyIndex());
-        keysOn.removeFirstMatchingValue(lastKeyDown);
+        lumatoneKeyUp(lastMouseKeyDown->getBoardIndex(), lastMouseKeyDown->getKeyIndex());
+        keysOn.removeFirstMatchingValue(lastMouseKeyDown);
     }
 
     keysDownPerMouse.set(e.source.getIndex(), LumatoneKeyCoord());
@@ -386,8 +366,8 @@ void LumatoneKeyboardComponent::mouseDrag(const juce::MouseEvent& e)
         key->startDrag();
         keysOn.addIfNotAlreadyThere(key);
 
-        lastKeyOver = key;
-        lastKeyDown = key;
+        lastMouseKeyOver = key;
+        lastMouseKeyDown = key;
     }
     else if (!e.mods.isShiftDown())
     {
@@ -493,3 +473,50 @@ void LumatoneKeyboardComponent::modifierKeysChanged(const juce::ModifierKeys& mo
     //    ctrlHeld = false;
     //}
 }
+
+void LumatoneKeyboardComponent::noteOnInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity)
+{
+    LumatoneMidiState::noteOnInternal(msg, midiChannel, midiNote, velocity);
+    handleNoteOn(nullptr, midiChannel, midiNote, velocity);
+}
+
+void LumatoneKeyboardComponent::noteOffInternal(const juce::MidiMessage& msg, int midiChannel, int midiNote, juce::uint8 velocity)
+{
+    LumatoneMidiState::noteOffInternal(msg, midiChannel, midiNote, velocity);
+    handleNoteOff(nullptr, midiChannel, midiNote);
+}
+
+void LumatoneKeyboardComponent::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity)
+{
+    auto mappedKeyCoords = lumatoneMidiMap.getKeysAssignedToNoteOn(midiChannel, midiNote);
+    for (auto coord : mappedKeyCoords)
+    {
+        if (state.isKeyCoordValid(coord))
+        {
+            showKeyDown(coord.boardIndex, coord.keyIndex, true);
+        }
+    }
+}
+
+void LumatoneKeyboardComponent::handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote)
+{
+    auto mappedKeyCoords = lumatoneMidiMap.getKeysAssignedToNoteOn(midiChannel, midiNote);
+    for (auto coord : mappedKeyCoords)
+    {
+        if (state.isKeyCoordValid(coord))
+        {
+            showKeyDown(coord.boardIndex, coord.keyIndex, false);
+        }
+    }
+}
+
+void LumatoneKeyboardComponent::handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch)
+{
+
+}
+
+void LumatoneKeyboardComponent::handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 value)
+{
+
+}
+
