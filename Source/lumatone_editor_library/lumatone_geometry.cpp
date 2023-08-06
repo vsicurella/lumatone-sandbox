@@ -1,14 +1,14 @@
 /*
   ==============================================================================
 
-    BoardGeometry.cpp
+    lumatone_geometry.cpp
     Created: 9 May 2016 9:04:35pm
     Author:  hsstraub
 
   ==============================================================================
 */
 
-#include "BoardGeometry.h"
+#include "lumatone_geometry.h"
 #include "LumatoneDataStructures.h"
 
 

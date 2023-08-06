@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    BoardGeometry.h
+    lumatone_geometry.h
     Created: 9 May 2016 9:04:35pm
     Author:  hsstraub
 

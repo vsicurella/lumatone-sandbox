@@ -84,7 +84,9 @@ private:
     int currentOctaveSize = 0;
     int currentSetSelection;
 
-    HexagonTilingGeometry tilingGeometry;
+    // Geometry settings
+    LumatoneGeometry        lumatoneGeometry;
+    LumatoneTiling   tilingGeometry;
 
     int graphicWidthUsed = 0;
     int graphicHeightUsed = 0;
@@ -161,9 +163,6 @@ private:
     juce::Point<float>  oct1Key1;
     juce::Point<float> oct1Key56;
     juce::Point<float>  oct5Key7;
-
-    // Geometry settings
-    LumatoneGeometry    lumatoneGeometry;
 
     //[/UserVariables]
 

@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    HexagonTilingGeometry.h
+    LumatoneTiling.h
     Created: 6 Jan 2021 11:42:30pm
     Author:  Vincenzo
 
@@ -9,7 +9,7 @@
 */
 
 #pragma once
-#include "BoardGeometry.h"
+#include "lumatone_geometry.h"
 #include "LumatoneDataStructures.h"
 
 //==============================================================================
@@ -19,14 +19,14 @@
 
 #define LATERALRADIUSRATIO   0.8660254037844 // sqrt(3) / 2, proportional to radius, the length between the center and a vertex)
 
-class HexagonTilingGeometry
+class LumatoneTiling
 {
 public:
 
 	/// <summary>
 	/// Creates a basic hexagon tiling with a 1x1 bounding box set at (0, 0)
 	/// </summary>
-	HexagonTilingGeometry() {};
+	LumatoneTiling() {};
 
 	void setRadius(double radiusIn) { radius = radiusIn; }
 

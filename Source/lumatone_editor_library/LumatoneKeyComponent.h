@@ -14,7 +14,7 @@
 #include "LumatoneDataStructures.h"
 #include "ViewComponents.h"
 #include "ImageResampling/ImageResampler.h"
-#include "HexagonTilingGeometry.h"
+#include "lumatone_tiling.h"
 
 // Representation of a key inside the overview
 class LumatoneKeyDisplay : public juce::Component

@@ -10,7 +10,7 @@
 
 #pragma once
 #include "./hex_field.h"
-#include "../lumatone_editor_library/BoardGeometry.h"
+#include "../lumatone_editor_library/lumatone_geometry.h"
 #include "../lumatone_editor_library/lumatone_state.h"
 
 class LumatoneHexMap

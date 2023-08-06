@@ -133,22 +133,23 @@
                 file="Source/lumatone_editor_library/tuning/NotationTable.cpp"/>
           <FILE id="hcyddc" name="NotationTable.h" compile="0" resource="0" file="Source/lumatone_editor_library/tuning/NotationTable.h"/>
         </GROUP>
+        <FILE id="fGZzxB" name="lumatone_geometry.h" compile="0" resource="0"
+              file="Source/lumatone_editor_library/lumatone_geometry.h"/>
+        <FILE id="IQrEcV" name="lumatone_tiling.h" compile="0" resource="0"
+              file="Source/lumatone_editor_library/lumatone_tiling.h"/>
+        <FILE id="gVhj09" name="lumatone_tiling.cpp" compile="1" resource="0"
+              file="Source/lumatone_editor_library/lumatone_tiling.cpp"/>
+        <FILE id="ukD8ia" name="lumatone_geometry.cpp" compile="1" resource="0"
+              file="Source/lumatone_editor_library/lumatone_geometry.cpp"/>
         <FILE id="aOmmj7" name="lumatone_assets.h" compile="1" resource="0"
               file="Source/lumatone_editor_library/lumatone_assets.h"/>
         <FILE id="FmXi4D" name="ApplicationListeners.h" compile="0" resource="0"
               file="Source/lumatone_editor_library/ApplicationListeners.h"/>
-        <FILE id="jUF4rV" name="BoardGeometry.cpp" compile="1" resource="0"
-              file="Source/lumatone_editor_library/BoardGeometry.cpp"/>
-        <FILE id="HmH9w2" name="BoardGeometry.h" compile="0" resource="0" file="Source/lumatone_editor_library/BoardGeometry.h"/>
         <FILE id="R9pmDA" name="DeviceActivityMonitor.cpp" compile="1" resource="0"
               file="Source/lumatone_editor_library/DeviceActivityMonitor.cpp"/>
         <FILE id="qEOASO" name="DeviceActivityMonitor.h" compile="0" resource="0"
               file="Source/lumatone_editor_library/DeviceActivityMonitor.h"/>
         <FILE id="ry018e" name="EditorEmitter.h" compile="0" resource="0" file="Source/lumatone_editor_library/EditorEmitter.h"/>
-        <FILE id="OpK1DO" name="HexagonTilingGeometry.cpp" compile="1" resource="0"
-              file="Source/lumatone_editor_library/HexagonTilingGeometry.cpp"/>
-        <FILE id="KVQEp3" name="HexagonTilingGeometry.h" compile="0" resource="0"
-              file="Source/lumatone_editor_library/HexagonTilingGeometry.h"/>
         <FILE id="y4PUz4" name="lumatone_state.cpp" compile="1" resource="0"
               file="Source/lumatone_editor_library/lumatone_state.cpp"/>
         <FILE id="TcE06C" name="lumatone_state.h" compile="0" resource="0"
