@@ -74,6 +74,8 @@ public:
     const LumatoneBoard* getBoard(int boardIndex) const;
     const LumatoneKey* getKey(int boardIndex, int keyIndex) const;
 
+    bool isKeyCoordValid(const LumatoneKeyCoord& coord) const;
+
     const FirmwareSupport& getFirmwareSupport() const;
 
     bool getInvertExpression() const { return invertExpression; }

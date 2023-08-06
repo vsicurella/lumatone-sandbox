@@ -198,6 +198,13 @@ const LumatoneKey* LumatoneState::getKey(int boardIndex, int keyIndex) const
     return &mappingData->readBoard(boardIndex)->theKeys[keyIndex];
 }
 
+bool LumatoneState::isKeyCoordValid(const LumatoneKeyCoord& coord) const
+{
+    return coord.isInitialized()
+        && coord.boardIndex < getNumBoards()
+        && coord.keyIndex < getOctaveBoardSize();
+}
+
 LumatoneBoard* LumatoneState::getEditBoard(int boardIndex)
 {
     return mappingData->getBoard(boardIndex);

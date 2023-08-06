@@ -19,8 +19,16 @@ struct LumatoneKeyCoord
 		: boardIndex(boardIndexIn)
 		, keyIndex(keyIndexIn) {}
 
-	const int boardIndex;
-	const int keyIndex;
+	int boardIndex = - 1;
+	int keyIndex = -1;
+
+	bool isInitialized() const { return boardIndex >= 0 && keyIndex >= 0; }
+
+	bool operator==(const LumatoneKeyCoord& coord) const { return keyIndex == coord.keyIndex && boardIndex == coord.boardIndex; }
+	bool operator!=(const LumatoneKeyCoord& coord) const { return keyIndex != coord.keyIndex || boardIndex != coord.boardIndex; }
+
+	static juce::String toString(int board, int key) { return juce::String(board) + "," + juce::String(key); }
+	juce::String toString() { return LumatoneKeyCoord::toString(boardIndex, keyIndex); }
 };
 
 // Mapping of one key
