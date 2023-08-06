@@ -24,8 +24,7 @@ class LumatoneController :  public LumatoneState,
                             public LumatoneEditor::StatusListener,
                             public LumatoneEditor::StatusEmitter,
                             public LumatoneEditor::EditorEmitter,
-                            protected LumatoneEditor::FirmwareListener,
-                            private juce::Timer
+                            protected LumatoneEditor::FirmwareListener
 {
 public:
 
@@ -65,6 +64,7 @@ public:
 
     void connectionLost() override;
 
+public:
     //============================================================================
     // Combined (hi-level) commands
 
@@ -215,17 +215,6 @@ public:
     void addMidiListener(LumatoneMidiState::Listener* listener);
     void removeMidiListener(LumatoneMidiState::Listener* listener);
 
-
-public:    
-    //============================================================================
-    // juce::Timer implementation
-
-    void timerCallback() override {};
-    
-    //============================================================================
-    // LumatoneEditor::Status Listener implementation
-
-
 protected:
     //============================================================================
     // LumatoneEditor::FirmwareListener implementation
@@ -256,23 +245,19 @@ protected:
     
 private:
 
-    TerpstraMidiDriver&         midiDriver;
+    TerpstraMidiDriver& midiDriver;
 
     std::unique_ptr<LumatoneEventManager>   eventManager;
 
-    juce::CriticalSection       criticalSection;
+    const int bufferReadTimeoutMs = 30;
+    const int bufferReadSize = 16;
+    bool      bufferReadRequested = false;
 
-    HajuErrorVisualizerPlaceholder     errorVisualizer;
+    std::atomic<int>    readQueueSize;
+    int                 sendQueueSize = 0;
 
-    const int                   bufferReadTimeoutMs = 30;
-    const int                   bufferReadSize = 16;
-    bool                        bufferReadRequested = false;
-
-    std::atomic<int>            readQueueSize;
-    int                         sendQueueSize = 0;
-
-    int                         lastTestDeviceSent = -1;
-    int                         lastTestDeviceResponded = -1;
-    bool                        waitingForTestResponse = false;
-    bool                        currentDevicePairConfirmed = false;
+    int     lastTestDeviceSent = -1;
+    int     lastTestDeviceResponded = -1;
+    bool    waitingForTestResponse = false;
+    bool    currentDevicePairConfirmed = false;
 };

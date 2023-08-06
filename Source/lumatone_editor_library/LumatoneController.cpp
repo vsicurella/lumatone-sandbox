@@ -12,10 +12,9 @@
 
 
 LumatoneController::LumatoneController(juce::ValueTree state, TerpstraMidiDriver& midiDriverIn, juce::UndoManager* undoManager)
-    : LumatoneState(state, undoManager),
-        midiDriver(midiDriverIn),
-        //errorVisualizer(TerpstraSysExApplication::getApp().getLookAndFeel()),
-        readQueueSize(0)
+    : LumatoneState(state, undoManager)
+    , midiDriver(midiDriverIn)
+    , readQueueSize(0)
 {
     reset(bufferReadSize);
     midiDriver.addMessageCollector(this);
@@ -43,26 +42,6 @@ void LumatoneController::connectionLost()
 {
     statusListeners.call(&LumatoneEditor::StatusListener::connectionLost);
 }
-
-//
-//void LumatoneController::setSysExSendingMode(sysExSendingMode newMode)
-//{
-//    // Might be worth it to provide further context of commands, such as which ones are mutable or not
-//    // And use an automated system for determining whether or not to send a message in live or offline mode
-//
-//    if (newMode != editingMode)
-//    {
-//        editingMode = newMode;
-//        if (editingMode == sysExSendingMode::offlineEditor)
-//        {
-//            midiDriver.clearMIDIMessageBuffer();	// ToDo remove only SysEx messages (leave NoteOn/NoteOff)?
-//            stopTimer();
-//        }
-//    }
-//    
-//    editorListeners.call(&LumatoneEditor::EditorListener::editorModeChanged, newMode);
-//    midiDriver.restrictToRequestMessages(editingMode == sysExSendingMode::offlineEditor);
-//}
 
 void LumatoneController::setMidiInput(int deviceIndex, bool test)
 {
