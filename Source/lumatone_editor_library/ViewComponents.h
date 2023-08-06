@@ -11,7 +11,7 @@
 #pragma once
 #include <JuceHeader.h>
 
-#include "LumatoneDataStructures.h"
+#include "./data/lumatone_layout.h"
 #include "ViewConstants.h"
 
 

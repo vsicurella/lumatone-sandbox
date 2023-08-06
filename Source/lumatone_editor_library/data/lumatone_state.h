@@ -11,8 +11,10 @@
 #pragma once
 
 #include "state_base.h"
-#include "./lumatone_midi_driver/firmware_definitions.h"
-#include "LumatoneDataStructures.h"
+#include "lumatone_layout.h"
+
+#include "../lumatone_midi_driver/firmware_definitions.h"
+#include "../lumatone_output_map.h"
 
 enum class ConnectionState
 {
@@ -68,7 +70,7 @@ public:
     juce::String getSerialNumber() const;
 
     int getOctaveBoardSize() const;
-    int getNumBoards() const { return BOARD_OCT_5; } // TODO: Set variable based on serial/
+    int getNumBoards() const;
 
     const LumatoneLayout* getMappingData() const;
     const LumatoneBoard* getBoard(int boardIndex) const;
@@ -90,8 +92,9 @@ public:
 protected:
 
     void setConnectedSerialNumber(juce::String serialNumberIn);
-
     void setFirmwareVersion(FirmwareVersion& versionIn, bool writeToState=false);
+
+    void setLumatoneVersion(LumatoneFirmwareVersion versionIn, bool writeToState=false);
 
     void setInvertExpression(bool invert);
     void setInvertSustain(bool invert);
@@ -116,6 +119,7 @@ protected:
 
     //LumatoneLayout mappingData;
     std::shared_ptr<LumatoneLayout> mappingData;
+    std::shared_ptr<LumatoneOutputMap> midiKeyMap;
 
     LumatoneBoard* getEditBoard(int boardIndex);
     LumatoneKey* getEditKey(int boardIndex, int keyIndex);
@@ -135,5 +139,7 @@ private:
     LumatoneFirmwareVersion     determinedVersion = LumatoneFirmwareVersion::NO_VERSION;
     FirmwareVersion             firmwareVersion = { 0, 0, 0 };
     FirmwareVersion             incomingVersion = { 0, 0, 0 };
+
+    int                         numBoards = 5;
     int                         octaveBoardSize = 56;
 };

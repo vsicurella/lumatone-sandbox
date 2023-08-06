@@ -12,7 +12,7 @@
 
 #include <JuceHeader.h>
 #include "../lumatone_editor_library/ApplicationListeners.h"
-#include "../lumatone_editor_library/lumatone_state.h"
+#include "../lumatone_editor_library/data/lumatone_state.h"
 
 //==============================================================================
 /*

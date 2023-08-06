@@ -13,8 +13,8 @@
 #pragma once
 #include  <JuceHeader.h>
 
-#include "LumatoneDataStructures.h"
-#include "lumatone_state.h"
+#include "./data/lumatone_layout.h"
+#include "./data/lumatone_state.h"
 
 namespace LumatoneEditor
 {

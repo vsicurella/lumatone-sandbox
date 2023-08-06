@@ -10,7 +10,7 @@
 
 #pragma once
 #include "lumatone_geometry.h"
-#include "LumatoneDataStructures.h"
+#include "./data/lumatone_layout.h"
 
 //==============================================================================
 // Used to calculate the center point coordinates for a hexagon tiling.

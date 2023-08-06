@@ -56,9 +56,11 @@ juce::ValueTree LumatoneState::loadStateProperties(juce::ValueTree stateIn)
                              ? stateIn
                              : juce::ValueTree(LumatoneEditorProperty::StateTree);
 
+    DBG("LumatoneState::loadStateProperties:\n" + newState.toXmlString());
     for (auto property : getAllProperties())
     {
-        convertStateMemberValue(newState, property);
+        if (newState.hasProperty(property))
+            convertStateMemberValue(newState, property);
     }
 
     return newState;
@@ -76,7 +78,9 @@ void LumatoneState::convertStateMemberValue(juce::ValueTree stateIn, const juce:
     }
     else if (property == LumatoneEditorProperty::LastConnectedFirmwareVersion)
     {
-        determinedVersion = LumatoneFirmwareVersion((int)stateIn.getProperty(property, (int)LumatoneFirmwareVersion::FUTURE_VERSION));
+        setLumatoneVersion(
+            LumatoneFirmwareVersion((int)stateIn.getProperty(property, (int)LumatoneFirmwareVersion::FUTURE_VERSION))
+            );
         firmwareVersion = FirmwareVersion::fromDeterminedVersion(determinedVersion);
     }
     else if (property == LumatoneEditorProperty::DetectDeviceIfDisconnected)
@@ -90,8 +94,11 @@ void LumatoneState::convertStateMemberValue(juce::ValueTree stateIn, const juce:
     else if (property == LumatoneEditorProperty::MappingData)
     {
         juce::String mappingString = stateIn.getProperty(property).toString();
+        if (mappingString.isEmpty())
+            return;
+
         auto stringArray = juce::StringArray::fromLines(mappingString);
-        LumatoneLayout loadedLayout;
+        LumatoneLayout loadedLayout(getNumBoards(), getOctaveBoardSize());
         loadedLayout.fromStringArray(stringArray);
 
         if (!loadedLayout.isEmpty())
@@ -122,21 +129,35 @@ void LumatoneState::setConnectedSerialNumber(juce::String serialNumberIn)
         connectedSerialNumber, 
         undoManager);
 
+    numBoards = 5;
+
     if (connectedSerialNumber == SERIAL_55_KEYS)
     {
-        determinedVersion = LumatoneFirmwareVersion::VERSION_55_KEYS;
-        state.setPropertyExcludingListener(
-            this, 
-            LumatoneEditorProperty::LastConnectedFirmwareVersion, 
-            (int)determinedVersion, 
-            undoManager);
+        setLumatoneVersion(LumatoneFirmwareVersion::VERSION_55_KEYS);
     }
 }
 
 void LumatoneState::setFirmwareVersion(FirmwareVersion& versionIn, bool writeToState)
 {
     firmwareVersion = FirmwareVersion(versionIn);
-    determinedVersion = firmwareSupport.getLumatoneFirmwareVersion(firmwareVersion);
+    setLumatoneVersion(firmwareSupport.getLumatoneFirmwareVersion(firmwareVersion), writeToState);
+}
+
+void LumatoneState::setLumatoneVersion(LumatoneFirmwareVersion versionIn, bool writeToState)
+{
+    determinedVersion = versionIn;
+
+    numBoards = 5;
+
+    switch (determinedVersion)
+    {
+    case LumatoneFirmwareVersion::VERSION_55_KEYS:
+        octaveBoardSize = 55;
+        break;
+    default:
+        octaveBoardSize = 56;
+        break;
+    }
 
     if (writeToState)
     {
@@ -178,6 +199,11 @@ FirmwareVersion LumatoneState::getFirmwareVersion() const
 juce::String LumatoneState::getSerialNumber() const
 {
     return connectedSerialNumber;
+}
+
+int LumatoneState::getNumBoards() const
+{
+    return numBoards;
 }
 
 int LumatoneState::getOctaveBoardSize() const
@@ -241,34 +267,47 @@ void LumatoneState::setExpressionSensitivity(juce::uint8 sensitivity)
 
 bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
 {
+    bool fileOpened = false;
+    bool fileParsed = false;
+
     if (layoutFile.existsAsFile())
     {
-        // XXX StringArray format: platform-independent?
+        fileOpened = true;
+
         juce::StringArray stringArray;
         layoutFile.readLines(stringArray);
 
-        LumatoneLayout newLayout;
+        LumatoneLayout newLayout(getNumBoards(), getOctaveBoardSize());
         newLayout.fromStringArray(stringArray);
 
-        mappingData.reset(new LumatoneLayout(newLayout));
+        // TODO: something if boards/size don't match?
+        fileParsed = true;
 
-        // Mark file as unchanged
-        //setHasChangesToSave(false);
 
-        // Clear undo history
-        //undoManager.clearUndoHistory();
+        if (fileParsed)
+        {
+            mappingData.reset(new LumatoneLayout(newLayout));
 
-        // Add file to recent files list
-        //recentFiles.addFile(currentFile);
+            // Mark file as unchanged
+            //setHasChangesToSave(false);
 
-        return true;
+            // Clear undo history
+            //undoManager.clearUndoHistory();
+
+            // Add file to recent files list
+            //recentFiles.addFile(currentFile);
+
+            return true;
+        }
     }
-    else
+
+    if (fileOpened)
     {
         // Show error message
         juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::AlertIconType::WarningIcon, "Open File Error", "The file " + layoutFile.getFullPathName() + " could not be opened.");
 
         // XXX Update Window title in any case? Make file name empty/make data empty in case of error?
-        return false;
     }
+
+    return false;
 }

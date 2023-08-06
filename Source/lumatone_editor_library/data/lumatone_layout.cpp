@@ -8,36 +8,7 @@
   ==============================================================================
 */
 
-#include "LumatoneDataStructures.h"
-
-/*
-==============================================================================
-TerpstraKeys class
-==============================================================================
-*/
-
-LumatoneBoard::LumatoneBoard(LumatoneKeyType newKeyType)
-{
-    for (int i = 0; i < 56; i++)
-        theKeys[i] = LumatoneKey(newKeyType);
-    board_idx = 0;
-    key_idx = 0;
-}
-
-bool LumatoneBoard::isEmpty() const
-{
-    LumatoneKey emptyKeyData = LumatoneKey();
-
-    bool setIsEmpty = true;
-    //for (int i = 0; i < TerpstraSysExApplication::getApp().getOctaveBoardSize() && setIsEmpty; i++) {
-    //    if (theKeys[i] != emptyKeyData) {
-    //        setIsEmpty = false;
-    //        break;
-    //    }
-    //}
-
-    return setIsEmpty;
-}
+#include "lumatone_layout.h"
 
 /*
 ==============================================================================
@@ -232,7 +203,9 @@ TerpstraKeyMapping class
 ==============================================================================
 */
 
-LumatoneLayout::LumatoneLayout()
+LumatoneLayout::LumatoneLayout(int numBoardsIn, int octaveBoardSizeIn)
+    : numBoards(numBoardsIn)
+    , octaveBoardSize(octaveBoardSizeIn)
 {
     clearAll();
 }
@@ -262,9 +235,9 @@ void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)
 {
     auto newKeyType = (initializeWithNoteKeyType) ? LumatoneKeyType::noteOnNoteOff : LumatoneKeyType::disabled;
 
-    for (int i = 0; i < NUMBEROFBOARDS; i++)
+    for (int i = 0; i < numBoards; i++)
     {
-        boards[i] = LumatoneBoard(newKeyType);
+        boards[i] = LumatoneBoard(newKeyType, octaveBoardSize);
     }
 
     // Default values for options
@@ -284,7 +257,7 @@ void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)
 bool LumatoneLayout::isEmpty() const
 {
     bool isEmpty = true;
-    for (int i = 0; i < NUMBEROFBOARDS && isEmpty; i++) {
+    for (int i = 0; i < octaveBoardSize && isEmpty; i++) {
         isEmpty &= boards[i].isEmpty();
     }
 
@@ -298,129 +271,176 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
     bool hasFiftySixKeys = false;
 
     int boardIndex = -1;
-    for (int i = 0; i < stringArray.size(); i++) {
+    for (int i = 0; i < stringArray.size(); i++)
+    {
         juce::String currentLine = stringArray[i];
         int pos1, pos2;
-        if ((pos1 = currentLine.indexOf("[Board")) >= 0) {
+        if ((pos1 = currentLine.indexOf("[Board")) >= 0) 
+        {
             pos2 = currentLine.indexOf("]");
-            if (pos2 >= 0 && pos2 > pos1) {
+            if (pos2 >= 0 && pos2 > pos1) 
+            {
                 boardIndex = currentLine.substring(pos1 + 6, pos2).getIntValue();
-            } else
+            } 
+            else
                 jassert(false);
-        } else if ((pos1 = currentLine.indexOf("Key_")) >= 0) {
+        } 
+        else if ((pos1 = currentLine.indexOf("Key_")) >= 0) 
+        {
             pos2 = currentLine.indexOf("=");
-            if (pos2 >= 0 && pos2 > pos1) {
+            if (pos2 >= 0 && pos2 > pos1) 
+            {
                 int keyIndex = currentLine.substring(pos1 + 4, pos2).getIntValue();
                 int keyValue = currentLine.substring(pos2 + 1).getIntValue();
-                if (boardIndex >= 0 && boardIndex < NUMBEROFBOARDS) {
+                if (boardIndex >= 0 && boardIndex < octaveBoardSize) 
+                {
                     if (keyIndex >= 0 && keyIndex < 56)
                         boards[boardIndex].theKeys[keyIndex].noteNumber = keyValue;
                     else
                         jassert(false);
-                } else
+                }
+                else
                     jassert(false);
             }
-        } else if ((pos1 = currentLine.indexOf("Chan_")) >= 0) {
+        } 
+        else if ((pos1 = currentLine.indexOf("Chan_")) >= 0) 
+        {
             pos2 = currentLine.indexOf("=");
-            if (pos2 >= 0 && pos2 > pos1) {
+            if (pos2 >= 0 && pos2 > pos1)
+            {
                 int keyIndex = currentLine.substring(pos1 + 5, pos2).getIntValue();
                 int keyValue = currentLine.substring(pos2 + 1).getIntValue();
-                if (boardIndex >= 0 && boardIndex < NUMBEROFBOARDS) {
-                    if (keyIndex >= 0 && keyIndex < 56) {
+                if (boardIndex >= 0 && boardIndex < octaveBoardSize)
+                {
+                    if (keyIndex >= 0 && keyIndex < 56)
+                    {
 
-                        if (keyValue > 0 && keyValue <= 16) {
+                        if (keyValue > 0 && keyValue <= 16)
+                        {
                             boards[boardIndex].theKeys[keyIndex].channelNumber = keyValue;
-                        } else {
+                        } else
+                        {
                             boards[boardIndex].theKeys[keyIndex].channelNumber = 1;
                             boards[boardIndex].theKeys[keyIndex].keyType = LumatoneKeyType::disabledDefault;
                         }
 
                         if (keyIndex == 55)
                             hasFiftySixKeys = true;
-                    } else
+                    }
+                    else
                         jassert(false);
-                } else
+                }
+                else
                     jassert(false);
             }
-        } else if ((pos1 = currentLine.indexOf("Col_")) >= 0) {
+        }
+        else if ((pos1 = currentLine.indexOf("Col_")) >= 0)
+        {
             pos2 = currentLine.indexOf("=");
-            if (pos2 >= 0 && pos2 > pos1) {
+            if (pos2 >= 0 && pos2 > pos1)
+            {
                 int keyIndex = currentLine.substring(pos1 + 4, pos2).getIntValue();
                 int colValue = currentLine.substring(pos2 + 1).getHexValue32();
-                if (boardIndex >= 0 && boardIndex < NUMBEROFBOARDS) {
+                if (boardIndex >= 0 && boardIndex < octaveBoardSize)
+                {
                     if (keyIndex >= 0 && keyIndex < 56)
                         boards[boardIndex].theKeys[keyIndex].colour = juce::Colour(colValue).withAlpha(1.0f);
                     else
                         jassert(false);
-                } else
+                }
+                else
                     jassert(false);
             }
-        } else if ((pos1 = currentLine.indexOf("KTyp_")) >= 0) {
+        }
+        else if ((pos1 = currentLine.indexOf("KTyp_")) >= 0)
+        {
             pos2 = currentLine.indexOf("=");
-            if (pos2 >= 0 && pos2 > pos1) {
+            if (pos2 >= 0 && pos2 > pos1)
+            {
                 int keyIndex = currentLine.substring(pos1 + 5, pos2).getIntValue();
                 int keyValue = currentLine.substring(pos2 + 1).getIntValue();
-                if (boardIndex >= 0 && boardIndex < NUMBEROFBOARDS) {
-                    if (keyIndex >= 0 && keyIndex < 56) {
+                if (boardIndex >= 0 && boardIndex < octaveBoardSize)
+                {
+                    if (keyIndex >= 0 && keyIndex < 56)
+                    {
                         auto currentKeyType = boards[boardIndex].theKeys[keyIndex].keyType;
                         if (keyValue < 0 && keyValue >= 5 || currentKeyType == LumatoneKeyType::disabledDefault)
                             boards[boardIndex].theKeys[keyIndex].keyType = LumatoneKeyType::disabled;
                         else
                             boards[boardIndex].theKeys[keyIndex].keyType = (LumatoneKeyType)keyValue;
-                    } else
+                    }
+                    else
                         jassert(false);
                 }
-            } else
+            }
+            else
                 jassert(false);
-        } else if ((pos1 = currentLine.indexOf("CCInvert_")) >= 0) {
+        }
+        else if ((pos1 = currentLine.indexOf("CCInvert_")) >= 0)
+        {
             int keyIndex = currentLine.substring(pos1 + 9, currentLine.length()).getIntValue();
-            if (boardIndex >= 0 && boardIndex < NUMBEROFBOARDS) {
+            if (boardIndex >= 0 && boardIndex < octaveBoardSize)
+            {
                 if (keyIndex >= 0 && keyIndex < 56)
                         boards[boardIndex].theKeys[keyIndex].ccFaderDefault = false;
                 else
                     jassert(false);
             }
         }
+
         // General options
-        else if ((pos1 = currentLine.indexOf("AfterTouchActive=")) >= 0) {
+        else if ((pos1 = currentLine.indexOf("AfterTouchActive=")) >= 0)
             afterTouchActive = currentLine.substring(pos1 + 17).getIntValue() > 0;
-        } else if ((pos1 = currentLine.indexOf("LightOnKeyStrokes=")) >= 0) {
+
+        else if ((pos1 = currentLine.indexOf("LightOnKeyStrokes=")) >= 0)
             lightOnKeyStrokes = currentLine.substring(pos1 + 18).getIntValue() > 0;
-        } else if ((pos1 = currentLine.indexOf("InvertFootController=")) >= 0) {
+
+        else if ((pos1 = currentLine.indexOf("InvertFootController=")) >= 0)
             invertExpression = currentLine.substring(pos1 + 21).getIntValue() > 0;
-        } else if ((pos1 = currentLine.indexOf("InvertSustain=")) >= 0) {
+
+        else if ((pos1 = currentLine.indexOf("InvertSustain=")) >= 0)
             invertSustain = currentLine.substring(pos1 + 14).getIntValue() > 0;
-        } else if ((pos1 = currentLine.indexOf("ExprCtrlSensivity=")) >= 0) {
+
+        else if ((pos1 = currentLine.indexOf("ExprCtrlSensivity=")) >= 0)
             expressionControllerSensivity = currentLine.substring(pos1 + 18).getIntValue();
-        }
+
         // Velocity curve config
-        else if ((pos1 = currentLine.indexOf("VelocityIntrvlTbl=")) >= 0) {
+        else if ((pos1 = currentLine.indexOf("VelocityIntrvlTbl=")) >= 0)
+        {
             juce::String intervalTableString = currentLine.substring(pos1 + 18);
             juce::StringArray intervalTableValueArray = juce::StringArray::fromTokens(intervalTableString, false);
-            if (intervalTableValueArray.size() > 0) {
+            if (intervalTableValueArray.size() > 0)
+            {
                 jassert(intervalTableValueArray.size() >= VELOCITYINTERVALTABLESIZE);
 
-                for (int x = 0; x < VELOCITYINTERVALTABLESIZE; x++) {
+                for (int x = 0; x < VELOCITYINTERVALTABLESIZE; x++)
+                {
                     table[x] = intervalTableValueArray[x].getIntValue();
                 }
-            } else {
+            }
+            else
+            {
                 clearVelocityIntervalTable();
             }
         }
         // Note on/off velocity configuration
-        else if ((pos1 = currentLine.indexOf("NoteOnOffVelocityCrvTbl=")) >= 0) {
+        else if ((pos1 = currentLine.indexOf("NoteOnOffVelocityCrvTbl=")) >= 0) 
+        {
             velocityTable = LumatoneConfigTable(currentLine.substring(pos1 + 24));
         }
         // Fader configuration
-        else if ((pos1 = currentLine.indexOf("FaderConfig=")) >= 0) {
+        else if ((pos1 = currentLine.indexOf("FaderConfig=")) >= 0) 
+        {
             faderTable = LumatoneConfigTable(currentLine.substring(pos1 + 12));
         }
         // Aftertouch configuration
-        else if ((pos1 = currentLine.indexOf("afterTouchConfig=")) >= 0) {
+        else if ((pos1 = currentLine.indexOf("afterTouchConfig=")) >= 0) 
+        {
             afterTouchTable = LumatoneConfigTable(currentLine.substring(pos1 + 17));
         }
         // Lumatouch configuration
-        else if ((pos1 = currentLine.indexOf("LumaTouchConfig=")) >= 0) {
+        else if ((pos1 = currentLine.indexOf("LumaTouchConfig=")) >= 0) 
+        {
             lumaTouchTable = LumatoneConfigTable(currentLine.substring(pos1 + 17));
         }
     }
@@ -428,13 +448,13 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
     // Conversion between 55-key and 56-key layout
     //if (TerpstraSysExApplication::getApp().getOctaveBoardSize() == 56 && !hasFiftySixKeys) {
     //    // Loaded layout has 55-key layout. Adjust geometry to 56-key layout
-    //    for (boardIndex = 0; boardIndex < NUMBEROFBOARDS; boardIndex++) {
+    //    for (boardIndex = 0; boardIndex < octaveBoardSize; boardIndex++) {
     //        boards[boardIndex].theKeys[55] = boards[boardIndex].theKeys[54];
     //        boards[boardIndex].theKeys[54] = TerpstraKey();
     //    }
     //} else if (TerpstraSysExApplication::getApp().getOctaveBoardSize() == 55 && hasFiftySixKeys) {
     //    // Loaded layout has 56-key layout. Adjust geometry to 55-key layout
-    //    for (boardIndex = 0; boardIndex < NUMBEROFBOARDS; boardIndex++) {
+    //    for (boardIndex = 0; boardIndex < octaveBoardSize; boardIndex++) {
     //        boards[boardIndex].theKeys[54] = boards[boardIndex].theKeys[55];
     //        boards[boardIndex].theKeys[55] = TerpstraKey();
     //    }
@@ -445,7 +465,7 @@ juce::StringArray LumatoneLayout::toStringArray()
 {
     juce::StringArray result;
 
-    for (int boardIndex = 0; boardIndex < NUMBEROFBOARDS; boardIndex++) {
+    for (int boardIndex = 0; boardIndex < octaveBoardSize; boardIndex++) {
         result.add("[Board" + juce::String(boardIndex) + "]");
 
         //for (int keyIndex = 0; keyIndex < TerpstraSysExApplication::getApp().getOctaveBoardSize(); keyIndex++) {
@@ -485,21 +505,6 @@ juce::StringArray LumatoneLayout::toStringArray()
 
     return result;
 }
-
-//SortedSet<TerpstraKey::COLOURTYPE> TerpstraKeyMapping::getUsedColours()
-//{
-//	SortedSet<TerpstraKey::COLOURTYPE> result;
-//
-//	for (int boardIndex = 0; boardIndex < NUMBEROFBOARDS; boardIndex++)
-//	{
-//		for (int keyIndex = 0; keyIndex < 56; keyIndex++)
-//		{
-//			result.add(boards[boardIndex].theKeys[keyIndex].colour);
-//		}
-//	}
-//
-//	return result;
-//}
 
 LumatoneConfigTable* LumatoneLayout::getConfigTable(LumatoneConfigTable::TableType velocityCurveType)
 {
