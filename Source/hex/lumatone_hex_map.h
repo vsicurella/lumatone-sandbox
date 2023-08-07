@@ -11,44 +11,38 @@
 #pragma once
 #include "./hex_field.h"
 #include "../lumatone_editor_library/lumatone_geometry.h"
-#include "../lumatone_editor_library/data/lumatone_state.h"
+#include "../lumatone_editor_library/data/lumatone_layout.h"
 
 class LumatoneHexMap
 {
 public:
 
-    struct KeyCoords
-    {
-        int boardIndex = 0;
-        int keyIndex = 0;
-    };
-
     struct MappedKey
     {
-        KeyCoords key{ -1, -1 };
+        LumatoneKeyCoord key;
         Hex::Point point { 0, 0 };
     };
 
     struct MapBoard
     {
         int size = 0;
-        juce::Array<MappedKey> keys;
+        MappedKey keys[MAXBOARDSIZE];
 
         MapBoard(int octaveBoardSize = 0)
         {
             size = octaveBoardSize;
             for (int i = 0; i < octaveBoardSize; i++)
-                keys.add(MappedKey());
+                keys[i] = MappedKey();
         }
     };
 
 public:
-    LumatoneHexMap(LumatoneState stateIn, 
+    LumatoneHexMap(LumatoneLayout layout, 
                    Hex::Point originPoint = Hex::Point(0, 0), 
                    int originBoardIndex = 0, 
                    int originKeyIndex = 0);
 
-    KeyCoords hexToKeyCoords(Hex::Point point) const;
+    LumatoneKeyCoord hexToKeyCoords(Hex::Point point) const;
    
     Hex::Point keyCoordsToHex(int boardIndex, int keyIndex) const;
 
@@ -62,11 +56,12 @@ private:
 
 private:
 
-    LumatoneState state;
+    LumatoneLayout layout;
 
     LumatoneGeometry lumatoneGeometry;
 
-    juce::Array<MapBoard> boards;
+    //juce::Array<MapBoard> boards;
+    MapBoard boards[MAXNUMBOARDS];
 
     Hex::Point originPoint;
     int originBoardIndex = 0;

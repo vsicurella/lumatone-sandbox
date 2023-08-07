@@ -10,8 +10,8 @@
 
 #include "lumatone_hex_map.h"
 
-LumatoneHexMap::LumatoneHexMap(LumatoneState stateIn, Hex::Point originPointIn, int originBoardIndexIn, int originKeyIndexIn)
-    : state(stateIn)
+LumatoneHexMap::LumatoneHexMap(LumatoneLayout layoutIn, Hex::Point originPointIn, int originBoardIndexIn, int originKeyIndexIn)
+    : layout(layoutIn)
     , originPoint(originPointIn)
     , originBoardIndex(originBoardIndexIn)
     , originKeyIndex(originKeyIndexIn)
@@ -20,9 +20,10 @@ LumatoneHexMap::LumatoneHexMap(LumatoneState stateIn, Hex::Point originPointIn, 
     renderMap();
 }
 
-LumatoneHexMap::KeyCoords LumatoneHexMap::hexToKeyCoords(Hex::Point point) const
+LumatoneKeyCoord LumatoneHexMap::hexToKeyCoords(Hex::Point point) const
 {
-    return map[point.toString()].key;
+    auto key = point.toString();
+    return map[key].key;
 }
 
 Hex::Point LumatoneHexMap::keyCoordsToHex(int boardIndex, int keyIndex) const
@@ -38,7 +39,11 @@ Hex::Point LumatoneHexMap::addBoardIndex(Hex::Point point, int numIndexes)
 void LumatoneHexMap::renderMap()
 {
     map.clear();
-    boards.clear();
+    //boards.clear();
+
+    for (int i = 0; i < layout.getNumBoards(); i++)
+        //boards.add(MapBoard(layout.getOctaveBoardSize()));
+        boards[i] = MapBoard(layout.getOctaveBoardSize());
 
     // use lumatoneGeometry.getVerticalOriginLineIndexForRow to find zeroth key from origin
 
@@ -98,18 +103,18 @@ void LumatoneHexMap::renderMap()
 
         while (keyIndex < lumatoneGeometry.getLastIndexForRow(lineIndex))
         {
-            for (int boardIndex = 0; boardIndex < state.getNumBoards(); boardIndex++)
+            for (int boardIndex = 0; boardIndex < layout.getNumBoards(); boardIndex++)
             {
                 auto mappedBoardKey = addBoardIndex(rowPoint + Hex::Point(rowKeyIndex, 0), boardIndex);
-                
-                boards.add(MapBoard(state.getOctaveBoardSize()));
-                auto board = &boards[boardIndex];
 
-                KeyCoords coords = { boardIndex, keyIndex };
+                LumatoneKeyCoord coords(boardIndex, keyIndex);
 
                 MappedKey mappedKey = { coords, mappedBoardKey };
-                board->keys.set(keyIndex, mappedKey);
-                map.set(mappedBoardKey.toString(), mappedKey);
+                //boards.getReference(boardIndex).keys[keyIndex] = mappedKey;
+                boards[boardIndex].keys[keyIndex] = mappedKey;
+
+                auto key = mappedBoardKey.toString();
+                map.set(key, mappedKey);
 
                 keyIndex++;
             }
