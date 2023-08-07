@@ -34,7 +34,8 @@ namespace LumatoneSandbox {
 
 			aboutSysEx = 0x200400,
 
-			openRandomColorsGame = 0x300100,
+			openRandomColorsGame	= 0x300100,
+			openHexRingsGame		= 0x300200,
 		};
 
 		class Model : public juce::MenuBarModel
@@ -52,7 +53,7 @@ namespace LumatoneSandbox {
 			virtual void createHelpMenu(juce::PopupMenu& menu);
 
 		private:
-			juce::ApplicationCommandManager * theManager;
+			juce::ApplicationCommandManager* theManager;
 		};
 	}
 }

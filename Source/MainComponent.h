@@ -23,6 +23,9 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    void addKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->addListener(listener); }
+    void removeKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->removeListener(listener); }
+
 private:
     //==============================================================================
     // Your private member variables go here...

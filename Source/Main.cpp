@@ -13,6 +13,7 @@
 
 #include "game/game_engine.h"
 #include "game/random_colors/random_colors_launcher.h"
+#include "game/hex_rings/hex_rings_launcher.h"
 
 //==============================================================================
 class LumatoneSandboxApp  : public juce::JUCEApplication
@@ -56,11 +57,13 @@ public:
         monitor->initializeDeviceDetection();
 
         gameEngine = std::make_unique<LumatoneSandboxGameEngine>(controller.get(), 30);
+        mainWindow->getMainComponent()->addKeyboardComponentListener(gameEngine.get());
     }
 
     void shutdown() override
     {
         // Add your application's shutdown code here..
+        game = nullptr;
         gameEngine = nullptr;
         fileChooser = nullptr;
         
@@ -121,10 +124,11 @@ public:
 
             LumatoneSandbox::Menu::commandIDs::aboutSysEx,
 
-            LumatoneSandbox::Menu::commandIDs::openRandomColorsGame
+            LumatoneSandbox::Menu::commandIDs::openRandomColorsGame,
+            LumatoneSandbox::Menu::commandIDs::openHexRingsGame
         };
 
-        commands.addArray(ids, 15);
+        commands.addArray(ids, 16);
     }
 
 	void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result) override
@@ -209,6 +213,10 @@ public:
                 result.setInfo("Random Colors", "Open launcher for Random Colors game", "Game", 0);
                 break;
 
+            case LumatoneSandbox::Menu::commandIDs::openHexRingsGame:
+                result.setInfo("Hex Rings", "Open launcher for Hex Rings game", "Game", 0);
+                break;
+
             default:
                 JUCEApplication::getCommandInfo(commandID, result);
                 break;
@@ -237,12 +245,54 @@ public:
         {
             auto dialogOptions = juce::DialogWindow::LaunchOptions();
 
-            auto launcher = new RandomColorsComponent(gameEngine.get());
-            launcher->setSize(300, 200);
-            dialogOptions.content = juce::OptionalScopedPointer<juce::Component>(launcher, true);
-            dialogOptions.dialogTitle = "Random Colors Launcher";
-            dialogOptions.launchAsync();
-            break;
+            game.reset(new RandomColorsComponent(gameEngine.get()));
+            game->setSize(300, 200);
+                
+            juce::DialogWindow::showDialog(
+                "Random Colours Launcher",
+                //juce::OptionalScopedPointer<juce::Component>(launcher, true),
+                game.get(),
+                nullptr,
+                juce::Colours::slategrey,
+                false,
+                true,
+                true
+            );
+
+            //dialogOptions.content = ;
+            //dialogOptions.dialogTitle = "Random Colors Launcher";
+            //dialogOptions.useNativeTitleBar = false;
+            //dialogOptions.launchAsync();
+            return true;
+        }
+        
+        case LumatoneSandbox::Menu::commandIDs::openHexRingsGame:
+        {
+            auto dialogOptions = juce::DialogWindow::LaunchOptions();
+
+            game.reset(new HexRingLauncher(gameEngine.get()));
+            game->setSize(300, 200);
+
+            juce::DialogWindow::showDialog(
+                "Hex Rings Launcher",
+                //juce::OptionalScopedPointer<juce::Component>(launcher, true),
+                game.get(),
+                nullptr,
+                juce::Colours::slategrey,
+                false,
+                true,
+                true
+            );
+
+            //auto launcher = new HexRingLauncher(gameEngine.get());
+            //launcher->setSize(300, 200);
+            //dialogOptions.content = juce::OptionalScopedPointer<juce::Component>(launcher, true);
+            //dialogOptions.dialogTitle = "Random Hex Launcher";
+            //dialogOptions.useNativeTitleBar = false;
+            //auto window = dialogOptions.launchAsync();
+            //window->exitModalState();
+            //break;
+            return true;
         }
 
         default:
@@ -296,6 +346,8 @@ public:
            subclass also calls the superclass's method.
         */
 
+        MainComponent* getMainComponent() { return (MainComponent*)getContentComponent(); }
+
     private:
         std::unique_ptr<juce::ComponentBoundsConstrainer> constrainer;
 
@@ -318,6 +370,7 @@ private:
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
+    std::unique_ptr<juce::Component> game;
     std::unique_ptr<LumatoneSandboxGameEngine> gameEngine;
 
 };

@@ -197,6 +197,10 @@
         <GROUP id="{B47132DF-56FC-40F5-AA08-89636891A2CC}" name="hex_rings">
           <FILE id="zvBslR" name="hex_rings.cpp" compile="1" resource="0" file="Source/game/hex_rings/hex_rings.cpp"/>
           <FILE id="PVhX55" name="hex_rings.h" compile="0" resource="0" file="Source/game/hex_rings/hex_rings.h"/>
+          <FILE id="yMqadD" name="hex_rings_launcher.cpp" compile="1" resource="0"
+                file="Source/game/hex_rings/hex_rings_launcher.cpp"/>
+          <FILE id="Rtk7jU" name="hex_rings_launcher.h" compile="0" resource="0"
+                file="Source/game/hex_rings/hex_rings_launcher.h"/>
         </GROUP>
         <GROUP id="{A8866079-963B-89EF-61D1-A8CA3676A790}" name="random_colors">
           <FILE id="tMkWYs" name="random_colors.cpp" compile="1" resource="0"
