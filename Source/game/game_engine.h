@@ -11,7 +11,9 @@
 #pragma once
 #include "game_base.h"
 
-class LumatoneSandboxGameEngine : private juce::Timer
+class LumatoneSandboxGameEngine : public LumatoneMidiState
+                                , public LumatoneMidiState::Listener
+                                , private juce::Timer
 {
 public:
 
@@ -49,6 +51,10 @@ public:
 
     bool isGameRunning() const { return gameIsRunning; }
 
+public:
+
+    void handleLumatoneMidi(LumatoneMidiState* midiState, const juce::MidiMessage& msg) override;
+
 private:
 
     juce::ListenerList<LumatoneSandboxGameEngine::Listener> engineListeners;
@@ -68,6 +74,9 @@ private:
     LumatoneController* controller;
 
     std::unique_ptr<LumatoneSandboxGameBase> game;
+
+    juce::UndoableAction* actionQueue[MAX_QUEUE_SIZE];
+    int numActions = 0;
 
     int desiredFps = 30;
 

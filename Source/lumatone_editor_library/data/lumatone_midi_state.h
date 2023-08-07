@@ -43,6 +43,8 @@ public:
     public:
         virtual ~Listener() {}
 
+        virtual void handleLumatoneMidi(LumatoneMidiState* midiState, const juce::MidiMessage& msg) {}
+
         virtual void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) {}
         virtual void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) {}
         virtual void handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch) {}

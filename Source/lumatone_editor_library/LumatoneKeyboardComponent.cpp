@@ -237,7 +237,7 @@ void LumatoneKeyboardComponent::lumatoneKeyDown(int boardIndex, int keyIndex)
         switch (keyData->keyType)
         {
         case LumatoneKeyType::noteOnNoteOff:
-            noteOn(keyData->channelNumber, keyData->noteNumber, (juce::uint8)0x127);
+            noteOn(keyData->channelNumber, keyData->noteNumber, (juce::uint8)127);
             showKeyDown(boardIndex, keyIndex, true);
             break;
         default:

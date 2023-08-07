@@ -163,6 +163,8 @@ void LumatoneMidiState::noteOnInternal(const juce::MidiMessage& msg, int midiCha
     juce::MidiKeyboardState::processNextMidiEvent(msg);
 
     velocityStates[midiChannel - 1][midiNote] = velocity;
+
+    midiListeners.call(&LumatoneMidiState::Listener::handleLumatoneMidi, this, msg);
     midiListeners.call(&LumatoneMidiState::Listener::handleNoteOn, this, midiChannel, midiNote, velocity);
 }
 
@@ -171,6 +173,8 @@ void LumatoneMidiState::noteOffInternal(const juce::MidiMessage& msg, int midiCh
     juce::MidiKeyboardState::processNextMidiEvent(msg);
 
     velocityStates[midiChannel - 1][midiNote] = velocity;
+
+    midiListeners.call(&LumatoneMidiState::Listener::handleLumatoneMidi, this, msg);
     midiListeners.call(&LumatoneMidiState::Listener::handleNoteOff, this,  midiChannel, midiNote);
 }
 
