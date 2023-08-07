@@ -69,19 +69,19 @@ public:
     // Combined (hi-level) commands
 
     // Send all parametrizations of one sub board
-    void sendAllParamsOfBoard(int boardIndex, const LumatoneBoard* boardData, bool signalEditorListeners=false);
+    void sendAllParamsOfBoard(int boardId, const LumatoneBoard* boardData, bool signalEditorListeners=false);
 
     // Send and save a complete key mapping
     void sendCompleteMapping(LumatoneLayout mappingData);
 
     // Send request to receive the current mapping of one sub board on the controller
-    void sendGetMappingOfBoardRequest(int boardIndex);
+    void sendGetMappingOfBoardRequest(int boardId);
 
     // Send request to receive the complete current mapping on the controller
     void sendGetCompleteMappingRequest();
 
     // Send parametrization of one key to the device
-    void sendKeyParam(int boardIndex, int keyIndex, LumatoneKey keyData);
+    void sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData);
 
     // Send configuration of a certain look up table
     void sendTableConfig(LumatoneConfigTable::TableType velocityCurveType, const juce::uint8* table);

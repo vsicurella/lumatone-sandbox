@@ -108,22 +108,21 @@ void LumatoneController::noAnswerToMessage(juce::MidiInput* expectedDevice, cons
 }
 
 
-
 /*
 ==============================================================================
 Combined (hi-level) commands
 */
 
 
-void LumatoneController::sendAllParamsOfBoard(int boardIndex, const LumatoneBoard* boardData, bool signalEditorListeners)
+void LumatoneController::sendAllParamsOfBoard(int boardId, const LumatoneBoard* boardData, bool signalEditorListeners)
 {
     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
     {
         for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
         {
             auto key = &boardData->theKeys[keyIndex];
-            midiDriver.sendKeyFunctionParameters(boardIndex, keyIndex, key->noteNumber, key->channelNumber, key->keyType & 0x3);
-            midiDriver.sendKeyLightParameters(boardIndex, keyIndex, key->colour.getRed(), key->colour.getGreen(), key->colour.getBlue());
+            midiDriver.sendKeyFunctionParameters(boardId, keyIndex, key->noteNumber, key->channelNumber, key->keyType & 0x3);
+            midiDriver.sendKeyLightParameters(boardId, keyIndex, key->colour.getRed(), key->colour.getGreen(), key->colour.getBlue());
         }
     }
     else
@@ -131,8 +130,8 @@ void LumatoneController::sendAllParamsOfBoard(int boardIndex, const LumatoneBoar
         for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
         {
             auto key = &boardData->theKeys[keyIndex];
-            midiDriver.sendKeyFunctionParameters(boardIndex, keyIndex, key->noteNumber, key->channelNumber, key->keyType & 0x3);
-            midiDriver.sendKeyLightParameters_Version_1_0_0(boardIndex, keyIndex, key->colour.getRed() / 2, key->colour.getGreen() / 2, key->colour.getBlue() / 2);
+            midiDriver.sendKeyFunctionParameters(boardId, keyIndex, key->noteNumber, key->channelNumber, key->keyType & 0x3);
+            midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, key->colour.getRed() / 2, key->colour.getGreen() / 2, key->colour.getBlue() / 2);
         }
 
         if (signalEditorListeners)
@@ -142,21 +141,21 @@ void LumatoneController::sendAllParamsOfBoard(int boardIndex, const LumatoneBoar
 
 void LumatoneController::sendCompleteMapping(LumatoneLayout mappingData)
 {
-    for (int boardIndex = 1; boardIndex <= getNumBoards(); boardIndex++)
-        sendAllParamsOfBoard(boardIndex, mappingData.getBoard(boardIndex - 1));
+    for (int boardId = 1; boardId <= getNumBoards(); boardId++)
+        sendAllParamsOfBoard(boardId, mappingData.getBoard(boardId - 1));
 
     editorListeners.call(&LumatoneEditor::EditorListener::completeMappingLoaded, mappingData);
 }
 
-void LumatoneController::sendGetMappingOfBoardRequest(int boardIndex)
+void LumatoneController::sendGetMappingOfBoardRequest(int boardId)
 {
-    getRedLEDConfig(boardIndex);
-    getGreenLEDConfig(boardIndex);
-    getBlueLEDConfig(boardIndex);
-    getChannelConfig(boardIndex);
-    getNoteConfig(boardIndex);
-    getKeyTypeConfig(boardIndex);
-    getFaderTypeConfig(boardIndex);
+    getRedLEDConfig(boardId);
+    getGreenLEDConfig(boardId);
+    getBlueLEDConfig(boardId);
+    getChannelConfig(boardId);
+    getNoteConfig(boardId);
+    getKeyTypeConfig(boardId);
+    getFaderTypeConfig(boardId);
 }
 
 void LumatoneController::sendGetCompleteMappingRequest()

@@ -165,7 +165,7 @@ SectionEditAction::SectionEditAction(LumatoneController* controller, int boardIn
     , boardId(boardIndexIn + 1)
     , newData(newSectionValue)
 {
-    previousData = *controller->getBoard(boardId);
+    previousData = *controller->getBoard(boardIndexIn);
 }
 
 bool SectionEditAction::isValid() const
@@ -175,7 +175,7 @@ bool SectionEditAction::isValid() const
 
 bool SectionEditAction::perform()
 {
-    if (boardId >= 0 && boardId < controller->getNumBoards())
+    if (boardId > 0 && boardId <= controller->getNumBoards())
     {
         // Send to device
         controller->sendAllParamsOfBoard(boardId, &newData, true);
