@@ -26,38 +26,49 @@ public:
 
 };
 
+#define MAX_QUEUE_SIZE 280
 
-class LumatoneSandboxGameBase : public LumatoneMidiState, 
-                                public LumatoneMidiState::Listener
+
+class LumatoneSandboxGameBase : public LumatoneMidiState::Listener
 {
 public:
 
     LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String gameName);
     virtual ~LumatoneSandboxGameBase()
     {
-        queuedActions.clear();
+        reset(true);
     }
 
-    virtual void reset(bool clearQueue);
+    LumatoneLayout queueIdentityLayout(bool resetColors);
+
+    virtual void reset(bool clearActionQueue);
     virtual void nextTick() = 0;
 
-    void readQueue(juce::OwnedArray<juce::UndoableAction>& buffer);
+    virtual void clearQueue();
+    void readQueue(juce::UndoableAction** buffer, int& numActions);
 
     juce::String getName() const { return name; }
 
     const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
 
+private:
+
+    int getQueuePtr() const { return (queuePtr + queueSize - 1) % MAX_QUEUE_SIZE; }
+
 protected:
 
     LumatoneLayout layoutBeforeStart;
 
+    virtual void addToQueue(juce::UndoableAction* action);
     virtual juce::UndoableAction* renderFrame() = 0;
 
-    juce::OwnedArray<juce::UndoableAction> queuedActions;
+    //juce::OwnedArray<juce::UndoableAction, juce::CriticalSection> queuedActions;
+
+    juce::UndoableAction* queuedActions[MAX_QUEUE_SIZE];
+    int queueSize = 0;
+    int queuePtr = 0;
 
     LumatoneController* controller;
-
-
 
 private:
 

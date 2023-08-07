@@ -45,13 +45,15 @@ RandomColorsComponent::RandomColorsComponent(LumatoneSandboxGameEngine* gameEngi
         gameEngine->resetGame();
         auto controller = gameEngine->getController();
         auto layout = game->getLayoutBeforeStart();
-        auto resetAction = new LumatoneEditAction::SectionEditAction(controller, 0, *layout.getBoard(0));
-        for (int i = 1; i < controller->getNumBoards(); i++)
+
+        for (int i = 0; i < controller->getNumBoards(); i++)
         {
-            resetAction->createCoalescedAction(new LumatoneEditAction::SectionEditAction(controller, i, *layout.getBoard(i)));
+            controller->performUndoableAction(
+                new LumatoneEditAction::SectionEditAction(controller, i, *layout.getBoard(i)), 
+                true, 
+                "Game Reset: " + game->getName());
         }
 
-        controller->performUndoableAction(resetAction, true, "Game Reset: " + game->getName());
     };
     addAndMakeVisible(*resetButton);
 
