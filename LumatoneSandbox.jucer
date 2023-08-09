@@ -27,6 +27,9 @@
                 file="Source/lumatone_editor_library/actions/lumatone_action.h"/>
         </GROUP>
         <GROUP id="{E5675079-813D-9347-BFA4-92F0F3CF8378}" name="assets">
+          <GROUP id="{640BD392-CABC-C234-2502-261500303045}" name="colours">
+            <FILE id="YE7HP6" name="model.json" compile="0" resource="1" file="Source/lumatone_editor_library/assets/colours/model.json"/>
+          </GROUP>
           <GROUP id="{AB6008DA-182A-C7ED-EF8C-0A3ED605E8BA}" name="fonts">
             <FILE id="IX639r" name="framd.ttf" compile="0" resource="1" file="Source/lumatone_editor_library/assets/fonts/framd.ttf"/>
             <FILE id="G3z2EL" name="framdit.ttf" compile="0" resource="1" file="Source/lumatone_editor_library/assets/fonts/framdit.ttf"/>
@@ -154,6 +157,15 @@
           <FILE id="XX1Ls9" name="state_base.cpp" compile="1" resource="0" file="Source/lumatone_editor_library/data/state_base.cpp"/>
           <FILE id="fYBYwD" name="state_base.h" compile="0" resource="0" file="Source/lumatone_editor_library/data/state_base.h"/>
         </GROUP>
+        <GROUP id="{40997F42-DCBE-6240-D6EC-FD15711D9A48}" name="color">
+          <FILE id="PWNl5D" name="colour_model.cpp" compile="1" resource="0"
+                file="Source/lumatone_editor_library/color/colour_model.cpp"/>
+          <FILE id="TSAmqU" name="colour_model.h" compile="0" resource="0" file="Source/lumatone_editor_library/color/colour_model.h"/>
+          <FILE id="hOUcVb" name="lumatone_colour.cpp" compile="1" resource="0"
+                file="Source/lumatone_editor_library/color/lumatone_colour.cpp"/>
+          <FILE id="pjoU5S" name="lumatone_colour.h" compile="0" resource="0"
+                file="Source/lumatone_editor_library/color/lumatone_colour.h"/>
+        </GROUP>
         <FILE id="fGZzxB" name="lumatone_geometry.h" compile="0" resource="0"
               file="Source/lumatone_editor_library/lumatone_geometry.h"/>
         <FILE id="IQrEcV" name="lumatone_tiling.h" compile="0" resource="0"
@@ -216,7 +228,6 @@
         <FILE id="rKxMh8" name="game_engine.cpp" compile="1" resource="0" file="Source/game/game_engine.cpp"/>
         <FILE id="Uadxb5" name="game_engine.h" compile="0" resource="0" file="Source/game/game_engine.h"/>
       </GROUP>
-      <GROUP id="{422339CB-3A6A-697A-4974-ADAC2726688C}" name="color"/>
       <GROUP id="{55B08FD4-0AD4-DFA0-43DE-428122D2066E}" name="gui">
         <FILE id="xS8FQe" name="connection_status.cpp" compile="1" resource="0"
               file="Source/gui/connection_status.cpp"/>
