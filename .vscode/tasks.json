@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cmake configure",
+      "type": "shell",
+      "command": "cmake -B build -G Ninja"
+    },
+    {
+      "label": "build debug",
+      "type": "shell",
+      "command": "cmake -B build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOn": "cmake configure"
+    },
+    {
+      "label": "build release",
+      "type": "shell",
+      "command": "cmake -B build --config Release",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/build/"
+      }
+    },
+
+  {
+    "label": "xcode-build",
+    "type": "shell",
+    "command": "cd ./Builds/MacOSX/ && xcodebuild -scheme 'LumatoneSandbox - App'"
+  }
+  ]
+}
