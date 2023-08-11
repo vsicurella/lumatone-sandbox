@@ -160,8 +160,8 @@ void LumatoneController::sendGetMappingOfBoardRequest(int boardId)
 
 void LumatoneController::sendGetCompleteMappingRequest()
 {
-    for (int boardIndex = 1; boardIndex <= getNumBoards(); boardIndex++)
-        sendGetMappingOfBoardRequest(boardIndex);
+    for (int boardId = 1; boardId <= getNumBoards(); boardId++)
+        sendGetMappingOfBoardRequest(boardId);
 }
 
 void LumatoneController::resetVelocityConfig(LumatoneConfigTable::TableType velocityCurveType)
@@ -219,7 +219,7 @@ void LumatoneController::testCurrentDeviceConnection()
     {
         waitingForTestResponse = true;
 
-        if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_9)
+        if (getSerialNumber().isNotEmpty() && getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_9)
         {
             pingLumatone(0xf);
         }
@@ -553,6 +553,19 @@ void LumatoneController::requestExpressionPedalSensitivity()
         midiDriver.sendGetExpressionPedalSensitivity();
 }
 
+void LumatoneController::onConnectionConfirmed()
+{
+    waitingForTestResponse = false;
+    currentDevicePairConfirmed = true;
+
+    if (getLumatoneVersion() != LumatoneFirmwareVersion::VERSION_55_KEYS)
+        sendGetFirmwareRevisionRequest();
+
+    statusListeners.call(&LumatoneEditor::StatusListener::connectionEstablished, 
+                        midiDriver.getLastMidiInputInfo().identifier,
+                        midiDriver.getLastMidiOutputInfo().identifier);
+    sendGetCompleteMappingRequest();
+}
 
 bool LumatoneController::loadLayoutFromFile(const juce::File& file)
 {
@@ -584,6 +597,9 @@ void LumatoneController::serialIdentityReceived(const int* serialBytes)
     DBG("Device serial is: " + serialNumber);
 
     setConnectedSerialNumber(serialNumber);
+
+    if (waitingForTestResponse)
+        onConnectionConfirmed();
 }
 
 void LumatoneController::firmwareRevisionReceived(FirmwareVersion version)
@@ -591,14 +607,22 @@ void LumatoneController::firmwareRevisionReceived(FirmwareVersion version)
     setFirmwareVersion(version, true);
 }
 
+void LumatoneController::pingResponseReceived(unsigned int pingValue)
+{
+    if (waitingForTestResponse)
+        onConnectionConfirmed();
+}
+
 void LumatoneController::octaveColourConfigReceived(int boardId, juce::uint8 rgbFlag, const int* colourData) 
 {
     auto octaveSize = getOctaveBoardSize();
     auto numBoards = getNumBoards();
 
+    int boardIndex = boardId - 1;
+
     for (int keyIndex = 0; keyIndex < octaveSize; keyIndex++)
     {
-        LumatoneKey* keyData = getEditKey(boardId - 1, keyIndex);
+        LumatoneKey* keyData = getEditKey(boardIndex, keyIndex);
         auto newValue = colourData[keyIndex];
 
         if (rgbFlag == 0)
@@ -619,7 +643,7 @@ void LumatoneController::octaveColourConfigReceived(int boardId, juce::uint8 rgb
         }
     }
 
-    editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *getBoard(boardId - 1));
+    editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *getBoard(boardIndex));
 };
 
 
@@ -704,21 +728,6 @@ void LumatoneController::octaveNoteConfigReceived(int boardId, const int* noteDa
 //            // Kludge - device monitor should be able to do this on it's own
 //            if (deviceMonitor->willDetectDeviceIfDisconnected())
 //                deviceMonitor->initializeDeviceDetection();
-//        }
-//    }
-//}
-
-//void LumatoneController::confirmAutoConnection()
-//{
-//    if (midiDriver.hasDevicesDefined() && !currentDevicePairConfirmed)
-//    {
-//        if (connectedSerialNumber.isEmpty())
-//        {
-//            sendGetSerialIdentityRequest();
-//        }
-//        else
-//        {
-//            sendGetFirmwareRevisionRequest();
 //        }
 //    }
 //}

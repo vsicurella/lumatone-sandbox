@@ -614,7 +614,6 @@ void DeviceActivityMonitor::connectionFailed()
 
 void DeviceActivityMonitor::connectionEstablished(int inputIndex, int outputIndex)
 {
-
     confirmedInputIndex = inputIndex;
     confirmedOutputIndex = outputIndex;
 

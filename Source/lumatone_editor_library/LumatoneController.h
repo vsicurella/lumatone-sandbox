@@ -53,6 +53,7 @@ public:
 
 private:
     bool connectionConfirmed() const { return midiDriver.hasDevicesDefined() && currentDevicePairConfirmed; }
+    void onConnectionConfirmed();
 
 public:
     //============================================================================
@@ -222,6 +223,8 @@ protected:
     void serialIdentityReceived(const int* serialBytes) override;
 
     void firmwareRevisionReceived(FirmwareVersion version) override;
+
+    void pingResponseReceived(unsigned int pingValue) override;
 
     void octaveColourConfigReceived(int boardId, juce::uint8 rgbFlag, const int* colourData) override;
     void octaveChannelConfigReceived(int octaveIndex, const int* channelData) override;
