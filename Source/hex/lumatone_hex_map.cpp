@@ -106,23 +106,24 @@ void LumatoneHexMap::renderMap()
             break;
         }
 
-        while (keyIndex < lumatoneGeometry.getLastIndexForRow(lineIndex))
+        int rowLastKey = lumatoneGeometry.getLastIndexForRow(lineIndex);
+        while (keyIndex <= rowLastKey)
         {
             for (int boardIndex = 0; boardIndex < layout.getNumBoards(); boardIndex++)
             {
-                auto mappedBoardKey = addBoardIndex(rowPoint + Hex::Point(rowKeyIndex, 0), boardIndex);
+                auto hexCoord = addBoardIndex(rowPoint + Hex::Point(rowKeyIndex, 0), boardIndex);
 
-                LumatoneKeyCoord coords(boardIndex, keyIndex);
+                LumatoneKeyCoord keyCoord(boardIndex, keyIndex);
 
-                MappedKey mappedKey = { coords, mappedBoardKey };
+                MappedKey mappedKey = { keyCoord, hexCoord };
                 //boards.getReference(boardIndex).keys[keyIndex] = mappedKey;
                 boards[boardIndex].keys[keyIndex] = mappedKey;
 
-                auto key = mappedBoardKey.toString();
-                map->set(key, mappedKey);
-
-                keyIndex++;
+                auto hexHash = hexCoord.toString();
+                map->set(hexHash, mappedKey);
             }
+            keyIndex++;
+            rowKeyIndex++;
         }
 
         lineIndex++;
