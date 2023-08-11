@@ -12,7 +12,7 @@
 
 LumatoneColourModel::LumatoneColourModel()
 {
-    cache.reset(new juce::HashMap<ColourHash, juce::Colour>(280));
+    cache.reset(new juce::HashMap<LumatoneEditor::ColourHash, juce::Colour>(280));
     parseTable();
 }
 
@@ -26,7 +26,7 @@ juce::Colour LumatoneColourModel::getModelColour(juce::Colour colour)
     if (colour.isTransparent())
         return juce::Colour();
 
-    ColourHash hash = (colour.getRed() << 16) | (colour.getGreen() << 8) | colour.getBlue();
+    LumatoneEditor::ColourHash hash = LumatoneEditor::getColourHash(colour);
     auto cached = (*cache)[hash];
     if (cached.isOpaque())
         return cached;

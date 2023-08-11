@@ -10,8 +10,7 @@
 
 #pragma once
 
-#include <JuceHeader.h>
-
+#include "../lumatone_editor_common.h"
 #include "interpolation.h"
 // #include "lumatone_colour.h"
 
@@ -22,7 +21,6 @@ class LumatoneColourModel
 private:
     using uint8 = unsigned char;
     using ColourTable = uint8[MAX_INCREMENT][MAX_INCREMENT][MAX_INCREMENT][3];
-    using ColourHash = unsigned int;
 
     struct TrilinearInterpolationParams
     {
@@ -68,5 +66,5 @@ private:
     ColourTable raw;
     ColourTable adjusted;
 
-    std::unique_ptr<juce::HashMap<ColourHash,juce::Colour>> cache;
+    std::unique_ptr<juce::HashMap<LumatoneEditor::ColourHash,juce::Colour>> cache;
 };
