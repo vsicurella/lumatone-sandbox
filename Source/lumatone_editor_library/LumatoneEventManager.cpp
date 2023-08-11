@@ -15,11 +15,14 @@ LumatoneEventManager::LumatoneEventManager(TerpstraMidiDriver& midiDriverIn, Lum
     : LumatoneMidiState(stateIn)
     , midiDriver(midiDriverIn)
 {
+    midiDriver.addMessageCollector(this);
 
+    juce::MidiMessageCollector::reset(bufferReadTimeoutMs);
 }
 
 LumatoneEventManager::~LumatoneEventManager()
 {
+    midiDriver.removeMessageCollector(this);
 }
 
 //=============================================================================
@@ -27,9 +30,9 @@ LumatoneEventManager::~LumatoneEventManager()
 
 void LumatoneEventManager::midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage)
 {
-    bool connected = state.getConnectionState() > ConnectionState::SEARCHING;
-    if (connected)
-    {
+    //bool connected = state.getConnectionState() >= ConnectionState::SEARCHING;
+    //if (connected)
+    //{
         if (midiMessage.isSysEx())
         {
             addMessageToQueue(midiMessage);
@@ -41,7 +44,7 @@ void LumatoneEventManager::midiMessageReceived(juce::MidiInput* source, const ju
                 startTimer(bufferReadTimeoutMs);
             }
         }
-    }
+    //}
 
     if (!midiMessage.isSysEx())
     {
