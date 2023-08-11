@@ -80,11 +80,21 @@ bool SingleNoteAssignAction::perform()
             }
 
             newData = resultKey;
-            // Send to device
-            controller->sendKeyParam(
-                boardId,
-                keyIndex,
-                newData);
+
+            bool onlyColor = setColour && !(setKeyType || setChannel || setNote || setCCFaderPolarity);
+            
+            if (onlyColor)
+            {
+                controller->sendKeyColourConfig(boardId, keyIndex, newData);
+            }
+            else
+            {
+                // Send to device
+                controller->sendKeyParam(
+                    boardId,
+                    keyIndex,
+                    newData);
+            }
 
             // Notfy that there are changes: in calling function
         }

@@ -31,10 +31,6 @@ void RandomColors::reset(bool clearQueue)
 
         queueIdentityLayout(true);
     }
-    else
-    {
-        addToQueue(renderFrame());
-    }
 }
 
 void RandomColors::nextTick()
@@ -44,7 +40,8 @@ void RandomColors::nextTick()
     if (ticks % nextStepTicks != 0)
         return;
 
-    reset(false);
+    ticks = 0;
+    addToQueue(renderFrame());
 }
 
 juce::UndoableAction* RandomColors::renderFrame()
