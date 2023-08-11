@@ -53,6 +53,8 @@ public:
 
     void setLumatoneKey(const LumatoneKey& lumatoneKey, int boardIdx, int keyIdx);
 
+    void setDisplayColour(const juce::Colour& colour);
+
     const LumatoneKey* getKeyData() const;
     juce::Colour getKeyColour() const;
 

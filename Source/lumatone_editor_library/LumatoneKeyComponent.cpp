@@ -36,15 +36,13 @@ void LumatoneKeyDisplay::setUiMode(LumatoneKeyDisplay::UiMode uiModeIn)
 
 void LumatoneKeyDisplay::paint(juce::Graphics& g)
 {
-    const juce::Colour hexagonColour = juce::Colours::slategrey.overlaidWith(getKeyColour());
+    juce::Colour hexagonColour = juce::Colours::slategrey.overlaidWith(getKeyColour());
     // juce::Colour hexagonColour = findColour(LumatoneKeyEdit::backgroundColourId).overlaidWith(getKeyColour());
-    //if (hexagonColour.getPerceivedBrightness() >= 0.6)
-    //    hexagonColour = hexagonColour.darker((1.0 - hexagonColour.getPerceivedBrightness()));
-
-    // TODO LUMATONE MODELED COLORS
+    if (hexagonColour.getPerceivedBrightness() >= 0.6)
+       hexagonColour = hexagonColour.darker((1.0 - hexagonColour.getPerceivedBrightness()));
 
     // set color
-    juce::Colour c = hexagonColour;
+    juce::Colour c = hexagonColour.withAlpha(0.88f);
 
     switch (uiMode)
     {
@@ -226,6 +224,9 @@ const LumatoneKey* LumatoneKeyDisplay::getKeyData() const
 
 juce::Colour LumatoneKeyDisplay::getKeyColour() const
 {
+    if (keyColour.isOpaque())
+        return keyColour;
+
     auto keyData = getKeyData();
     if (keyData != nullptr)
         return keyData->colour;
@@ -239,7 +240,12 @@ void LumatoneKeyDisplay::setLumatoneKey(const LumatoneKey& lumatoneKey, int boar
     keyData = lumatoneKey;
     boardIndex = boardIdx;
     keyIndex = keyIdx;
-    repaint();
+    // repaint();
+}
+
+void LumatoneKeyDisplay::setDisplayColour(const juce::Colour& colour)
+{
+    keyColour = colour;
 }
 
 void LumatoneKeyDisplay::setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn)

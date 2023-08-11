@@ -147,6 +147,8 @@ void LumatoneKeyboardComponent::resetOctaveSize()
 
 void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData)
 {
+    auto colourModel = state.getColourModel();
+
     for (int boardIndex = 0; boardIndex < octaveBoards.size(); boardIndex++)
     {
         auto board = octaveBoards[boardIndex];
@@ -156,6 +158,10 @@ void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData
             auto key = board->keyMiniDisplay[keyIndex];
             auto keyData = *mappingData.readKey(boardIndex, keyIndex);
             key->setLumatoneKey(keyData, boardIndex, keyIndex);
+
+            auto modelColour = colourModel->getModelColour(keyData.colour);
+            key->setDisplayColour(modelColour);
+
             key->repaint();
         }
     }
@@ -165,12 +171,20 @@ void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData
 
 void LumatoneKeyboardComponent::boardChanged(LumatoneBoard boardData)
 {
+    auto colourModel = state.getColourModel();
+
     auto board = octaveBoards[boardData.board_idx];
 
     for (int keyIndex = 0; keyIndex < state.getOctaveBoardSize(); keyIndex++)
     {
         auto key = board->keyMiniDisplay[keyIndex];
-        key->setLumatoneKey(boardData.theKeys[keyIndex], boardData.board_idx, keyIndex);
+
+        auto keyData = boardData.theKeys[keyIndex];
+        key->setLumatoneKey(keyData, boardData.board_idx, keyIndex);
+
+        auto modelColour = colourModel->getModelColour(keyData.colour);
+        key->setDisplayColour(modelColour);
+        
         key->repaint();
     }
 
@@ -179,11 +193,17 @@ void LumatoneKeyboardComponent::boardChanged(LumatoneBoard boardData)
 
 void LumatoneKeyboardComponent::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
 {
+    auto colourModel = state.getColourModel();
+
     auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
 
     LumatoneKey oldKey = *key->getKeyData();
 
     key->setLumatoneKey(lumatoneKey, boardIndex, keyIndex);
+    
+    auto modelColour = colourModel->getModelColour(lumatoneKey.colour);
+    key->setDisplayColour(modelColour);
+
     key->repaint();
 
     if (   oldKey.keyType != lumatoneKey.keyType
