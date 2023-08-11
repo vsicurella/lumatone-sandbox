@@ -21,8 +21,7 @@ LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneState stateIn)
 
     addKeyListener(this);
 
-    tilingGeometry.setColumnAngle(LUMATONEGRAPHICCOLUMNANGLE);
-    tilingGeometry.setRowAngle(LUMATONEGRAPHICROWANGLE);
+    prepareHexTiling();
 
     LumatoneAssets::LoadAssets(LumatoneAssets::ID::LumatoneGraphic);
     //LumatoneAssets::LoadAssets(LumatoneAssets::ID::KeybedShadows);
@@ -39,6 +38,8 @@ void LumatoneKeyboardComponent::paint (juce::Graphics& g)
 {
     g.drawImageAt(lumatoneGraphic, lumatoneBounds.getX(), lumatoneBounds.getY());
 
+    // DBG("KEYBOARD COMPONENT REPAINT");
+
     // Draw a line under the selected sub board
     if (currentSetSelection >= 0 && currentSetSelection < state.getNumBoards())
     {
@@ -52,15 +53,28 @@ void LumatoneKeyboardComponent::paint (juce::Graphics& g)
     }
 }
 
+void LumatoneKeyboardComponent::prepareHexTiling()
+{
+    // tilingGeometry.setColumnAngle(LUMATONEGRAPHICCOLUMNANGLE);
+    // tilingGeometry.setRowAngle(LUMATONEGRAPHICROWANGLE);
+
+    oct1Key1 = juce::Point<float>(oct1Key1X, oct1Key1Y);
+    oct1Key56 = juce::Point<float>(oct1Key56X, oct1Key56Y);
+    oct5Key7 = juce::Point<float>(oct5Key7X, oct5Key7Y);
+
+    tilingGeometry.fitSkewedTiling(oct1Key1, oct1Key56, 10, oct5Key7, 24, true);
+    keyCentres = tilingGeometry.getHexagonCentresSkewed(lumatoneGeometry, 0, state.getNumBoards());
+}
+
 void LumatoneKeyboardComponent::resized()
 {
     graphicWidthUsed = getWidth();
-    graphicHeightUsed = getWidth() / imageAspect;
+    graphicHeightUsed = juce::roundToInt((float)getWidth() / imageAspect);
 
     if (graphicHeightUsed > getHeight())
     {
         graphicHeightUsed = getHeight();
-        graphicWidthUsed = graphicHeightUsed * imageAspect;
+        graphicWidthUsed = juce::roundToInt((float)graphicHeightUsed * imageAspect);
     }
 
     // Prepare position helpers for graphics
@@ -83,16 +97,9 @@ void LumatoneKeyboardComponent::resized()
     keyShapeGraphic = getResizedImage(LumatoneAssets::ID::KeyShape, keyWidth, keyHeight);
     keyShadowGraphic = getResizedImage(LumatoneAssets::ID::KeyShadow, keyWidth, keyHeight);
 
-    oct1Key1 = juce::Point<float>(oct1Key1X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct1Key1Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
-    oct1Key56 = juce::Point<float>(oct1Key56X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct1Key56Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
-    oct5Key7 = juce::Point<float>(oct5Key7X * lumatoneBounds.getWidth() + lumatoneBounds.getX(), oct5Key7Y * lumatoneBounds.getHeight() + lumatoneBounds.getY());
-
-    tilingGeometry.fitSkewedTiling(oct1Key1, oct1Key56, 10, oct5Key7, 24, false);
-
-    juce::Array<juce::Point<float>> keyCentres = tilingGeometry.getHexagonCentresSkewed(lumatoneGeometry, 0, state.getNumBoards());
-
     int octaveIndex = 0;
-    octaveBoards[octaveIndex]->leftPos = keyCentres[0].getX() - keyWidth * 0.5;
+    int octaveX = keyCentres[0].getX() * lumatoneBounds.getWidth() + lumatoneBounds.getX();
+    octaveBoards[octaveIndex]->leftPos = octaveX - keyWidth * 0.5;
 
     // TODO get from state
     const int octaveBoardSize = 56;
@@ -102,13 +109,15 @@ void LumatoneKeyboardComponent::resized()
         int keyOctaveIndex = keyIndex % octaveBoardSize;
 
         // Apply rotational transform
-        juce::Point<int> centre = keyCentres[keyIndex].roundToInt();
+        juce::Point<int> centre = juce::Point<int>(
+            juce::roundToInt(keyCentres[keyIndex].x * lumatoneBounds.getWidth() + lumatoneBounds.getX()),
+            juce::roundToInt(keyCentres[keyIndex].y * lumatoneBounds.getHeight() + lumatoneBounds.getY())
+        );
 
         auto key = octaveBoards[octaveIndex]->keyMiniDisplay[keyOctaveIndex];
         key->setSize(keyWidth, keyHeight);
         key->setCentrePosition(centre);
         key->setKeyGraphics(keyShapeGraphic, keyShadowGraphic);
-
 
         if (keyOctaveIndex + 1 == octaveBoardSize)
         {
@@ -162,9 +171,11 @@ void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData
             auto modelColour = colourModel->getModelColour(keyData.colour);
             key->setDisplayColour(modelColour);
 
-            key->repaint();
+            // key->repaint();
         }
     }
+
+    repaint();
 
     resetLayoutState();
 }

@@ -90,6 +90,8 @@ private:
 
 private:
 
+    void prepareHexTiling();
+
     LumatoneKeyDisplay* getKeyFromMouseEvent(const juce::MouseEvent& e);
 
     juce::Image getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight);
@@ -150,6 +152,8 @@ private:
 
     juce::Rectangle<int> lumatoneBounds;
     int octaveLineY = 0;
+
+    juce::Array<juce::Point<float>> keyCentres;
 
     juce::Image lumatoneGraphic;
     juce::Image keyShapeGraphic;
