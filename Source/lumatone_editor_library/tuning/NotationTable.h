@@ -23,7 +23,7 @@ public:
 
     NotationTable(juce::Array<juce::String> degreeNominalsIn, juce::Array<juce::String> degreeAccidentalsIn, juce::Font accidentalsFontIn = juce::Font());
 
-    juce::Font getAccidentalsFont() const { return accidentalsFont; };
+    juce::Font getAccidentalsFont() const { return accidentalsFont; }
 
     juce::String getNoteNominal(int scaleDegree) const;
 

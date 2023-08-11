@@ -243,8 +243,6 @@ public:
 
         case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
         {
-            auto dialogOptions = juce::DialogWindow::LaunchOptions();
-
             game.reset(new RandomColorsComponent(gameEngine.get()));
             game->setSize(300, 200);
                 
@@ -268,7 +266,7 @@ public:
         
         case LumatoneSandbox::Menu::commandIDs::openHexRingsGame:
         {
-            auto dialogOptions = juce::DialogWindow::LaunchOptions();
+            // auto dialogOptions = juce::DialogWindow::LaunchOptions();
 
             game.reset(new HexRingLauncher(gameEngine.get()));
             game->setSize(300, 200);
