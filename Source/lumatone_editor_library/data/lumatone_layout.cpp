@@ -526,4 +526,29 @@ LumatoneConfigTable* LumatoneLayout::getConfigTable(LumatoneConfigTable::TableTy
 	}
 }
 
+juce::Array<juce::Colour> LumatoneLayout::getLayoutColours() const
+{
+    juce::Array<juce::Colour> layoutColours = readBoard(0)->getBoardColours();
 
+    for (int i = 1; i < getNumBoards(); i++)
+    {
+        auto boardColours = readBoard(i)->getBoardColours();
+        for (auto c : boardColours)
+        {
+            if (!layoutColours.contains(c))
+                layoutColours.add(c);
+        }
+    }
+
+    return layoutColours;
+}
+
+juce::Array<LumatoneKeyCoord> LumatoneLayout::getKeysWithColour(const juce::Colour& c) const
+{
+    juce::Array<LumatoneKeyCoord> keyCoords;
+
+    for (int i = 0; i < numBoards; i++)
+        keyCoords.addArray(getKeysWithColour(c));
+
+    return keyCoords;
+}

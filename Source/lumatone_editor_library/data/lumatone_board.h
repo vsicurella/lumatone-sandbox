@@ -9,6 +9,7 @@
 */
 
 #pragma once
+#include "../lumatone_editor_common.h"
 #include "lumatone_key.h"
 
 #define MAXBOARDSIZE 56
@@ -28,6 +29,9 @@ public:
     bool isEmpty() const;
 
     int getNumKeys() const;
+
+    juce::Array<juce::Colour> getBoardColours() const;
+    juce::Array<LumatoneKeyCoord> getKeysWithColour(const juce::Colour& c) const;
 
 private:
 

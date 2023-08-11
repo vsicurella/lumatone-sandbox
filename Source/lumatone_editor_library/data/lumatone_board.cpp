@@ -55,3 +55,29 @@ int LumatoneBoard::getNumKeys() const
 {
     return numKeys;
 }
+
+juce::Array<juce::Colour> LumatoneBoard::getBoardColours() const
+{
+    juce::Array<juce::Colour> boardColours;
+
+    for (int i = 0; i < numKeys; i++)
+    {
+        if (!boardColours.contains(theKeys[i].colour))
+            boardColours.add(theKeys[i].colour);
+    }
+
+    return boardColours;
+}
+
+juce::Array<LumatoneKeyCoord> LumatoneBoard::getKeysWithColour(const juce::Colour& c) const
+{
+    juce::Array<LumatoneKeyCoord> keyCoords;
+
+    for (int i = 0; i < numKeys; i++)
+    {
+        if (theKeys[i].colour == c)
+            keyCoords.add(LumatoneKeyCoord(board_idx, i));
+    }
+
+    return keyCoords;
+}
