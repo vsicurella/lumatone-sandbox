@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.27)
 
 project(LUMATONE_SANDBOX VERSION 0.0.1)
 
-add_subdirectory(../../juce subprojects/juce)
+# find_package(juce)
+add_subdirectory($ENV{juce_DIR} subprojects/juce)
 
 juce_add_gui_app(LumatoneSandbox PRODUCT_NAME "Lumatone Sandbox App")
 juce_generate_juce_header(LumatoneSandbox)
@@ -20,6 +21,7 @@ target_compile_definitions(LumatoneSandbox
         JUCE_USE_CURL=0
         JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:LumatoneSandbox,JUCE_PRODUCT_NAME>"
         JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:LumatoneSandbox,JUCE_VERSION>"
+        DONT_SET_USING_JUCE_NAMESPACE=1
     )
 
 file(GLOB_RECURSE BinaryData
