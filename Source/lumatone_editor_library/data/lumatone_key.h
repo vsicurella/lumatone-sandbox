@@ -35,11 +35,8 @@ struct LumatoneKeyCoord
 class LumatoneKey
 {
 public:
-	typedef juce::Colour COLOURTYPE;
-
-public:
 	LumatoneKey(LumatoneKeyType newKeyType = LumatoneKeyType::disabled) { noteNumber = 0; channelNumber = 1; colour = juce::Colour(); keyType = newKeyType; ccFaderDefault = true; };
-	LumatoneKey(LumatoneKeyType newKeyType, int newChannelNumber, int newNoteNumber, COLOURTYPE newColour, bool invertCCFader = false)
+	LumatoneKey(LumatoneKeyType newKeyType, int newChannelNumber, int newNoteNumber, juce::Colour newColour, bool invertCCFader = false)
 	{
 		keyType = newKeyType; channelNumber = newChannelNumber; noteNumber = newNoteNumber; colour = newColour; ccFaderDefault = invertCCFader;
 	}
@@ -55,11 +52,11 @@ public:
 	LumatoneKey withInvertCCFader(bool invertCCFader) const { return LumatoneKey(keyType, channelNumber, noteNumber, colour, invertCCFader); }
 
 public:
-	int			noteNumber;
-	int			channelNumber;
-	COLOURTYPE	colour;
-	bool        ccFaderDefault;
-	LumatoneKeyType		keyType;
+	int				noteNumber;
+	int			    channelNumber;
+	juce::Colour    colour;
+	bool            ccFaderDefault;
+	LumatoneKeyType	keyType;
 };
 
 
