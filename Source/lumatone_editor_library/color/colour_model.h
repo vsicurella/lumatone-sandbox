@@ -9,32 +9,64 @@
 */
 
 #pragma once
+
 #include <JuceHeader.h>
+
+#include "interpolation.h"
+// #include "lumatone_colour.h"
 
 #define MAX_INCREMENT 16
 
 class LumatoneColourModel
 {
-    typedef float ColourTable[MAX_INCREMENT][MAX_INCREMENT][MAX_INCREMENT][3];
+private:
+    using uint8 = unsigned char;
+    using ColourTable = uint8[MAX_INCREMENT][MAX_INCREMENT][MAX_INCREMENT][3];
+    using ColourHash = unsigned int;
+
+    struct TrilinearInterpolationParams
+    {
+        Interpolate::TrilinearParams red;
+        Interpolate::TrilinearParams green;
+        Interpolate::TrilinearParams blue;
+
+        TrilinearInterpolationParams(Interpolate::TrilinearParams r, Interpolate::TrilinearParams g, Interpolate::TrilinearParams b)
+            : red(r), green(g), blue(b) { }
+    };
+
+public:
+    enum class Type
+    {
+        RAW,
+        ADJUSTED
+    };
 
 public:
 
     LumatoneColourModel();
     ~LumatoneColourModel();
 
+    juce::Colour getModelColour(juce::Colour colour);
+
+    // LumatoneColour getLumatoneColour(juce::Colour colour);
 
 private:
+
+    juce::Colour calculateModelColour(LumatoneColourModel::Type type, const juce::Colour& colour);
 
     void readTable(const juce::var& tableVar, ColourTable& table);
 
     void parseTable();
 
+    TrilinearInterpolationParams getInterpolationParams(LumatoneColourModel::Type type, const juce::Colour& c);
+
+    static uint8 roundToUint8(float value);
 
 private:
-
-
     int increment = MAX_INCREMENT;
 
     ColourTable raw;
     ColourTable adjusted;
+
+    std::unique_ptr<juce::HashMap<ColourHash,juce::Colour>> cache;
 };

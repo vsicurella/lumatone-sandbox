@@ -9,3 +9,13 @@
 */
 
 #pragma once
+
+#include <JuceHeader.h>
+
+// class LumatoneColour : public juce::Colour
+// {
+// public:
+
+//     LumatoneColour(juce::Colour colour, juce::Colour modeledColour) : juce::Colour(colour) { }
+//     ~LumatoneColour();
+// };
