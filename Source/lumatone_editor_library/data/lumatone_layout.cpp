@@ -238,6 +238,7 @@ void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)
     for (int i = 0; i < numBoards; i++)
     {
         boards[i] = LumatoneBoard(newKeyType, octaveBoardSize);
+        boards[i].board_idx = i;
     }
 
     // Default values for options
