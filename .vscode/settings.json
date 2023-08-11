@@ -65,5 +65,6 @@
         "vector": "cpp",
         "__bits": "cpp",
         "map": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }
