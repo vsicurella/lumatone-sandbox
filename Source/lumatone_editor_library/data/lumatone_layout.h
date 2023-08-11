@@ -66,12 +66,12 @@ private:
 public:
 	LumatoneLayout(int numBoards=5, int octaveBoardSize=56, bool initializeWithNotes=false);
 
-	virtual void clearVelocityIntervalTable();
-	virtual void clearAll(bool initializeWithNoteKeyType=false);
-    virtual bool isEmpty() const;
+	void clearVelocityIntervalTable();
+	void clearAll(bool initializeWithNoteKeyType=false);
+    bool isEmpty() const;
 
-	virtual void fromStringArray(const juce::StringArray& stringArray);
-	virtual juce::StringArray toStringArray();
+	void fromStringArray(const juce::StringArray& stringArray);
+	juce::StringArray toStringArray();
 
 	int getNumBoards() const { return numBoards; }
 	int getOctaveBoardSize() const { return octaveBoardSize; }

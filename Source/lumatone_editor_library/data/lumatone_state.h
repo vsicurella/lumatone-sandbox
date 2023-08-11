@@ -16,6 +16,8 @@
 #include "../lumatone_midi_driver/firmware_definitions.h"
 #include "../lumatone_output_map.h"
 
+#include "../color/colour_model.h"
+
 enum class ConnectionState
 {
     DISCONNECTED = 0,
@@ -76,6 +78,10 @@ public:
     const LumatoneBoard* getBoard(int boardIndex) const;
     const LumatoneKey* getKey(int boardIndex, int keyIndex) const;
 
+    const LumatoneOutputMap* getMidiKeyMap() const;
+
+    LumatoneColourModel* getColourModel() const;
+
     bool isKeyCoordValid(const LumatoneKeyCoord& coord) const;
 
     const FirmwareSupport& getFirmwareSupport() const;
@@ -117,8 +123,8 @@ protected:
     
     FirmwareSupport firmwareSupport;
 
-    //LumatoneLayout mappingData;
     std::shared_ptr<LumatoneLayout> mappingData;
+    std::shared_ptr<LumatoneColourModel> colourModel;
     std::shared_ptr<LumatoneOutputMap> midiKeyMap;
 
     LumatoneBoard* getEditBoard(int boardIndex);

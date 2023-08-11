@@ -38,9 +38,11 @@ public:
 
 public:
     LumatoneHexMap(LumatoneLayout layout, 
-                   Hex::Point originPoint = Hex::Point(0, 0), 
+                   Hex::Point originPoint = Hex::Point(0, 0),
                    int originBoardIndex = 0, 
                    int originKeyIndex = 0);
+
+    ~LumatoneHexMap();
 
     LumatoneKeyCoord hexToKeyCoords(Hex::Point point) const;
    
@@ -48,7 +50,7 @@ public:
 
 private:
 
-    juce::HashMap<juce::String, MappedKey> map;
+    std::unique_ptr<juce::HashMap<juce::String, MappedKey>> map;
 
     void renderMap();
 

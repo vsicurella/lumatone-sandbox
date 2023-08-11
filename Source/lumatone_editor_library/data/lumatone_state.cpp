@@ -32,21 +32,25 @@ LumatoneState::LumatoneState(juce::ValueTree stateIn, juce::UndoManager* undoMan
     state = loadStateProperties(stateIn);
     state.addListener(this);
 
-    if (mappingData == nullptr)
-    {
-        mappingData = std::make_shared<LumatoneLayout>();
-    }
+    mappingData = std::make_shared<LumatoneLayout>();
+    colourModel = std::make_shared<LumatoneColourModel>();
+    midiKeyMap = std::make_shared<LumatoneOutputMap>(mappingData.get());
 }
 
 LumatoneState::LumatoneState(const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn)
     : LumatoneState(stateToCopy.state, undoManagerIn)
 {
     mappingData = stateToCopy.mappingData;
+    colourModel = stateToCopy.colourModel;
+    midiKeyMap = stateToCopy.midiKeyMap;
 }
 
 LumatoneState::~LumatoneState()
 {
     state.removeListener(this);
+
+    midiKeyMap = nullptr;
+    colourModel = nullptr;
     mappingData = nullptr;
 }
 
@@ -222,6 +226,16 @@ const LumatoneBoard* LumatoneState::getBoard(int boardIndex) const
 const LumatoneKey* LumatoneState::getKey(int boardIndex, int keyIndex) const
 {
     return &mappingData->readBoard(boardIndex)->theKeys[keyIndex];
+}
+
+const LumatoneOutputMap* LumatoneState::getMidiKeyMap() const
+{
+    return midiKeyMap.get();
+}
+
+LumatoneColourModel* LumatoneState::getColourModel() const
+{
+    return colourModel.get();
 }
 
 bool LumatoneState::isKeyCoordValid(const LumatoneKeyCoord& coord) const

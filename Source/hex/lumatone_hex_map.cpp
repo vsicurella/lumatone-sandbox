@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    lumatone_hex_map.cpp
+    lumatone_hex_map->cpp
     Created: 31 Jul 2023 1:39:39am
     Author:  Vincenzo
 
@@ -15,15 +15,20 @@ LumatoneHexMap::LumatoneHexMap(LumatoneLayout layoutIn, Hex::Point originPointIn
     , originPoint(originPointIn)
     , originBoardIndex(originBoardIndexIn)
     , originKeyIndex(originKeyIndexIn)
-    , map(juce::HashMap<juce::String, MappedKey>(280))
 {
+    map.reset(new juce::HashMap<juce::String, MappedKey>(280));
     renderMap();
+}
+
+LumatoneHexMap::~LumatoneHexMap()
+{
+    map = nullptr;
 }
 
 LumatoneKeyCoord LumatoneHexMap::hexToKeyCoords(Hex::Point point) const
 {
     auto key = point.toString();
-    return map[key].key;
+    return (*map)[key].key;
 }
 
 Hex::Point LumatoneHexMap::keyCoordsToHex(int boardIndex, int keyIndex) const
@@ -38,7 +43,7 @@ Hex::Point LumatoneHexMap::addBoardIndex(Hex::Point point, int numIndexes)
 
 void LumatoneHexMap::renderMap()
 {
-    map.clear();
+    map->clear();
     //boards.clear();
 
     for (int i = 0; i < layout.getNumBoards(); i++)
@@ -114,7 +119,7 @@ void LumatoneHexMap::renderMap()
                 boards[boardIndex].keys[keyIndex] = mappedKey;
 
                 auto key = mappedBoardKey.toString();
-                map.set(key, mappedKey);
+                map->set(key, mappedKey);
 
                 keyIndex++;
             }
