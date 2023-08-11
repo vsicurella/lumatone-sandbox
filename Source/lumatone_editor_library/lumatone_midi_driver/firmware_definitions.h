@@ -215,8 +215,8 @@ typedef enum
 enum class LumatoneFirmwareVersion
 {
 	NO_VERSION      = 0,  // Used for instantiation
-	VERSION_55_KEYS = 0,  // Used when GetSerialIdentity returns 00000000
 	UNKNOWN_VERSION = 0,  // Used when no other version applies
+	VERSION_55_KEYS = 1,  // Used when GetSerialIdentity returns 00000000
 	VERSION_1_0_3 = 0x10,
 	VERSION_1_0_4,
 	VERSION_1_0_5,
