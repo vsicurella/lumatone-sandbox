@@ -36,13 +36,13 @@ void LumatoneKeyDisplay::setUiMode(LumatoneKeyDisplay::UiMode uiModeIn)
 
 void LumatoneKeyDisplay::paint(juce::Graphics& g)
 {
-    juce::Colour hexagonColour = juce::Colours::slategrey.overlaidWith(getKeyColour());
+    juce::Colour hexagonColour = getKeyColour();
     // juce::Colour hexagonColour = findColour(LumatoneKeyEdit::backgroundColourId).overlaidWith(getKeyColour());
-    if (hexagonColour.getPerceivedBrightness() >= 0.6)
-       hexagonColour = hexagonColour.darker((1.0 - hexagonColour.getPerceivedBrightness()));
+    if (hexagonColour.getPerceivedBrightness() >= 0.6f)
+       hexagonColour = hexagonColour.darker((1.0f - hexagonColour.getPerceivedBrightness()));
 
     // set color
-    juce::Colour c = hexagonColour.withAlpha(0.88f);
+    juce::Colour c = hexagonColour;
 
     switch (uiMode)
     {
@@ -55,7 +55,6 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
         {
             c = c.overlaidWith(juce::Colours::slateblue.withAlpha(0.2f));
         }
-
         if (isNoteOn || isClicked)
         {
             c = hexagonColour.contrasting(0.5f);
@@ -88,8 +87,10 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
             int x = juce::roundToInt((getWidth() - colourGraphic->getWidth()) * 0.5f);
             int y = juce::roundToInt((getHeight() - colourGraphic->getHeight()) * 0.5f);
 
+            // g.beginTransparencyLayer(0.8f);
             g.drawImageAt(*colourGraphic, x, y, true);
             g.drawImageAt(*shadowGraphic, x, y);
+            // g.endTransparencyLayer();
         }
     }
     }
@@ -227,9 +228,9 @@ juce::Colour LumatoneKeyDisplay::getKeyColour() const
     if (keyColour.isOpaque())
         return keyColour;
 
-    auto keyData = getKeyData();
-    if (keyData != nullptr)
-        return keyData->colour;
+    auto config = getKeyData();
+    if (config != nullptr)
+        return config->colour;
     else
         // return findColour(LumatoneKeyEdit::backgroundColourId);
         return juce::Colours::slategrey;
