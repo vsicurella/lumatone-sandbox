@@ -11,7 +11,7 @@
 #ifndef BOARDGEOMETRY_H_INCLUDED
 #define BOARDGEOMETRY_H_INCLUDED
 
-#include "../JuceLibraryCode/JuceHeader.h"
+#include <JuceHeader.h>
 
 // Number of rows by which each octave board is offset
 #define BOARDROWOFFSET 2

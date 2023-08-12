@@ -9,6 +9,7 @@
 */
 
 #include "LumatoneKeyboardComponent.h"
+#include "./color/colour_model.h"
 
 LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneState stateIn)
     : LumatoneMidiState(stateIn)

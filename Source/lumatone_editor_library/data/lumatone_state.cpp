@@ -9,6 +9,7 @@
 */
 
 #include "lumatone_state.h"
+#include "../color/colour_model.h"
 
 juce::Array<juce::Identifier> LumatoneState::getAllProperties()
 {

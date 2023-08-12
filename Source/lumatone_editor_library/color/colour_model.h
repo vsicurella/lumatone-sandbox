@@ -12,7 +12,6 @@
 
 #include "../lumatone_editor_common.h"
 #include "interpolation.h"
-// #include "lumatone_colour.h"
 
 #define MAX_INCREMENT 16
 

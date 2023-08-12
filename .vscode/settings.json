@@ -64,7 +64,8 @@
         "variant": "cpp",
         "vector": "cpp",
         "__bits": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "*.mm": "cpp"
     },
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": true
 }

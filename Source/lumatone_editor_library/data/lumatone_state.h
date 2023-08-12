@@ -16,7 +16,7 @@
 #include "../lumatone_midi_driver/firmware_definitions.h"
 #include "../lumatone_output_map.h"
 
-#include "../color/colour_model.h"
+class LumatoneColourModel;
 
 enum class ConnectionState
 {

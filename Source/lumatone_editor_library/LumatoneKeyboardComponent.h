@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+
 #include "lumatone_assets.h"
 #include "./data/lumatone_state.h"
 #include "./data/lumatone_midi_state.h"
