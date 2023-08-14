@@ -57,12 +57,12 @@ namespace LumatoneAssets
             juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase8x_png, BinaryData::KeyboardBase8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_8x);
             break;
 
-        case LumatoneAssets::ID::KeybedShadows:
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows_png,   BinaryData::KeybedShadows_pngSize),   (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_1x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows2x_png, BinaryData::KeybedShadows2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_2x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows4x_png, BinaryData::KeybedShadows4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_4x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows8x_png, BinaryData::KeybedShadows8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_8x);
-            break;
+        // case LumatoneAssets::ID::KeybedShadows:
+        //     juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows_png,   BinaryData::KeybedShadows_pngSize),   (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_1x);
+        //     juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows2x_png, BinaryData::KeybedShadows2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_2x);
+        //     juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows4x_png, BinaryData::KeybedShadows4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_4x);
+        //     juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows8x_png, BinaryData::KeybedShadows8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_8x);
+        //     break;
 
         case LumatoneAssets::ID::KeyShape:
             juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape_png,   BinaryData::KeyShape_pngSize),   (juce::int64)LumatoneAssets::HashCodes::KeyShape_1x);
@@ -71,9 +71,11 @@ namespace LumatoneAssets
             break;
 
         case LumatoneAssets::ID::KeyShadow:
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow_png,   BinaryData::KeyShadow_pngSize),  (juce::int64)LumatoneAssets::HashCodes::KeyShadow_1x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow2x_png, BinaryData::KeyShadow2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_2x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow4x_png, BinaryData::KeyShadow4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_4x);
+            {
+            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadowInv_png, BinaryData::KeyShadowInv_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_1x);
+            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadowInv2x_png, BinaryData::KeyShadowInv2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_2x);
+            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadowInv4x_png, BinaryData::KeyShadowInv4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_4x);
+            }
             break;
 
         default:
@@ -86,37 +88,37 @@ namespace LumatoneAssets
         switch (assetId)
         {
         case LumatoneAssets::ID::LumatoneGraphic:
-            if (height < 212 || width < 530)
+            if (height <= 212 || width <= 530)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_1x);
-            else if (height < 424 || width < 1060)
+            else if (height <= 424 || width <= 1060)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_2x);
-            else if (height < 849 || width < 2121)
+            else if (height <= 849 || width <= 2121)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_4x);
             else
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_8x);
 
         case LumatoneAssets::ID::KeybedShadows:
-            if (height < 212 || width < 530)
+            if (height <= 212 || width <= 530)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeybedShadows_1x);
-            else if (height < 424 || width < 1060)
+            else if (height <= 424 || width <= 1060)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeybedShadows_2x);
-            else if (height < 849 || width < 2121)
+            else if (height <= 849 || width <= 2121)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeybedShadows_4x);
             else
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeybedShadows_8x);
 
         case LumatoneAssets::ID::KeyShape:
-            if (height < 62 || width < 58)
+            if (height <= 62 || width <= 58)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShape_1x);
-            else if (height < 124 || width < 116)
+            else if (height <= 124 || width <= 116)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShape_2x);
             else
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShape_4x);
 
         case LumatoneAssets::ID::KeyShadow:
-            if (height < 62 || width < 58)
+            if (height <= 62 || width <= 58)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShadow_1x);
-            else if (height < 124 || width < 116)
+            else if (height <= 124 || width <= 116)
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShadow_2x);
             else
                 return juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShadow_4x);
