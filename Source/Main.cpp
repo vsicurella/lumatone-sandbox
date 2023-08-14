@@ -318,10 +318,11 @@ public:
 
             setResizable(true, true);
 
+            glContext.attachTo(*this);
            //#if JUCE_IOS || JUCE_ANDROID
            // setFullScreen(true);
            //#else
-            centreWithSize (getWidth(), getHeight());
+            centreWithSize (1024, 768);
            //#endif
 
             setVisible (true);
@@ -348,6 +349,7 @@ public:
 
     private:
         std::unique_ptr<juce::ComponentBoundsConstrainer> constrainer;
+        juce::OpenGLContext glContext;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
     };
