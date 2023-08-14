@@ -91,7 +91,7 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
 
             g.drawImageAt(colourGraphic, x, y, true);
             
-            g.beginTransparencyLayer(0.77f);
+            g.beginTransparencyLayer(0.7f);
             // g.drawImageAt(shadowGraphic, x, y);
             g.drawImageAt(shadowGraphic, x, y);
             g.endTransparencyLayer();
