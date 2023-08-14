@@ -38,8 +38,8 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
 {
     juce::Colour hexagonColour = getKeyColour();
     // juce::Colour hexagonColour = findColour(LumatoneKeyEdit::backgroundColourId).overlaidWith(getKeyColour());
-    if (hexagonColour.getPerceivedBrightness() >= 0.6f)
-       hexagonColour = hexagonColour.darker((1.0f - hexagonColour.getPerceivedBrightness()));
+    // if (hexagonColour.getPerceivedBrightness() >= 0.6f)
+    //    hexagonColour = hexagonColour.darker((1.0f - hexagonColour.getPerceivedBrightness()));
 
     // set color
     juce::Colour c = hexagonColour;
@@ -63,7 +63,6 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
         {
             c = c.contrasting(0.25f);
         }
-
         break;
     }
 
@@ -82,15 +81,20 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
     case UiMode::Graphic:
     case UiMode::GraphicInteractive:
     {
-        if (colourGraphic && shadowGraphic)
+        if (colourGraphic.isValid() && shadowGraphic.isValid())
         {
-            int x = juce::roundToInt((getWidth() - colourGraphic->getWidth()) * 0.5f);
-            int y = juce::roundToInt((getHeight() - colourGraphic->getHeight()) * 0.5f);
+            // int x = juce::roundToInt((getWidth() - colourGraphic->getWidth()) * 0.5f);
+            // int y = juce::roundToInt((getHeight() - colourGraphic->getHeight()) * 0.5f);
 
-            // g.beginTransparencyLayer(0.8f);
-            g.drawImageAt(*colourGraphic, x, y, true);
-            g.drawImageAt(*shadowGraphic, x, y);
-            // g.endTransparencyLayer();
+            int x = 0;
+            int y = 0;
+
+            g.drawImageAt(colourGraphic, x, y, true);
+            
+            g.beginTransparencyLayer(0.77f);
+            // g.drawImageAt(shadowGraphic, x, y);
+            g.drawImageAt(shadowGraphic, x, y);
+            g.endTransparencyLayer();
         }
     }
     }
@@ -98,7 +102,6 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
 
 void LumatoneKeyDisplay::resized()
 {
-
 }
 
 void LumatoneKeyDisplay::parentHierarchyChanged()
@@ -225,7 +228,7 @@ const LumatoneKey* LumatoneKeyDisplay::getKeyData() const
 
 juce::Colour LumatoneKeyDisplay::getKeyColour() const
 {
-    if (keyColour.isOpaque())
+    if (keyColour != juce::Colour())
         return keyColour;
 
     auto config = getKeyData();
@@ -247,12 +250,13 @@ void LumatoneKeyDisplay::setLumatoneKey(const LumatoneKey& lumatoneKey, int boar
 void LumatoneKeyDisplay::setDisplayColour(const juce::Colour& colour)
 {
     keyColour = colour;
+    // redrawRender();
 }
 
 void LumatoneKeyDisplay::setKeyGraphics(juce::Image& colourGraphicIn, juce::Image& shadowGraphicIn)
 {
-    colourGraphic = &colourGraphicIn;
-    shadowGraphic = &shadowGraphicIn;
+    colourGraphic = colourGraphicIn;
+    shadowGraphic = shadowGraphicIn;
 }
 
 void LumatoneKeyDisplay::setSelected(bool selected)

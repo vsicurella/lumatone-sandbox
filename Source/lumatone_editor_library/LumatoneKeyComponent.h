@@ -108,10 +108,11 @@ private:
     bool isClicked = false;
     bool isNoteOn = false;
 
-    juce::Image* colourGraphic = nullptr;
-    juce::Image* shadowGraphic = nullptr;
+    juce::Image colourGraphic;
+    juce::Image shadowGraphic;
 
     //DEBUG
     juce::Colour keyColour;
+    // juce::Image image;
 };
 

@@ -46,6 +46,7 @@ public:
 
 private:
 
+    void updateKeyColour(int boardIndex, int keyIndex, const juce::Colour& colour);
     void resetLayoutState();
 
 public:
@@ -95,7 +96,7 @@ private:
 
     LumatoneKeyDisplay* getKeyFromMouseEvent(const juce::MouseEvent& e);
 
-    juce::Image getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight);
+    juce::Image getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight, bool useJuceResize=false);
 
 private:
 
@@ -115,12 +116,6 @@ private:
     LumatoneGeometry    lumatoneGeometry;
     LumatoneTiling      tilingGeometry;
     LumatoneOutputMap   lumatoneMidiMap;
-
-    int graphicWidthUsed = 0;
-    int graphicHeightUsed = 0;
-
-    juce::Image keyColourLayer;
-    juce::Image keyShadowLayer;
 
     // std::unique_ptr<juce::Label> lblFirmwareVersion;
 
@@ -151,8 +146,14 @@ private:
 
     std::unique_ptr<ImageProcessor> imageProcessor;
 
+    int currentWidth = 0;
+    int currentHeight = 0;
+
     juce::Rectangle<int> lumatoneBounds;
     int octaveLineY = 0;
+
+    int keyWidth = 0;
+    int keyHeight = 0;
 
     juce::Array<juce::Point<float>> keyCentres;
 
