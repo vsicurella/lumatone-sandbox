@@ -9,7 +9,9 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
 #include "SandboxMenu.h"
+
 #include "lumatone_editor_library/DeviceActivityMonitor.h"
+#include "lumatone_editor_library/palettes/palette_library.h"
 
 #include "./gui/adjust_colour_panel.h"
 
@@ -35,6 +37,8 @@ public:
         // This method is where you should put your application's initialisation code..
 
         undoManager = std::make_unique<juce::UndoManager>();
+
+        paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
 
         midiDriver = std::make_unique<TerpstraMidiDriver>();
         controller = std::make_unique<LumatoneController>(treeState, *midiDriver, undoManager.get());
@@ -253,8 +257,8 @@ public:
         {
             auto launch = juce::DialogWindow::LaunchOptions();
             launch.dialogTitle = "Adjust Colours";
-            launch.content.setOwned(new AdjustColourPanel(controller.get()));
-            launch.content->setSize(300, 200);
+            launch.content.setOwned(new AdjustColourPanel(controller.get(), paletteLibrary.get()));
+            launch.content->setSize(600, 400);
 
             launch.componentToCentreAround = mainWindow.get();
             launch.launchAsync();
@@ -382,6 +386,8 @@ private:
     std::unique_ptr<MainWindow> mainWindow;
 
     juce::ValueTree treeState;
+
+    std::unique_ptr<LumatonePaletteLibrary> paletteLibrary;
 
     std::unique_ptr<LumatoneSandbox::Menu::Model> menuModel;
 
