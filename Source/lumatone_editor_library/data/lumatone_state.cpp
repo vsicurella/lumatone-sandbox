@@ -229,6 +229,11 @@ const LumatoneKey* LumatoneState::getKey(int boardIndex, int keyIndex) const
     return &mappingData->readBoard(boardIndex)->theKeys[keyIndex];
 }
 
+const LumatoneKey* LumatoneState::getKey(LumatoneKeyCoord coord) const
+{
+    return getKey(coord.boardIndex, coord.keyIndex);
+}
+
 const LumatoneOutputMap* LumatoneState::getMidiKeyMap() const
 {
     return midiKeyMap.get();

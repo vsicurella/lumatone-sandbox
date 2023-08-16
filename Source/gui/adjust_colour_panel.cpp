@@ -24,7 +24,10 @@ juce::Colour AdjustColourPanel::Box::getColour() const
 
 void AdjustColourPanel::Box::paint(juce::Graphics& g)
 {
-    juce::Colour border = juce::Colours::black;
+    juce::Colour border = (selected) 
+        ? juce::Colours::lightgrey 
+        : juce::Colours::black;
+
     if (isMouseOver())
         border = border.contrasting(border.brighter(), colour);
 
@@ -38,6 +41,13 @@ void AdjustColourPanel::Box::resized()
 {
 
 }
+
+void  AdjustColourPanel::Box::setSelected(bool selectedIn)
+{
+    selected = selectedIn;
+    repaint();
+}
+
 
 AdjustColourPanel::AdjustColourPanel(LumatoneController* controllerIn,  LumatonePaletteLibrary* libraryIn)
     : controller(controllerIn)
@@ -86,6 +96,23 @@ void AdjustColourPanel::resized()
     }
 }
 
+void AdjustColourPanel::setSelectedBox(Box* box)
+{
+    box->setSelected(true);
+    selectedBox = colourBoxes.indexOf(box);
+    keySelection = controller->getMappingData()->getKeysWithColour(box->getColour());
+    DBG("select colour");
+}
+
+void AdjustColourPanel::deselectBox()
+{
+    DBG("deselect colour");
+    colourBoxes[selectedBox]->setSelected(false);
+    selectedBox = -1;
+    keySelection.clear();
+    reconfigureColours();
+}
+
 void AdjustColourPanel::mouseMove(const juce::MouseEvent& e)
 {
     
@@ -93,12 +120,26 @@ void AdjustColourPanel::mouseMove(const juce::MouseEvent& e)
 
 void AdjustColourPanel::mouseDown(const juce::MouseEvent& e)
 {
+    // if (callout.get() != nullptr && e.eventComponent != callout.get() || e.eventComponent->getParentComponent() != callout.get())
+    //     callout->dismiss();
+
     if (e.eventComponent->getParentComponent() == this)
     {
         auto box = (Box*)e.eventComponent;
+        setSelectedBox(box);
+
         palettePanel = std::make_unique<ColourPaletteWindow>(paletteLibrary->getPalettesReference());
         palettePanel->setSize(400, 400);
+        palettePanel->listenToColourSelection(this);
+
         callout.reset(new juce::CallOutBox(*palettePanel, box->getBounds(), this));
+    }
+    else if (e.eventComponent == this)
+    {
+        if (selectedBox >= 0)
+        {
+            deselectBox();
+        }
     }
 }
 
@@ -134,6 +175,21 @@ void AdjustColourPanel::reconfigureColours()
         repaint();
 }
 
+void AdjustColourPanel::sendColourUpdate(juce::Colour oldColour, juce::Colour newColour)
+{
+    // auto keyCoords = controller->getMappingData()->getKeysWithColour(oldColour);
+    juce::Array<MappedLumatoneKey> keyUpdates;
+
+    for (auto coord : keySelection)
+    {
+        auto key = controller->getKey(coord);
+        keyUpdates.add(MappedLumatoneKey(key->withColour(newColour), coord));
+    }
+
+    auto updateAction = new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates);
+    controller->performUndoableAction(updateAction);
+}
+
 void AdjustColourPanel::completeMappingLoaded(LumatoneLayout mappingData)
 {
     reconfigureColours();
@@ -147,4 +203,15 @@ void AdjustColourPanel::boardChanged(LumatoneBoard boardData)
 void AdjustColourPanel::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
 {
     reconfigureColours();
+}
+
+void AdjustColourPanel::colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour)
+{
+    jassert(selectedBox >= 0);
+    auto box = colourBoxes[selectedBox];
+
+    auto oldColour = box->getColour();
+    box->setColour(newColour);
+
+    sendColourUpdate(oldColour, newColour);
 }

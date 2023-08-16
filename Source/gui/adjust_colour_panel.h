@@ -4,8 +4,11 @@
 #include "../lumatone_editor_library/palettes/ColourPaletteWindow.h"
 #include "../lumatone_editor_library/palettes/palette_library.h"
 
+#include "../lumatone_editor_library/actions/edit_actions.h"
+
 class AdjustColourPanel : public juce::Component,
-                          public LumatoneEditor::EditorListener
+                          public LumatoneEditor::EditorListener,
+                          public ColourSelectionListener
 {
 private:
     class Box : public juce::Component
@@ -20,8 +23,12 @@ private:
         void paint(juce::Graphics& g) override;
         void resized() override;
 
+        void setSelected(bool selected);
+
     private:
         juce::Colour colour;
+
+        bool selected;
     };
 
 
@@ -39,13 +46,23 @@ public:
     void mouseDown(const juce::MouseEvent& e) override;
 
 private:
-
     void completeMappingLoaded(LumatoneLayout mappingData) override;
     void boardChanged(LumatoneBoard boardData) override;
     void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
 
 private:
+    void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) override;
+
+
+private:
+
     void reconfigureColours();
+
+    void setSelectedBox(Box* box);
+    void deselectBox();
+
+
+    void sendColourUpdate(juce::Colour oldColour, juce::Colour newColour);
 
 private:
 
@@ -59,6 +76,8 @@ private:
     std::unique_ptr<ColourPaletteWindow> palettePanel;
     std::unique_ptr<juce::CallOutBox> callout;
 
+    int selectedBox = -1;
+    juce::Array<LumatoneKeyCoord> keySelection;
 
     // UI helpers
     juce::Rectangle<int> controlBounds;

@@ -76,7 +76,9 @@ public:
 
     const LumatoneLayout* getMappingData() const;
     const LumatoneBoard* getBoard(int boardIndex) const;
+    
     const LumatoneKey* getKey(int boardIndex, int keyIndex) const;
+    const LumatoneKey* getKey(LumatoneKeyCoord coord) const;
 
     const LumatoneOutputMap* getMidiKeyMap() const;
 
