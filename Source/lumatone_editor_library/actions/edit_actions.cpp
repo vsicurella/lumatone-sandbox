@@ -269,11 +269,13 @@ void MultiKeyAssignAction::applyMappedKeyData(const juce::Array<MappedLumatoneKe
 bool MultiKeyAssignAction::perform()
 {
     applyMappedKeyData(newData, previousKeys);
+    return true;
 }
 
 bool MultiKeyAssignAction::undo()
 {
     applyMappedKeyData(previousKeys, newData);
+    return true;
 }
 
 // ==============================================================================

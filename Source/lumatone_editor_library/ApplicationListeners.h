@@ -159,4 +159,4 @@ namespace LumatoneEditor
     
         virtual void handleMidiMessage(const juce::MidiMessage& msg) = 0;
     };
-    }
+}

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include "../lumatone_editor_library/LumatoneController.h"
 
-class ColourEditPanel : juce::Component
+class AdjustColourPanel : public juce::Component,
+                          public LumatoneEditor::EditorListener
 {
 private:
     class Box : public juce::Component
@@ -12,6 +13,7 @@ private:
         ~Box();
 
         void setColour(juce::Colour newColour);
+        juce::Colour getColour() const;
 
         void paint(juce::Graphics& g) override;
         void resized() override;
@@ -23,12 +25,8 @@ private:
 
 public:
 
-    ColourEditPanel();
-    ColourEditPanel(const juce::Array<juce::Colour>& colourSet);
-    
-    ~ColourEditPanel();
-
-    void setColours(const juce::Array<juce::Colour>& colourSet);
+    AdjustColourPanel(LumatoneController* controller);
+    ~AdjustColourPanel();
 
 public:
     // juce::Component implementation
@@ -39,9 +37,17 @@ public:
     void mouseDown(const juce::MouseEvent& e) override;
 
 private:
-    void reconfigureColours(const juce::Array<juce::Colour>& colourSet);
+
+    void completeMappingLoaded(LumatoneLayout mappingData) override;
+    void boardChanged(LumatoneBoard boardData) override;
+    void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
 
 private:
+    void reconfigureColours();
+
+private:
+
+    LumatoneController* controller;
 
     juce::Array<juce::Colour> colours;
 

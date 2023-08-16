@@ -26,6 +26,8 @@ namespace LumatoneSandbox {
             pasteOctaveBoardChannels = 0x200104,
             pasteOctaveBoardColours = 0x200105,
             pasteOctaveBoardTypes = 0x200106,
+
+			adjustColour = 0x200110,
             
 			undo = 0x200200,
 			redo = 0x200201,

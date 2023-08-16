@@ -11,6 +11,8 @@
 #include "SandboxMenu.h"
 #include "lumatone_editor_library/DeviceActivityMonitor.h"
 
+#include "./gui/adjust_colour_panel.h"
+
 #include "game/game_engine.h"
 #include "game/random_colors/random_colors_launcher.h"
 #include "game/hex_rings/hex_rings_launcher.h"
@@ -119,6 +121,8 @@ public:
             LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours,
             LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes,
 
+            LumatoneSandbox::Menu::commandIDs::adjustColour,
+
             LumatoneSandbox::Menu::commandIDs::undo,
             LumatoneSandbox::Menu::commandIDs::redo,
 
@@ -191,6 +195,10 @@ public:
                 result.setInfo("Paste types", "Paste copied section key types", "Edit", 0);
                 result.addDefaultKeypress('v', juce::ModifierKeys::altModifier | juce::ModifierKeys::shiftModifier);
                 break;
+
+            case LumatoneSandbox::Menu::commandIDs::adjustColour:
+                result.setInfo("Adjust colours", "Apply adjustments to colours across the layout", "Edit", 0);
+                break;
                     
             case LumatoneSandbox::Menu::commandIDs::undo:
                 result.setInfo("Undo", "Undo latest edit", "Edit", 0);
@@ -238,6 +246,19 @@ public:
                     controller->loadLayoutFromFile(file);
                     
                 });
+            return true;
+        }
+
+        case LumatoneSandbox::Menu::commandIDs::adjustColour:
+        {
+            auto launch = juce::DialogWindow::LaunchOptions();
+            launch.dialogTitle = "Adjust Colours";
+            launch.content.setOwned(new AdjustColourPanel(controller.get()));
+            launch.content->setSize(300, 200);
+
+            launch.componentToCentreAround = mainWindow.get();
+            launch.launchAsync();
+
             return true;
         }
 

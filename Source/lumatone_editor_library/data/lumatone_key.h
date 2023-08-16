@@ -44,6 +44,12 @@ public:
 class MappedLumatoneKey : public LumatoneKey
 {
 public:
+    MappedLumatoneKey()
+        : LumatoneKey()
+        , boardIndex(-1)
+        , keyIndex(-1)
+        { }
+
     MappedLumatoneKey(LumatoneKey key, int boardIndexIn, int keyIndexIn)
         : LumatoneKey(key)
 		, boardIndex(boardIndexIn)

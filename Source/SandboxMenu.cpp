@@ -51,6 +51,9 @@ void LumatoneSandbox::Menu::Model::createEditMenu(juce::PopupMenu& menu)
   menu.addCommandItem(theManager, pasteOctaveBoardNotes);
   menu.addCommandItem(theManager, pasteOctaveBoardColours);
   menu.addCommandItem(theManager, pasteOctaveBoardTypes);
+
+  menu.addCommandItem(theManager, adjustColour);
+
   menu.addCommandItem(theManager, undo);
   menu.addCommandItem(theManager, redo);
 }
