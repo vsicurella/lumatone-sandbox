@@ -91,9 +91,12 @@ void TerpstraMidiDriver::sendKeyFunctionParameters(juce::uint8 boardIndex, juce:
 {
     // boardIndex is expected 1-based
     jassert(boardIndex > 0 && boardIndex <= numBoards);
-    //jassert(midiChannel > 0 && midiChannel <= 16);
+    jassert(midiChannel > 0 && midiChannel <= 16);
+    jassert(noteOrCCNum >= 0 && noteOrCCNum < 128);
+
     midiChannel = (midiChannel - 1) & 0xF;
-    juce::uint8 typeByte = (faderUpIsNull << 4) | keyType;
+    juce::uint8 typeByte = (faderUpIsNull << 4) | (keyType & 0x3);
+
     sendSysEx(boardIndex, CHANGE_KEY_NOTE, keyIndex, noteOrCCNum, midiChannel, typeByte);
 }
 

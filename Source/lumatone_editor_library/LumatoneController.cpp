@@ -121,7 +121,7 @@ void LumatoneController::sendAllParamsOfBoard(int boardId, const LumatoneBoard* 
         for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
         {
             auto key = &boardData->theKeys[keyIndex];
-            midiDriver.sendKeyFunctionParameters(boardId, keyIndex, key->noteNumber, key->channelNumber, key->keyType & 0x3);
+            midiDriver.sendKeyFunctionParameters(boardId, keyIndex, key->noteNumber, key->channelNumber, key->keyType);
             midiDriver.sendKeyLightParameters(boardId, keyIndex, key->colour.getRed(), key->colour.getGreen(), key->colour.getBlue());
         }
     }
@@ -130,7 +130,7 @@ void LumatoneController::sendAllParamsOfBoard(int boardId, const LumatoneBoard* 
         for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
         {
             auto key = &boardData->theKeys[keyIndex];
-            midiDriver.sendKeyFunctionParameters(boardId, keyIndex, key->noteNumber, key->channelNumber, key->keyType & 0x3);
+            midiDriver.sendKeyFunctionParameters(boardId, keyIndex, key->noteNumber, key->channelNumber, key->keyType);
             midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, key->colour.getRed() / 2, key->colour.getGreen() / 2, key->colour.getBlue() / 2);
         }
 

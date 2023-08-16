@@ -511,12 +511,15 @@ void LumatoneEventManager::timerCallback()
     removeNextBlockOfMessages(readBuffer, bufferReadSize);
     for (auto event : readBuffer)
     {
+        bool configMsg = false;
         auto midiMessage = event.getMessage();
-        DBG("READ: " + midiMessage.getDescription());
         if (midiMessage.isSysEx())
         {
             auto sysExData = midiMessage.getSysExData();
             auto cmd = sysExData[CMD_ID];
+
+            configMsg = cmd < 0x2;
+            DBG("READ: " + midiMessage.getDescription());
 
             auto errorCode = getBufferErrorCode(sysExData);
             handleMidiDriverError(errorCode, cmd);
