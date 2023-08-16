@@ -72,9 +72,9 @@ namespace LumatoneAssets
 
         case LumatoneAssets::ID::KeyShadow:
             {
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadowInv_png, BinaryData::KeyShadowInv_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_1x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadowInv2x_png, BinaryData::KeyShadowInv2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_2x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadowInv4x_png, BinaryData::KeyShadowInv4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_4x);
+            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow_png, BinaryData::KeyShadow_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_1x);
+            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow2x_png, BinaryData::KeyShadow2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_2x);
+            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow4x_png, BinaryData::KeyShadow4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_4x);
             }
             break;
 
