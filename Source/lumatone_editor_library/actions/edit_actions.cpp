@@ -218,6 +218,64 @@ bool SectionEditAction::undo()
 
 }
 
+
+MultiKeyAssignAction::MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys)
+    : LumatoneAction(controller)
+{
+    for (auto updatedKey : updatedKeys)
+    {
+        auto coord = updatedKey.getKeyCoord();
+        if (controller->isKeyCoordValid(coord))
+        {
+            newData.add(updatedKey);
+
+            auto key = controller->getKey(coord.boardIndex, coord.keyIndex);
+            previousKeys.add(MappedLumatoneKey(*key, coord));
+        }
+    }
+}
+
+bool MultiKeyAssignAction::isValid() const
+{
+    return newData.size() > 0 && newData.size() == previousKeys.size();
+}
+
+void MultiKeyAssignAction::applyMappedKeyData(const juce::Array<MappedLumatoneKey>& newKeys, const juce::Array<MappedLumatoneKey>& oldKeys)
+{
+    for (int i = 0; i < newKeys.size(); i++)
+    {
+        auto oldKey = oldKeys[i];
+        auto newKey = newKeys[i];
+
+        bool updateChannel = oldKey.channelNumber != newKey.noteNumber;
+        bool updateNote = oldKey.noteNumber != newKey.noteNumber;
+        bool updateType = oldKey.keyType != newKey.keyType;
+        bool updateFader = oldKey.ccFaderDefault != newKey.ccFaderDefault;
+
+        bool updateColour = oldKey.colour != newKey.colour;
+
+        if (updateChannel || updateNote || updateType || updateFader)
+        {
+            controller->sendKeyParam(newKey.boardIndex + 1, newKey.keyIndex, newKey);
+        }
+
+        if (updateColour)
+        {
+            controller->sendKeyColourConfig(newKey.boardIndex + 1, newKey.keyIndex, newKey);
+        }
+    }
+}
+
+bool MultiKeyAssignAction::perform()
+{
+    applyMappedKeyData(newData, previousKeys);
+}
+
+bool MultiKeyAssignAction::undo()
+{
+    applyMappedKeyData(previousKeys, newData);
+}
+
 // ==============================================================================
 // Implementation of InvertFootControllerEditAction
 
