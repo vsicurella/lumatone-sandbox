@@ -133,6 +133,7 @@ void AdjustColourPanel::mouseDown(const juce::MouseEvent& e)
         palettePanel->listenToColourSelection(this);
 
         callout.reset(new juce::CallOutBox(*palettePanel, box->getBounds(), this));
+        callout->setDismissalMouseClicksAreAlwaysConsumed(true);
     }
     else if (e.eventComponent == this)
     {
