@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../lumatone_editor_library/LumatoneController.h"
+#include "../lumatone_editor_library/palettes/ColourPaletteWindow.h"
+#include "../lumatone_editor_library/palettes/palette_library.h"
 
 class AdjustColourPanel : public juce::Component,
                           public LumatoneEditor::EditorListener
@@ -25,7 +27,7 @@ private:
 
 public:
 
-    AdjustColourPanel(LumatoneController* controller);
+    AdjustColourPanel(LumatoneController* controller, LumatonePaletteLibrary* paletteLibrary);
     ~AdjustColourPanel();
 
 public:
@@ -48,13 +50,14 @@ private:
 private:
 
     LumatoneController* controller;
+    LumatonePaletteLibrary* paletteLibrary;
 
     juce::Array<juce::Colour> colours;
 
     juce::OwnedArray<Box> colourBoxes;
 
-    std::unique_ptr<juce::ColourSelector> selector;
-    std::unique_ptr<juce::CallOutBox> selectorBox;
+    std::unique_ptr<ColourPaletteWindow> palettePanel;
+    std::unique_ptr<juce::CallOutBox> callout;
 
 
     // UI helpers

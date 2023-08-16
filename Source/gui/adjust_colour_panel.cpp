@@ -39,16 +39,19 @@ void AdjustColourPanel::Box::resized()
 
 }
 
-AdjustColourPanel::AdjustColourPanel(LumatoneController* controllerIn)
+AdjustColourPanel::AdjustColourPanel(LumatoneController* controllerIn,  LumatonePaletteLibrary* libraryIn)
     : controller(controllerIn)
+    , paletteLibrary(libraryIn)
 {
     controller->addEditorListener(this);
+    addMouseListener(this, true);
     reconfigureColours();
 }
 
 AdjustColourPanel::~AdjustColourPanel()
 {
     controller->removeEditorListener(this);
+    palettePanel = nullptr;
     colourBoxes.clear();
 }
 
@@ -90,7 +93,13 @@ void AdjustColourPanel::mouseMove(const juce::MouseEvent& e)
 
 void AdjustColourPanel::mouseDown(const juce::MouseEvent& e)
 {
-    
+    if (e.eventComponent->getParentComponent() == this)
+    {
+        auto box = (Box*)e.eventComponent;
+        palettePanel = std::make_unique<ColourPaletteWindow>(paletteLibrary->getPalettesReference());
+        palettePanel->setSize(400, 400);
+        callout.reset(new juce::CallOutBox(*palettePanel, box->getBounds(), this));
+    }
 }
 
 void AdjustColourPanel::reconfigureColours()
@@ -110,8 +119,9 @@ void AdjustColourPanel::reconfigureColours()
             colourBoxes.getUnchecked(i)->setColour(c);
         else
         {
-            colourBoxes.add(new AdjustColourPanel::Box(c));
-            addAndMakeVisible(colourBoxes.getUnchecked(i));
+            auto box = new AdjustColourPanel::Box(c);
+            colourBoxes.add(box);
+            addAndMakeVisible(box);
         }
     }
 

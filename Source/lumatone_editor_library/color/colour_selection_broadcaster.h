@@ -19,7 +19,7 @@ class ColourSelectionListener
 {
 public:
     virtual ~ColourSelectionListener() {}
-    virtual void colourChangedCallback(ColourSelectionBroadcaster* source, Colour newColour) = 0;
+    virtual void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) = 0;
 };
 
 class ColourSelectionBroadcaster
@@ -29,7 +29,7 @@ public:
     ColourSelectionBroadcaster() {};
     virtual ~ColourSelectionBroadcaster() {}
 
-    virtual Colour getSelectedColour() = 0;
+    virtual juce::Colour getSelectedColour() = 0;
 
     virtual void deselectColour() = 0;
 
@@ -38,7 +38,7 @@ public:
 
 protected:
 
-    ListenerList<ColourSelectionListener> selectorListeners;
+    juce::ListenerList<ColourSelectionListener> selectorListeners;
 };
 
 class ColourSelectionGroup :  public ColourSelectionBroadcaster,
@@ -86,12 +86,12 @@ public:
         selectedBroadcasterIndex = -1;
     }
 
-    Colour getSelectedColour() override
+    juce::Colour getSelectedColour() override
     {
         if (selectedBroadcasterIndex >= 0)
             return colourSelectors[selectedBroadcasterIndex]->getSelectedColour();
         
-        return Colour();
+        return juce::Colour();
     }
 
     ColourSelectionBroadcaster* getSelectedBroadcaster() const
@@ -136,14 +136,14 @@ public:
     /// </summary>
     /// <param name="source"></param>
     /// <param name="newColour"></param>
-    void colourChangedCallback(ColourSelectionBroadcaster* source, Colour newColour) override
+    void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) override
     {
         setCurrentSelector(source);
     }
 
 private:
 
-    Array<ColourSelectionBroadcaster*> colourSelectors;
+    juce::Array<ColourSelectionBroadcaster*> colourSelectors;
 
     int selectedBroadcasterIndex = -1;
 };
