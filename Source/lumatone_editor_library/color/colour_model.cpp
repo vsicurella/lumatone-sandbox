@@ -28,7 +28,7 @@ juce::Colour LumatoneColourModel::getModelColour(juce::Colour colour)
 
     LumatoneEditor::ColourHash hash = LumatoneEditor::getColourHash(colour);
     auto cached = (*cache)[hash];
-    if (cached.isOpaque())
+    if (cached != juce::Colours::transparentBlack)
         return cached;
 
     auto modelColour = calculateModelColour(LumatoneColourModel::Type::ADJUSTED, colour);
@@ -36,65 +36,29 @@ juce::Colour LumatoneColourModel::getModelColour(juce::Colour colour)
     return modelColour;
 }
 
-// LumatoneColour LumatoneColourModel::getLumatoneColour(juce::Colour colour)
-// {
-//     auto modelColour = getModelColour(colour);
-//     return LumatoneColour(colour, modelColour);
-// }
-
 juce::Colour LumatoneColourModel::calculateModelColour(LumatoneColourModel::Type type, const juce::Colour& colour)
 {
-    float shadowMakeupLightness = 1.12f;
-
-    // return colour.withMultipliedLightness(shadowMakeupLightness);
-
-    // auto params = getInterpolationParams(type, colour);
     auto params = getInterpolationParams(type, colour);
     
-    float r = Interpolate::trilinear(params.red) / 255.0f;
-    float g = Interpolate::trilinear(params.green) / 255.0f;
-    float b = Interpolate::trilinear(params.blue) / 255.0f;
+    float ri = Interpolate::trilinear(params.red);
+    float gi = Interpolate::trilinear(params.green);
+    float bi = Interpolate::trilinear(params.blue);
+    
+    juce::uint8 r = roundToUint8(ri);
+    juce::uint8 g = roundToUint8(gi);
+    juce::uint8 b = roundToUint8(bi);
 
-    float L = 1.0f;
-    // float L =  0.2126f*r + 0.7152f*g + 0.0722f*b;
-    // float L = colour.getPerceivedBrightness();
-    // float L =  sqrtf(0.299*powf(r,2) + 0.587f*powf(g, 2) + 0.114f*powf(b,2));
+    auto modeled = juce::Colour(r, g, b);
 
-    // float fr = 1.0f / r;
-    // float fg = 1.0f / g;
-    // float fb = 1.0f / b;
+    float hue = modeled.getHue();
+    float saturation = modeled.getSaturation();
+    float br = modeled.getBrightness();
 
-    // float f = fr;
-    // if (f > fg)
-    //     f = fg;
-    // if (f > fb)
-    //     f = fb;
+    auto blackFiltered = juce::Colour::fromHSV(hue, saturation, 1.0f, br);
+    if (br > 0.5)
+        blackFiltered = blackFiltered.withMultipliedLightness(1.09f);
 
-    // // f *= 1.12f;
-
-    // r *= f;
-    // b *= f;
-    // g *= f;
-
-    // auto hsvc = juce::Colour(
-    //     roundToUint8(r * 255.0f),
-    //     roundToUint8(g * 255.0f),
-    //     roundToUint8(b * 255.0f));
-
-    // auto sat = hsvc.getSaturation();
-
-    // return hsvc.withSaturation(1.0f).withAlpha(sat);
-
-    auto result = juce::Colour(
-        roundToUint8(r * 255.0f),
-        roundToUint8(g * 255.0f),
-        roundToUint8(b * 255.0f),
-        L * 0.88f
-    );
-
-    // if (result.getPerceivedBrightness() < 0.8f)
-        return result.withMultipliedLightness(shadowMakeupLightness);//.withSaturationHSL(1.0f);
-    // return result;
+    return blackFiltered;
 }
 
 void LumatoneColourModel::readTable(const juce::var& tableVar, ColourTable& table)
