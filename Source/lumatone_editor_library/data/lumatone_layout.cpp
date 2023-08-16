@@ -548,7 +548,7 @@ juce::Array<LumatoneKeyCoord> LumatoneLayout::getKeysWithColour(const juce::Colo
     juce::Array<LumatoneKeyCoord> keyCoords;
 
     for (int i = 0; i < numBoards; i++)
-        keyCoords.addArray(getKeysWithColour(c));
+        keyCoords.addArray(boards[i].getKeysWithColour(c));
 
     return keyCoords;
 }
