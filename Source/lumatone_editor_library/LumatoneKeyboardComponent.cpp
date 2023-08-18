@@ -195,17 +195,33 @@ void LumatoneKeyboardComponent::boardChanged(LumatoneBoard boardData)
 
 void LumatoneKeyboardComponent::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
 {
+    keyUpdateCallback(boardIndex, keyIndex, lumatoneKey);
+}
+
+void LumatoneKeyboardComponent::keyConfigChanged(int boardIndex, int keyIndex, LumatoneKey keyData)
+{
+    keyUpdateCallback(boardIndex, keyIndex, keyData);
+}
+
+void LumatoneKeyboardComponent::keyColourChanged(int boardIndex, int keyIndex, juce::Colour keyColour)
+{
+    updateKeyColour(boardIndex, keyIndex, keyColour);
+    octaveBoards[boardIndex]->keyMiniDisplay[keyIndex]->repaint();
+}
+
+void LumatoneKeyboardComponent::keyUpdateCallback(int boardIndex, int keyIndex, const LumatoneKey& newKey)
+{
     auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
 
     LumatoneKey oldKey = *key->getKeyData();
 
-    key->setLumatoneKey(lumatoneKey, boardIndex, keyIndex);
-    updateKeyColour(boardIndex, keyIndex, lumatoneKey.colour);
+    key->setLumatoneKey(newKey, boardIndex, keyIndex);
+    updateKeyColour(boardIndex, keyIndex, newKey.colour);
     key->repaint();
 
-    if (   oldKey.keyType != lumatoneKey.keyType
-        || oldKey.channelNumber != lumatoneKey.channelNumber
-        || oldKey.noteNumber != lumatoneKey.noteNumber
+    if (   oldKey.keyType != newKey.keyType
+        || oldKey.channelNumber != newKey.channelNumber
+        || oldKey.noteNumber != newKey.noteNumber
         )
     {
         resetLayoutState();

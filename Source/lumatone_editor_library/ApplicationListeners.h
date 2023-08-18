@@ -120,7 +120,7 @@ namespace LumatoneEditor
 
         // Firmware Actions
         virtual void keyConfigChanged(int boardIndex, int keyIndex, LumatoneKey keyData) {};
-        virtual void keyColourChanged(int octaveNumber, int keyNumber, juce::Colour keyColour) {};
+        virtual void keyColourChanged(int boardIndex, int keyIndex, juce::Colour keyColour) {};
         virtual void expressionPedalSensitivityChanged(unsigned char value) {};
         virtual void invertFootControllerChanged(bool inverted) {};
         virtual void macroButtonActiveColourChagned(juce::Colour colour) {};
