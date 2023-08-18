@@ -14,6 +14,7 @@
 LumatoneController::LumatoneController(juce::ValueTree state, TerpstraMidiDriver& midiDriverIn, juce::UndoManager* undoManager)
     : LumatoneState(state, undoManager)
     , midiDriver(midiDriverIn)
+    , updateBuffer(midiDriver, state)
     , readQueueSize(0)
 {
     reset(bufferReadSize);
@@ -239,8 +240,8 @@ void LumatoneController::testCurrentDeviceConnection()
 void LumatoneController::sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData)
 {    
     // Default CC polarity = 1, Inverted CC polarity = 0
-    sendKeyConfig(boardId, keyIndex, keyData);
-    sendKeyColourConfig(boardId, keyIndex, keyData);
+    sendKeyConfig(boardId, keyIndex, keyData, false);
+    sendKeyColourConfig(boardId, keyIndex, keyData, false);
 
     editorListeners.call(&LumatoneEditor::EditorListener::keyChanged, boardId - 1, keyIndex, keyData);
 }
@@ -273,21 +274,24 @@ void LumatoneController::sendTableConfig(LumatoneConfigTable::TableType velocity
 // Send note, channel, cc, and fader polarity data
 void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& keyData, bool signalEditorListeners)
 {
-    *getEditKey(boardId - 1, keyIndex) = keyData;
-    midiDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
+    // midiDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
 
+    updateBuffer.sendKeyConfig(boardId, keyIndex, keyData);
+    *getEditKey(boardId - 1, keyIndex) = keyData;
+    
     if (signalEditorListeners)
         editorListeners.call(&LumatoneEditor::EditorListener::keyConfigChanged, boardId - 1, keyIndex, keyData);
 }
 
 void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners)
 {
-    getEditKey(boardId - 1, keyIndex)->colour = colour;
+    // if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
+    //     midiDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
+    // else
+    //     midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
 
-    if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
-        midiDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
-    else
-        midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+    updateBuffer.sendKeyColourConfig(boardId, keyIndex, colour);
+    getEditKey(boardId - 1, keyIndex)->colour = colour;
 
     if (signalEditorListeners)
         editorListeners.call(&LumatoneEditor::EditorListener::keyColourChanged, boardId - 1, keyIndex, colour);

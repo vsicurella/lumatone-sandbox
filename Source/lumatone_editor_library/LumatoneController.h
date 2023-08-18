@@ -13,6 +13,8 @@
 #include "./EditorEmitter.h"
 #include "./data/lumatone_layout.h"
 #include "./data/lumatone_state.h"
+
+#include "key_update_buffer.h"
 #include "LumatoneEventManager.h"
 
 //==============================================================================
@@ -249,6 +251,7 @@ protected:
 private:
 
     TerpstraMidiDriver& midiDriver;
+    LumatoneKeyUpdateBuffer updateBuffer;
 
     std::unique_ptr<LumatoneEventManager>   eventManager;
 

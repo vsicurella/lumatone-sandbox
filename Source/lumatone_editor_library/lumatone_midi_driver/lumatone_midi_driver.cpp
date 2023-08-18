@@ -89,6 +89,7 @@ Single (mid-level) commands, firmware specific
 // CMD 00h: Send a single key's functionctional configuration
 void TerpstraMidiDriver::sendKeyFunctionParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 noteOrCCNum, juce::uint8 midiChannel, juce::uint8 keyType, bool faderUpIsNull)
 {
+    DBG("SEND KEY FUNCTION REQUESTED " + juce::String(boardIndex) + "," + juce::String(keyIndex));
     // boardIndex is expected 1-based
     jassert(boardIndex > 0 && boardIndex <= numBoards);
     jassert(midiChannel > 0 && midiChannel <= 16);
@@ -103,6 +104,8 @@ void TerpstraMidiDriver::sendKeyFunctionParameters(juce::uint8 boardIndex, juce:
 // CMD 01h: Send a single key's LED channel intensities
 void TerpstraMidiDriver::sendKeyLightParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 red, juce::uint8 green, juce::uint8 blue)
 {
+    DBG("SEND KEY COLOUR REQUESTED " + juce::String(boardIndex) + "," + juce::String(keyIndex));
+
     juce::MidiMessage msg = createExtendedKeyColourSysEx(boardIndex, SET_KEY_COLOUR, keyIndex, red, green, blue);
 
     sendMessageWithAcknowledge(msg);
