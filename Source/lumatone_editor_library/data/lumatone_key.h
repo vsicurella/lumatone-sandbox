@@ -24,7 +24,11 @@ public:
     }
     bool isEmpty() const { return channelNumber == 0; }
 
-    bool operator!=(const LumatoneKey& second) const { return noteNumber != second.noteNumber || channelNumber != second.channelNumber || colour != second.colour || keyType != second.keyType || ccFaderDefault != second.ccFaderDefault; }
+    bool configIsEqual(const LumatoneKey& compare) const;
+    bool colourIsEqual(const LumatoneKey& compare) const;
+
+    bool operator==(const LumatoneKey& compare) const { return configIsEqual(compare) && colourIsEqual(compare); }
+    bool operator!=(const LumatoneKey& compare) const { return !(*this == compare); }
 
     // Chainable setters
     LumatoneKey withKeyType(LumatoneKeyType type) const { return LumatoneKey(type, channelNumber, noteNumber, colour, ccFaderDefault); }

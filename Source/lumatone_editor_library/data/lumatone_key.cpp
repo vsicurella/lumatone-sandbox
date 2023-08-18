@@ -9,3 +9,16 @@
 */
 
 #include "lumatone_key.h"
+
+bool LumatoneKey::configIsEqual(const LumatoneKey& compare) const
+{
+    return keyType == compare.keyType 
+        && channelNumber == compare.channelNumber
+        && noteNumber == compare.noteNumber
+        && ccFaderDefault == compare.ccFaderDefault;
+}
+
+bool LumatoneKey::colourIsEqual(const LumatoneKey& compare) const
+{
+    return colour == compare.colour;
+}

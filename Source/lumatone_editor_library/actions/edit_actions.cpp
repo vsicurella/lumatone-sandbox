@@ -247,21 +247,14 @@ void MultiKeyAssignAction::applyMappedKeyData(const juce::Array<MappedLumatoneKe
         auto oldKey = oldKeys[i];
         auto newKey = newKeys[i];
 
-        bool updateChannel = oldKey.channelNumber != newKey.noteNumber;
-        bool updateNote = oldKey.noteNumber != newKey.noteNumber;
-        bool updateType = oldKey.keyType != newKey.keyType;
-        bool updateFader = oldKey.ccFaderDefault != newKey.ccFaderDefault;
-
-        bool updateColour = oldKey.colour != newKey.colour;
-
-        if (updateChannel || updateNote || updateType || updateFader)
+        if (!oldKey.configIsEqual(newKey))
         {
-            controller->sendKeyParam(newKey.boardIndex + 1, newKey.keyIndex, newKey);
+            controller->sendKeyConfig(newKey.boardIndex + 1, newKey.keyIndex, newKey, true);
         }
 
-        if (updateColour)
+        if (!oldKey.colourIsEqual(newKey))
         {
-            controller->sendKeyColourConfig(newKey.boardIndex + 1, newKey.keyIndex, newKey);
+            controller->sendKeyColourConfig(newKey.boardIndex + 1, newKey.keyIndex, newKey, true);
         }
     }
 }
