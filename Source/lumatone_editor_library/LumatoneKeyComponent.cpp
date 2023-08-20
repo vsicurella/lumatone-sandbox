@@ -65,29 +65,22 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
     // draw
     switch (renderMode)
     {
-    default:
-        break;
-
     case LumatoneComponentRenderMode::Shape:
     case LumatoneComponentRenderMode::ShapeInteractive:
         break; // TODO
 
+    default:
     case LumatoneComponentRenderMode::Graphic:
     case LumatoneComponentRenderMode::GraphicInteractive:
     {
         if (colourGraphic.isValid() && shadowGraphic.isValid())
         {
-            // int x = juce::roundToInt((getWidth() - colourGraphic->getWidth()) * 0.5f);
-            // int y = juce::roundToInt((getHeight() - colourGraphic->getHeight()) * 0.5f);
-
-            int x = 0;
-            int y = 0;
-
             g.setColour(drawColour);
 
-            g.drawImageAt(colourGraphic, x, y, true);
-            g.drawImageAt(shadowGraphic, x, y);
+            g.drawImageAt(colourGraphic, 0, 0, true);
+            g.drawImageAt(shadowGraphic, 0, 0);
         }
+        break;
     }
 
     case LumatoneComponentRenderMode::MaxRes:
@@ -97,6 +90,7 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
             g.setColour(juce::Colours::black.withAlpha(0.2f).overlaidWith(drawColour));
             g.drawImageAt(shadowGraphic, 0, 0, true);
         }
+        break;
     }
     }
 }

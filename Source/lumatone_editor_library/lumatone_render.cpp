@@ -44,7 +44,7 @@ void LumatoneRender::render(LumatoneAssets::LumatoneGraphicRenderSize maxRenderS
     int keyWidth = juce::roundToInt(width * keyW);
     int keyHeight = juce::roundToInt(height * keyH);
 
-    juce::Image renderImage = juce::Image(juce::Image::PixelFormat::ARGB, width, height, false);
+    juce::Image renderImage = juce::Image(juce::Image::PixelFormat::ARGB, width, height, true);
     juce::Graphics g(renderImage);
 
     g.drawImageAt(LumatoneAssets::getImage(LumatoneAssets::ID::LumatoneGraphic, height, width), 0, 0);
