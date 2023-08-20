@@ -22,7 +22,7 @@ enum class LumatoneBoardSize
     LM56
 };
 
-static int GetLumatoneBoardSize(LumatoneBoardSize boardSize)
+static int GetSizeOfBoard(LumatoneBoardSize boardSize)
 {
     switch (boardSize)
     {
@@ -33,6 +33,19 @@ static int GetLumatoneBoardSize(LumatoneBoardSize boardSize)
     }
 
     return 56;
+}
+
+static LumatoneBoardSize GetLumatoneBoardSize(int octaveBoardSize)
+{
+    switch (octaveBoardSize)
+    {
+        case 55:
+            return LumatoneBoardSize::PROTOTYPE;
+
+        default:
+        case 56:
+            return LumatoneBoardSize::LM56;
+    }
 }
 
 

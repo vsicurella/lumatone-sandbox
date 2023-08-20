@@ -86,7 +86,7 @@ LumatoneGeometry::LumatoneGeometry(LumatoneBoardSize boardSize)
         this->boardYOffset = -2;
     }
 
-    octaveBoardSize = GetLumatoneBoardSize(boardSize);
+    octaveBoardSize = GetSizeOfBoard(boardSize);
 
     maxHorizontalLineSize = 0;
 
