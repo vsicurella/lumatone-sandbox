@@ -16,22 +16,24 @@
 #include "ImageResampling/ImageResampler.h"
 #include "lumatone_tiling.h"
 
+enum class LumatoneComponentRenderMode
+{
+    NoDisplay = -1,
+
+    Shape = 0x000010,
+    ShapeInteractive = 0x000011,
+
+    Graphic = 0x000020,
+    GraphicInteractive = 0x000021,
+
+    MaxRes = 0x000030,
+};
+
 // Representation of a key inside the overview
-class LumatoneKeyDisplay : public juce::Component
+class LumatoneKeyDisplay : public MappedLumatoneKey, 
+                           public juce::Component
 {
 public:
-
-    enum class UiMode
-    {
-        NoDisplay = -1,
-
-        Shape = 0x000010,
-        ShapeInteractive = 0x000011,
-
-        Graphic = 0x000020,
-        GraphicInteractive = 0x000021
-    };
-
     enum class NoteOffModifier
     {
         None = 0,
@@ -40,11 +42,11 @@ public:
     };
 
 public:
-    LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, LumatoneKey keyData=LumatoneKey());
+    LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, const LumatoneKey& keyData=LumatoneKey());
     ~LumatoneKeyDisplay();
 
-    LumatoneKeyDisplay::UiMode getUiMode() const { return uiMode; }
-    void setUiMode(LumatoneKeyDisplay::UiMode uiModeIn);
+    LumatoneComponentRenderMode getRenderMode() const { return renderMode; }
+    void setRenderMode(LumatoneComponentRenderMode uiModeIn);
 
     void paint(juce::Graphics&) override;
     void resized() override;
@@ -55,8 +57,8 @@ public:
 
     void setDisplayColour(const juce::Colour& colour);
 
-    const LumatoneKey* getKeyData() const;
-    juce::Colour getKeyColour() const;
+    // const LumatoneKey* getKeyData() const;
+    // juce::Colour getKeyColour() const;
 
     int getBoardIndex() const { return boardIndex; }
     int getKeyIndex() const { return keyIndex; }
@@ -94,14 +96,8 @@ public:
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LumatoneKeyDisplay)
 
-
-    LumatoneKeyDisplay::UiMode uiMode;
+    LumatoneComponentRenderMode renderMode;
     LumatoneKeyDisplay::NoteOffModifier noteOffMode;
-
-    LumatoneKey keyData;
-
-    int boardIndex = -1;
-    int keyIndex = -1;
 
     bool mouseIsOver = false;
     bool isSelected = false;
@@ -110,9 +106,5 @@ private:
 
     juce::Image colourGraphic;
     juce::Image shadowGraphic;
-
-    //DEBUG
-    juce::Colour keyColour;
-    // juce::Image image;
 };
 

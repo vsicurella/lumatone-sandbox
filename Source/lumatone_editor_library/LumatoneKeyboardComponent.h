@@ -12,12 +12,15 @@
 
 #include <JuceHeader.h>
 
-#include "lumatone_assets.h"
 #include "./data/lumatone_state.h"
 #include "./data/lumatone_midi_state.h"
+
 #include "LumatoneKeyComponent.h"
 #include "ApplicationListeners.h"
+
+#include "lumatone_assets.h"
 #include "lumatone_output_map.h"
+#include "lumatone_render.h"
 
 
 //==============================================================================
@@ -36,7 +39,10 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    void resetOctaveSize();
+    void resetOctaveSize(bool resetState = true);
+
+    LumatoneComponentRenderMode getRenderMode() const { return renderMode; }
+    void setRenderMode(LumatoneComponentRenderMode modeIn);
 
 public:
     // LumatoneEditor::EditorListener Implementation
@@ -52,6 +58,7 @@ private:
     void resetLayoutState();
 
     void keyUpdateCallback(int boardIndex, int keyIndex, const LumatoneKey& keyData);
+    void mappingUpdateCallback();
 
 public:
     // Playing mode methods
@@ -95,12 +102,8 @@ private:
 
 
 private:
-
-    void prepareHexTiling();
-
     LumatoneKeyDisplay* getKeyFromMouseEvent(const juce::MouseEvent& e);
 
-    juce::Image getResizedImage(LumatoneAssets::ID assetId, int targetWidth, int targetHeight, bool useJuceResize=false);
 
 private:
 
@@ -116,9 +119,10 @@ private:
     int currentOctaveSize = 0;
     int currentSetSelection;
 
-    // Geometry settings
-    LumatoneGeometry    lumatoneGeometry;
-    LumatoneTiling      tilingGeometry;
+    LumatoneComponentRenderMode renderMode;
+
+    LumatoneRender      lumatoneRender;
+
     LumatoneOutputMap   lumatoneMidiMap;
 
     // std::unique_ptr<juce::Label> lblFirmwareVersion;
@@ -148,8 +152,6 @@ private:
     //==============================================================================
     // Style helpers
 
-    std::unique_ptr<ImageProcessor> imageProcessor;
-
     int currentWidth = 0;
     int currentHeight = 0;
 
@@ -165,6 +167,8 @@ private:
     juce::Image keyShapeGraphic;
     juce::Image keyShadowGraphic;
 
+    juce::Image currentRender;
+
     //==============================================================================
     // Position and sizing constants in reference to parent bounds
 
@@ -176,26 +180,8 @@ private:
 
     const float octaveLineYRatio    = 0.0236559f;
 
-    // In reference to lumatoneBounds
-    const float keybedX = 0.06908748f;
-
     const float keyW = 0.027352f;
     const float keyH = 0.07307f;
-
-    const float oct1Key1X = 0.0839425f;
-    const float oct1Key1Y = 0.335887f;
-
-    const float oct1Key56X = 0.27304881f;
-    const float oct1Key56Y = 0.8314673f;
-
-    const float oct5Key7X = 0.878802f;
-    const float oct5Key7Y = 0.356511491f;
-
-    //===============================================================================
-
-    juce::Point<float>  oct1Key1;
-    juce::Point<float> oct1Key56;
-    juce::Point<float>  oct5Key7;
 
     //[/UserVariables]
 

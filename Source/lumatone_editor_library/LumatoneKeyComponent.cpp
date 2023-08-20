@@ -1,4 +1,4 @@
-/*
+    /*
   ==============================================================================
 
     LumatoneKeyComponent.cpp
@@ -12,16 +12,11 @@
 
 //==============================================================================
 
-LumatoneKeyDisplay::LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, LumatoneKey keyDataIn)
-    : Component("LumatoneKeyDisplay_" + LumatoneKeyCoord::toString(newBoardIndex, newKeyIndex))
+LumatoneKeyDisplay::LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, const LumatoneKey& keyDataIn)
+    : MappedLumatoneKey(keyDataIn, newBoardIndex, newKeyIndex)
+    , Component("LumatoneKeyDisplay_" + LumatoneKeyCoord::toString(newBoardIndex, newKeyIndex))
 {
-    uiMode = UiMode::GraphicInteractive;
-
-    boardIndex = newBoardIndex;
-    keyIndex = newKeyIndex;
-
-    keyData = keyDataIn;
-    
+    renderMode = LumatoneComponentRenderMode::GraphicInteractive;
     clearUiState();
 }
 
@@ -29,57 +24,56 @@ LumatoneKeyDisplay::~LumatoneKeyDisplay()
 {
 }
 
-void LumatoneKeyDisplay::setUiMode(LumatoneKeyDisplay::UiMode uiModeIn)
+void LumatoneKeyDisplay::setRenderMode(LumatoneComponentRenderMode modeIn)
 {
-    uiMode = uiModeIn;
+    renderMode = modeIn;
 }
 
 void LumatoneKeyDisplay::paint(juce::Graphics& g)
 {
-    juce::Colour hexagonColour = getKeyColour();
+    juce::Colour hexagonColour = colour;
     // juce::Colour hexagonColour = findColour(LumatoneKeyEdit::backgroundColourId).overlaidWith(getKeyColour());
     // if (hexagonColour.getPerceivedBrightness() >= 0.6f)
     //    hexagonColour = hexagonColour.darker((1.0f - hexagonColour.getPerceivedBrightness()));
 
     // set color
-    juce::Colour c = hexagonColour;
+    juce::Colour drawColour = hexagonColour;
 
-    switch (uiMode)
+    switch (renderMode)
     {
     default:
         break;
 
-    case UiMode::ShapeInteractive:
-    case UiMode::GraphicInteractive:
+    case LumatoneComponentRenderMode::ShapeInteractive:
+    case LumatoneComponentRenderMode::GraphicInteractive:
+    case LumatoneComponentRenderMode::MaxRes:
         if(isSelected)
         {
-            c = c.overlaidWith(juce::Colours::slateblue.withAlpha(0.2f));
+            drawColour = drawColour.overlaidWith(juce::Colours::slateblue.withAlpha(0.2f));
         }
         if (isNoteOn || isClicked)
         {
-            c = hexagonColour.contrasting(0.5f);
+            drawColour = hexagonColour.contrasting(0.5f);
         }
         else if (mouseIsOver)
         {
-            c = c.contrasting(0.25f);
+            drawColour = drawColour.contrasting(0.25f);
         }
         break;
     }
 
-    g.setColour(c);
-
     // draw
-    switch (uiMode)
+    switch (renderMode)
     {
     default:
         break;
 
-    case UiMode::Shape:
-    case UiMode::ShapeInteractive:
+    case LumatoneComponentRenderMode::Shape:
+    case LumatoneComponentRenderMode::ShapeInteractive:
         break; // TODO
 
-    case UiMode::Graphic:
-    case UiMode::GraphicInteractive:
+    case LumatoneComponentRenderMode::Graphic:
+    case LumatoneComponentRenderMode::GraphicInteractive:
     {
         if (colourGraphic.isValid() && shadowGraphic.isValid())
         {
@@ -89,8 +83,19 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
             int x = 0;
             int y = 0;
 
+            g.setColour(drawColour);
+
             g.drawImageAt(colourGraphic, x, y, true);
             g.drawImageAt(shadowGraphic, x, y);
+        }
+    }
+
+    case LumatoneComponentRenderMode::MaxRes:
+    {
+        if (drawColour != hexagonColour && shadowGraphic.isValid())
+        {
+            g.setColour(juce::Colours::black.withAlpha(0.2f).overlaidWith(drawColour));
+            g.drawImageAt(shadowGraphic, 0, 0, true);
         }
     }
     }
@@ -217,35 +222,27 @@ void LumatoneKeyDisplay::endDrag()
     }
 }
 
-const LumatoneKey* LumatoneKeyDisplay::getKeyData() const
-{
-    return &keyData;
-}
+// const LumatoneKey* LumatoneKeyDisplay::getKeyData() const
+// {
+//     return &keyData;
+// }
 
-juce::Colour LumatoneKeyDisplay::getKeyColour() const
-{
-    if (keyColour != juce::Colour())
-        return keyColour;
-
-    auto config = getKeyData();
-    if (config != nullptr)
-        return config->colour;
-    else
-        // return findColour(LumatoneKeyEdit::backgroundColourId);
-        return juce::Colours::slategrey;
-}
+// juce::Colour LumatoneKeyDisplay::getKeyColour() const
+// {
+    
+// }
 
 void LumatoneKeyDisplay::setLumatoneKey(const LumatoneKey& lumatoneKey, int boardIdx, int keyIdx)
 {
-    keyData = lumatoneKey;
+    *(LumatoneKey*)this = lumatoneKey;
     boardIndex = boardIdx;
     keyIndex = keyIdx;
     // repaint();
 }
 
-void LumatoneKeyDisplay::setDisplayColour(const juce::Colour& colour)
+void LumatoneKeyDisplay::setDisplayColour(const juce::Colour& colourIn)
 {
-    keyColour = colour;
+    colour = colourIn;
     // redrawRender();
 }
 
@@ -272,12 +269,13 @@ void LumatoneKeyDisplay::clearUiState()
 
 void LumatoneKeyDisplay::repaintIfInteractive()
 {
-    switch (uiMode)
+    switch (renderMode)
     {
     default:
         break;
-    case UiMode::ShapeInteractive:
-    case UiMode::GraphicInteractive:
+    case LumatoneComponentRenderMode::ShapeInteractive:
+    case LumatoneComponentRenderMode::GraphicInteractive:
+    case LumatoneComponentRenderMode::MaxRes:
         if (mouseIsOver != isMouseOver())
         {
             mouseIsOver = isMouseOver();
