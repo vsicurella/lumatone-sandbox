@@ -34,5 +34,7 @@ private:
 
     juce::HashMap<int, MappedLumatoneKey> keysToUpdate;
 
-    int updateMs = 200;
+    LumatoneLayout preUpdateLayout;
+
+    int updateMs = 300;
 };

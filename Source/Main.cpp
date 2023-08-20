@@ -255,7 +255,7 @@ public:
 
         case LumatoneSandbox::Menu::commandIDs::adjustColour:
         {
-            auto launch = juce::DialogWindow::LaunchOptions();
+            juce::DialogWindow::LaunchOptions launch;
             launch.dialogTitle = "Adjust Colours";
             launch.content.setOwned(new AdjustColourPanel(controller.get(), paletteLibrary.get()));
             launch.content->setSize(600, 400);
