@@ -306,7 +306,7 @@ bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
 
         if (fileParsed)
         {
-            mappingData.reset(new LumatoneLayout(newLayout));
+            *mappingData = LumatoneLayout(newLayout);
 
             // Mark file as unchanged
             //setHasChangesToSave(false);
