@@ -37,7 +37,7 @@ public:
     };
 
 public:
-    LumatoneHexMap(LumatoneLayout layout, 
+    LumatoneHexMap(std::shared_ptr<LumatoneLayout> layout, 
                    Hex::Point originPoint = Hex::Point(0, 0),
                    int originBoardIndex = 0, 
                    int originKeyIndex = 0);
@@ -47,6 +47,7 @@ public:
     LumatoneKeyCoord hexToKeyCoords(Hex::Point point) const;
    
     Hex::Point keyCoordsToHex(int boardIndex, int keyIndex) const;
+    Hex::Point keyCoordsToHex(const LumatoneKeyCoord& keyCoord) const;
 
 private:
 
@@ -58,7 +59,7 @@ private:
 
 private:
 
-    LumatoneLayout layout;
+    std::shared_ptr<LumatoneLayout> layout;
 
     LumatoneGeometry lumatoneGeometry;
 

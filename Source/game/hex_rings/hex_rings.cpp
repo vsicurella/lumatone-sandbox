@@ -13,6 +13,7 @@
 HexRings::HexRings(LumatoneController* controller)
     : LumatoneSandboxGameBase(controller, "Hex Rings")
 {
+    hexMap.reset(new LumatoneHexMap(controller->shareMappingData()));
     reset(true);
 }
 
@@ -20,7 +21,6 @@ void HexRings::reset(bool clearQueue)
 {
     LumatoneSandboxGameBase::reset(clearQueue);
     auto layout = queueIdentityLayout(true);
-    hexMap.reset(new LumatoneHexMap(layout));
 }
 
 void HexRings::nextTick()

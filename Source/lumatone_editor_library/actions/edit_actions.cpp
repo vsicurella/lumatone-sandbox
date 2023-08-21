@@ -242,21 +242,8 @@ bool MultiKeyAssignAction::isValid() const
 
 void MultiKeyAssignAction::applyMappedKeyData(const juce::Array<MappedLumatoneKey>& newKeys, const juce::Array<MappedLumatoneKey>& oldKeys)
 {
-    for (int i = 0; i < newKeys.size(); i++)
-    {
-        auto oldKey = oldKeys[i];
-        auto newKey = newKeys[i];
-
-        if (!oldKey.configIsEqual(newKey))
-        {
-            controller->sendKeyConfig(newKey.boardIndex + 1, newKey.keyIndex, newKey, true);
-        }
-
-        if (!oldKey.colourIsEqual(newKey))
-        {
-            controller->sendKeyColourConfig(newKey.boardIndex + 1, newKey.keyIndex, newKey, true);
-        }
-    }
+    controller->sendSelectionParam(newKeys, false);
+    controller->sendSelectionColours(newKeys, true);
 }
 
 bool MultiKeyAssignAction::perform()

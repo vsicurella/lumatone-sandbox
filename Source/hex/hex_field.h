@@ -51,6 +51,7 @@ namespace Hex
 
     public:
 
+        Point() {}
         Point(int hex_q, int hex_r);
         Point(float hex_q, float hex_r);
         Point(Hex::Cube cube);

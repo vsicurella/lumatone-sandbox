@@ -76,6 +76,8 @@ public:
 
     const LumatoneLayout* getMappingData() const;
     const LumatoneBoard* getBoard(int boardIndex) const;
+
+    std::shared_ptr<LumatoneLayout> shareMappingData() { return mappingData; }
     
     const LumatoneKey* getKey(int boardIndex, int keyIndex) const;
     const LumatoneKey* getKey(LumatoneKeyCoord coord) const;

@@ -118,6 +118,8 @@ namespace LumatoneEditor
 
         virtual void tableChanged(LumatoneConfigTable::TableType type, const juce::uint8* table, int tableSize) {};
 
+        virtual void selectionChanged(juce::Array<MappedLumatoneKey> selection) {};
+
         // Firmware Actions
         virtual void keyConfigChanged(int boardIndex, int keyIndex, LumatoneKey keyData) {};
         virtual void keyColourChanged(int boardIndex, int keyIndex, juce::Colour keyColour) {};

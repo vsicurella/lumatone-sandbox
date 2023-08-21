@@ -10,7 +10,7 @@
 
 #include "lumatone_hex_map.h"
 
-LumatoneHexMap::LumatoneHexMap(LumatoneLayout layoutIn, Hex::Point originPointIn, int originBoardIndexIn, int originKeyIndexIn)
+LumatoneHexMap::LumatoneHexMap(std::shared_ptr<LumatoneLayout> layoutIn, Hex::Point originPointIn, int originBoardIndexIn, int originKeyIndexIn)
     : layout(layoutIn)
     , originPoint(originPointIn)
     , originBoardIndex(originBoardIndexIn)
@@ -36,6 +36,11 @@ Hex::Point LumatoneHexMap::keyCoordsToHex(int boardIndex, int keyIndex) const
     return boards[boardIndex].keys[keyIndex].point;
 }
 
+Hex::Point LumatoneHexMap::keyCoordsToHex(const LumatoneKeyCoord& keyCoord) const
+{
+    return keyCoordsToHex(keyCoord.boardIndex, keyCoord.keyIndex);
+}
+
 Hex::Point LumatoneHexMap::addBoardIndex(Hex::Point point, int numIndexes)
 {
     return Hex::Point(point.q + numIndexes * 7, point.r - numIndexes * 5);
@@ -46,9 +51,9 @@ void LumatoneHexMap::renderMap()
     map->clear();
     //boards.clear();
 
-    for (int i = 0; i < layout.getNumBoards(); i++)
-        //boards.add(MapBoard(layout.getOctaveBoardSize()));
-        boards[i] = MapBoard(layout.getOctaveBoardSize());
+    for (int i = 0; i < layout->getNumBoards(); i++)
+        //boards.add(MapBoard(layout->getOctaveBoardSize()));
+        boards[i] = MapBoard(layout->getOctaveBoardSize());
 
     // use lumatoneGeometry.getVerticalOriginLineIndexForRow to find zeroth key from origin
 
@@ -109,7 +114,7 @@ void LumatoneHexMap::renderMap()
         int rowLastKey = lumatoneGeometry.getLastIndexForRow(lineIndex);
         while (keyIndex <= rowLastKey)
         {
-            for (int boardIndex = 0; boardIndex < layout.getNumBoards(); boardIndex++)
+            for (int boardIndex = 0; boardIndex < layout->getNumBoards(); boardIndex++)
             {
                 auto hexCoord = addBoardIndex(rowPoint + Hex::Point(rowKeyIndex, 0), boardIndex);
 

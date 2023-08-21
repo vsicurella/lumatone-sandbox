@@ -246,6 +246,28 @@ void LumatoneController::sendKeyParam(int boardId, int keyIndex, LumatoneKey key
     editorListeners.call(&LumatoneEditor::EditorListener::keyChanged, boardId - 1, keyIndex, keyData);
 }
 
+void LumatoneController::sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners)
+{
+    for (auto mappedKey : selection)
+    {
+        sendKeyConfig(mappedKey.boardIndex + 1, mappedKey.keyIndex, (LumatoneKey)mappedKey, false);
+    }
+
+    if (signalEditorListeners)
+        editorListeners.call(&LumatoneEditor::EditorListener::selectionChanged, selection);
+}
+
+void LumatoneController::sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners)
+{
+    for (auto mappedKey : selection)
+    {
+        sendKeyColourConfig(mappedKey.boardIndex + 1, mappedKey.keyIndex, (LumatoneKey)mappedKey, false);
+    }
+
+    if (signalEditorListeners)
+        editorListeners.call(&LumatoneEditor::EditorListener::selectionChanged, selection);
+}
+
 // Send configuration of a certain look up table
 void LumatoneController::sendTableConfig(LumatoneConfigTable::TableType velocityCurveType, const juce::uint8* table)
 {

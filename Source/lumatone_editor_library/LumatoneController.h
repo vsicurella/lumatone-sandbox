@@ -86,6 +86,10 @@ public:
     // Send parametrization of one key to the device
     void sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData);
 
+    void sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners=false);
+
+    void sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners=false);
+
     // Send configuration of a certain look up table
     void sendTableConfig(LumatoneConfigTable::TableType velocityCurveType, const juce::uint8* table);
 
