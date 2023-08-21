@@ -5,10 +5,6 @@ LumatoneRender::LumatoneRender(LumatoneState& stateIn)
     : state(stateIn) 
 {
     imageProcessor.reset(new ImageProcessor());
-
-    LumatoneAssets::LoadAssets(LumatoneAssets::ID::LumatoneGraphic);
-    LumatoneAssets::LoadAssets(LumatoneAssets::ID::KeyShape);
-    LumatoneAssets::LoadAssets(LumatoneAssets::ID::KeyShadow);
 }
 
 LumatoneRender::~LumatoneRender() 

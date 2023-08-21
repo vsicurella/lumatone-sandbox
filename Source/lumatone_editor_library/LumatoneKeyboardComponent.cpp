@@ -87,7 +87,6 @@ void LumatoneKeyboardComponent::resized()
         case LumatoneComponentRenderMode::GraphicInteractive:
             lumatoneGraphic = lumatoneRender.getResizedAsset(LumatoneAssets::ID::LumatoneGraphic, lumatoneBounds.getWidth(), lumatoneBounds.getHeight());
             keyShapeGraphic = lumatoneRender.getResizedAsset(LumatoneAssets::ID::KeyShape, keyWidth, keyHeight);
-            keyShadowGraphic = lumatoneRender.getResizedAsset(LumatoneAssets::ID::KeyShadow, keyWidth, keyHeight);
             break;
         case LumatoneComponentRenderMode::MaxRes:
             currentRender = lumatoneRender.getResizedRender(lumatoneBounds.getWidth(), lumatoneBounds.getHeight());

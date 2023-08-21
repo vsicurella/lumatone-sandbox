@@ -53,32 +53,37 @@ namespace LumatoneAssets
         switch (assetId)
         {
         case LumatoneAssets::ID::LumatoneGraphic:
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase_png,   BinaryData::KeyboardBase_pngSize),   (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_1x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase2x_png, BinaryData::KeyboardBase2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_2x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase4x_png, BinaryData::KeyboardBase4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_4x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase8x_png, BinaryData::KeyboardBase8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_8x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_1x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase_png,   BinaryData::KeyboardBase_pngSize),   (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_1x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_2x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase2x_png, BinaryData::KeyboardBase2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_2x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_4x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase4x_png, BinaryData::KeyboardBase4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_4x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_8x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyboardBase8x_png, BinaryData::KeyboardBase8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::LumatoneGraphic_8x);
             break;
 
-        // case LumatoneAssets::ID::KeybedShadows:
-        //     juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows_png,   BinaryData::KeybedShadows_pngSize),   (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_1x);
-        //     juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows2x_png, BinaryData::KeybedShadows2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_2x);
-        //     juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows4x_png, BinaryData::KeybedShadows4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_4x);
-        //     juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeybedShadows8x_png, BinaryData::KeybedShadows8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeybedShadows_8x);
-        //     break;
-
         case LumatoneAssets::ID::KeyShape:
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape_png,   BinaryData::KeyShape_pngSize),   (juce::int64)LumatoneAssets::HashCodes::KeyShape_1x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape2x_png, BinaryData::KeyShape2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShape_2x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape4x_png, BinaryData::KeyShape4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShape_4x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape8x_png, BinaryData::KeyShape8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShape_8x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShape_1x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape_png,   BinaryData::KeyShape_pngSize),   (juce::int64)LumatoneAssets::HashCodes::KeyShape_1x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShape_2x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape2x_png, BinaryData::KeyShape2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShape_2x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShape_4x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape4x_png, BinaryData::KeyShape4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShape_4x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShape_8x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShape8x_png, BinaryData::KeyShape8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShape_8x);
             break;
 
         case LumatoneAssets::ID::KeyShadow:
             {
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow_png, BinaryData::KeyShadow_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_1x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow2x_png, BinaryData::KeyShadow2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_2x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow4x_png, BinaryData::KeyShadow4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_4x);
-            juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow8x_png, BinaryData::KeyShadow8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_8x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShadow_1x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow_png, BinaryData::KeyShadow_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_1x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShadow_2x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow2x_png, BinaryData::KeyShadow2x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_2x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShadow_4x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow4x_png, BinaryData::KeyShadow4x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_4x);
+            if (juce::ImageCache::getFromHashCode((juce::int64)LumatoneAssets::HashCodes::KeyShadow_8x).isNull())
+                juce::ImageCache::addImageToCache(juce::ImageCache::getFromMemory(BinaryData::KeyShadow8x_png, BinaryData::KeyShadow8x_pngSize), (juce::int64)LumatoneAssets::HashCodes::KeyShadow_8x);
             }
             break;
 
@@ -141,6 +146,8 @@ namespace LumatoneAssets
 
     static juce::Image getImage(LumatoneAssets::ID assetId, int height = 0, int width = 0)
     {
+        LoadAssets(assetId);
+
         switch (assetId)
         {
         case LumatoneAssets::ID::LumatoneGraphic:

@@ -73,11 +73,15 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
     case LumatoneComponentRenderMode::Graphic:
     case LumatoneComponentRenderMode::GraphicInteractive:
     {
-        if (colourGraphic.isValid() && shadowGraphic.isValid())
-        {
-            g.setColour(drawColour);
+        g.setColour(drawColour);
 
+        if (colourGraphic.isValid())
+        {
             g.drawImageAt(colourGraphic, 0, 0, true);
+        }
+
+        if (shadowGraphic.isValid())
+        {
             g.drawImageAt(shadowGraphic, 0, 0);
         }
         break;
