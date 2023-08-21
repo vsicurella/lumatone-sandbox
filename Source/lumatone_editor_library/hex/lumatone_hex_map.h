@@ -10,8 +10,8 @@
 
 #pragma once
 #include "./hex_field.h"
-#include "../lumatone_editor_library/lumatone_geometry.h"
-#include "../lumatone_editor_library/data/lumatone_layout.h"
+#include "../lumatone_geometry.h"
+#include "../data/lumatone_layout.h"
 
 class LumatoneHexMap
 {

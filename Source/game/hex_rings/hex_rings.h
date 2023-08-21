@@ -10,7 +10,7 @@
 
 #pragma once
 #include "../game_base.h"
-#include "../../hex/lumatone_hex_map.h"
+#include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
 
 class HexRings : public LumatoneSandboxGameBase
 {

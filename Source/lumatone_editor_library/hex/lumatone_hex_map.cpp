@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    lumatone_hex_map->cpp
+    lumatone_hex_map.cpp
     Created: 31 Jul 2023 1:39:39am
     Author:  Vincenzo
 

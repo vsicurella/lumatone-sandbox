@@ -6,7 +6,7 @@
 
 #include "../actions/edit_actions.h"
 
-#include "../../hex/lumatone_hex_map.h"
+#include "../hex/lumatone_hex_map.h"
 
 class AdjustLayoutColour : public LumatoneEditor::EditorListener,
                           public ColourSelectionListener
