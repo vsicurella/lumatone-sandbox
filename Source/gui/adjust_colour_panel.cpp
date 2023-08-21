@@ -52,10 +52,16 @@ void  AdjustColourPanel::Box::setSelected(bool selectedIn)
 AdjustColourPanel::AdjustColourPanel(LumatoneController* controllerIn,  LumatonePaletteLibrary* libraryIn)
     : controller(controllerIn)
     , paletteLibrary(libraryIn)
+    , colourAdjuster(controllerIn)
 {
     controller->addEditorListener(this);
     addMouseListener(this, true);
-    reconfigureColours();
+    reconfigureColours(false);
+
+    hueSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
+    hueSlider->setRange(-1.0, 1.0, 0.001);
+    hueSlider->onValueChange = [&]() { hueValueCallback(); };
+    addAndMakeVisible(hueSlider.get());
 }
 
 AdjustColourPanel::~AdjustColourPanel()
@@ -94,6 +100,8 @@ void AdjustColourPanel::resized()
 
         boxX += boxSize + boxMargin;
     }
+
+    hueSlider->setBounds(controlBounds.getX(), boxY + boxSize * 2 + boxMargin, getWidth() * 0.5, boxSize);
 }
 
 void AdjustColourPanel::setSelectedBox(Box* box)
@@ -123,9 +131,9 @@ void AdjustColourPanel::mouseDown(const juce::MouseEvent& e)
     // if (callout.get() != nullptr && e.eventComponent != callout.get() || e.eventComponent->getParentComponent() != callout.get())
     //     callout->dismiss();
 
-    if (e.eventComponent->getParentComponent() == this)
+    auto box = dynamic_cast<Box*>(e.eventComponent);
+    if (box != nullptr)
     {
-        auto box = (Box*)e.eventComponent;
         setSelectedBox(box);
 
         palettePanel = std::make_unique<ColourPaletteWindow>(paletteLibrary->getPalettesReference());
@@ -144,12 +152,11 @@ void AdjustColourPanel::mouseDown(const juce::MouseEvent& e)
     }
 }
 
-void AdjustColourPanel::reconfigureColours()
+void AdjustColourPanel::reconfigureColours(bool doResize)
 {
     juce::Array<juce::Colour> colourSet = controller->getMappingData()->getLayoutColours();
     
-    bool doResize = colourSet.size() != colours.size();
-
+    bool sizeChanged = colourSet.size() != colours.size();
     colours = colourSet;
 
     int numToDelete = colourBoxes.size() - colours.size();
@@ -171,24 +178,12 @@ void AdjustColourPanel::reconfigureColours()
         colourBoxes.removeLast(numToDelete);
 
     if (doResize)
-        resized();
-    else 
-        repaint();
-}
-
-void AdjustColourPanel::sendColourUpdate(juce::Colour oldColour, juce::Colour newColour)
-{
-    // auto keyCoords = controller->getMappingData()->getKeysWithColour(oldColour);
-    juce::Array<MappedLumatoneKey> keyUpdates;
-
-    for (auto coord : keySelection)
     {
-        auto key = controller->getKey(coord);
-        keyUpdates.add(MappedLumatoneKey(key->withColour(newColour), coord));
+        if (sizeChanged)
+            resized();
+        else 
+            repaint();
     }
-
-    auto updateAction = new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates);
-    controller->performUndoableAction(updateAction);
 }
 
 void AdjustColourPanel::completeMappingLoaded(LumatoneLayout mappingData)
@@ -214,5 +209,10 @@ void AdjustColourPanel::colourChangedCallback(ColourSelectionBroadcaster* source
     auto oldColour = box->getColour();
     box->setColour(newColour);
 
-    sendColourUpdate(oldColour, newColour);
+    colourAdjuster.replaceColour(oldColour, newColour);
+}
+
+void AdjustColourPanel::hueValueCallback()
+{
+    colourAdjuster.rotateHue(hueSlider->getValue());
 }

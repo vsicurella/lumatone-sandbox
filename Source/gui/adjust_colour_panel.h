@@ -6,6 +6,8 @@
 
 #include "../lumatone_editor_library/actions/edit_actions.h"
 
+#include "../lumatone_editor_library/color/adjust_layout_colour.h"
+
 class AdjustColourPanel : public juce::Component,
                           public LumatoneEditor::EditorListener,
                           public ColourSelectionListener
@@ -53,25 +55,27 @@ private:
 private:
     void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) override;
 
+    void hueValueCallback();
 
 private:
 
-    void reconfigureColours();
+    void reconfigureColours(bool doResize=true);
 
     void setSelectedBox(Box* box);
     void deselectBox();
-
-
-    void sendColourUpdate(juce::Colour oldColour, juce::Colour newColour);
 
 private:
 
     LumatoneController* controller;
     LumatonePaletteLibrary* paletteLibrary;
 
+    AdjustLayoutColour colourAdjuster;
+
     juce::Array<juce::Colour> colours;
 
     juce::OwnedArray<Box> colourBoxes;
+
+    std::unique_ptr<juce::Slider> hueSlider;
 
     std::unique_ptr<ColourPaletteWindow> palettePanel;
     std::unique_ptr<juce::CallOutBox> callout;
