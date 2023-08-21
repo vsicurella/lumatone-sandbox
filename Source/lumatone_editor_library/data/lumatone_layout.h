@@ -89,6 +89,10 @@ public:
 
 public:
 
+	juce::Array<LumatoneKeyCoord> getAllKeyCoords() const;
+
+public:
+
 	int numBoards = 0;
 	int octaveBoardSize = 0;
 

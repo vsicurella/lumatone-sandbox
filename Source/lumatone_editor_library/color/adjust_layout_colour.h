@@ -18,26 +18,26 @@ public:
         NONE,
         FINDREPLACE,
         ROTATEHUE,
+        ADJUSTBRIGHTNESS,
         SETGRADIENT
     };
 
     struct SetGradientOptions
     {
-        const juce::Array<MappedLumatoneKey>& selection;
+        const juce::Array<LumatoneKeyCoord>& selection;
         juce::ColourGradient gradient;
         bool selectionOrigin = true;
         bool fillRelative = true;
         int numColumns = 1;
         int numRows = 1;
 
-        SetGradientOptions(const juce::Array<MappedLumatoneKey>& selectionIn, juce::ColourGradient gradientIn, bool selectionOriginIn = true, bool fillRelativeIn=true, int numColumnsIn = 1, int numRowsIn = 1)
+        SetGradientOptions(const juce::Array<LumatoneKeyCoord>& selectionIn, juce::ColourGradient gradientIn, bool selectionOriginIn = true, bool fillRelativeIn=true, int numColumnsIn = 1, int numRowsIn = 1)
             : selection(selectionIn)
             , gradient(gradientIn)
             , selectionOrigin(selectionOriginIn)
             , fillRelative(fillRelativeIn)
             , numColumns(numColumnsIn)
             , numRows(numRowsIn) {}
-
     };
 
 public:
@@ -45,8 +45,13 @@ public:
     AdjustLayoutColour(LumatoneController* controller);
     ~AdjustLayoutColour();
 
-    void replaceColour(juce::Colour oldColour, juce::Colour newColour);
-    void rotateHue(float change);
+    void replaceColour(juce::Colour oldColour, juce::Colour newColour, bool sendUpdate=true);
+
+    void rotateHue(float change, bool sendUpdate=true);
+    void rotateHue(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
+
+    void multiplyBrightness(float change, bool sendUpdate=true);
+    void multiplyBrightness(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
     
     void setGradient(SetGradientOptions options);
     
@@ -83,7 +88,4 @@ private:
     LumatoneLayout currentLayout;
 
     AdjustLayoutColour::Type currentAction;
-    
-    float totalHueAdjustment = 0.0f;
-    
 };

@@ -552,3 +552,17 @@ juce::Array<LumatoneKeyCoord> LumatoneLayout::getKeysWithColour(const juce::Colo
 
     return keyCoords;
 }
+
+juce::Array<LumatoneKeyCoord> LumatoneLayout::getAllKeyCoords() const
+{
+    juce::Array<LumatoneKeyCoord> coords;
+    for (int boardIndex = 0; boardIndex < getNumBoards(); boardIndex++)
+    {
+        for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+        {
+            coords.add(LumatoneKeyCoord(boardIndex, keyIndex));
+        }
+    }
+
+    return coords;
+}
