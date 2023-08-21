@@ -51,13 +51,13 @@ public:
     void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
     void keyConfigChanged(int boardIndex, int keyIndex, LumatoneKey keyData) override;
     void keyColourChanged(int octaveNumber, int keyNumber, juce::Colour keyColour) override;
-
+    void selectionChanged(juce::Array<MappedLumatoneKey> selection) override;
 private:
 
     void updateKeyColour(int boardIndex, int keyIndex, const juce::Colour& colour);
     void resetLayoutState();
 
-    void keyUpdateCallback(int boardIndex, int keyIndex, const LumatoneKey& keyData);
+    void keyUpdateCallback(int boardIndex, int keyIndex, const LumatoneKey& keyData, bool doRepaint=true);
     void mappingUpdateCallback();
 
 public:
@@ -104,6 +104,7 @@ private:
 private:
     LumatoneKeyDisplay* getKeyFromMouseEvent(const juce::MouseEvent& e);
 
+    void rerender();
 
 private:
 
