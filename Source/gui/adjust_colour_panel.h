@@ -56,6 +56,7 @@ private:
     void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) override;
 
     void hueValueCallback();
+    void brightnessValueCallback();
 
 private:
 
@@ -76,6 +77,7 @@ private:
     juce::OwnedArray<Box> colourBoxes;
 
     std::unique_ptr<juce::Slider> hueSlider;
+    std::unique_ptr<juce::Slider> brightnessSlider;
 
     std::unique_ptr<ColourPaletteWindow> palettePanel;
     std::unique_ptr<juce::CallOutBox> callout;
