@@ -1,8 +1,10 @@
 #include "MainComponent.h"
+#include "SandboxMenu.h"
 
 //==============================================================================
 MainComponent::MainComponent(LumatoneController* controllerIn)
     : controller(controllerIn)
+    , colourAdjust(controllerIn)
 {
     connectionStatus = std::make_unique<ConnectionStatus>();
     controller->addStatusListener(connectionStatus.get());
@@ -47,4 +49,56 @@ void MainComponent::resized()
 
     const float widthMargin = proportionOfWidth(lumatoneComponentWidthMarginRatio * 0.5f);
     lumatoneComponent->setBounds(widthMargin, connectionStatus->getBottom(), getWidth() - widthMargin * 2, getHeight() - connectionStatusHeight * 2);
+}
+
+
+void MainComponent::getAllCommands(juce::Array <juce::CommandID>& commands)
+{
+    const juce::CommandID ids[] = {
+        LumatoneSandbox::Menu::commandIDs::setRenderModeKeys,
+        LumatoneSandbox::Menu::commandIDs::setRenderModeMaxRes
+    };
+
+    commands.addArray(ids, 2);
+}
+
+void MainComponent::getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result)
+{
+    // result.setActive(false);
+
+    switch (commandID)
+        {
+        case LumatoneSandbox::Menu::commandIDs::setRenderModeKeys:
+            result.setInfo("Render by key", "Render Lumatone graphic as individual components", "View", 0);
+            result.setTicked(lumatoneComponent->getRenderMode() != LumatoneComponentRenderMode::MaxRes);
+            break;
+
+        case LumatoneSandbox::Menu::commandIDs::setRenderModeMaxRes:
+            result.setInfo("Render max size", "Render Lumatone graphic at max quality", "View", 0);
+            result.setTicked(lumatoneComponent->getRenderMode() == LumatoneComponentRenderMode::MaxRes);
+            break;
+
+        default:
+            break;
+        }
+}
+
+bool MainComponent::perform(const juce::ApplicationCommandTarget::InvocationInfo& info)
+{
+    switch (info.commandID)
+    {
+    default:
+        return false;
+
+    case LumatoneSandbox::Menu::commandIDs::setRenderModeKeys:
+    {
+        lumatoneComponent->setRenderMode(LumatoneComponentRenderMode::GraphicInteractive);
+        return true;
+    }
+    case LumatoneSandbox::Menu::commandIDs::setRenderModeMaxRes:
+    {
+        lumatoneComponent->setRenderMode(LumatoneComponentRenderMode::MaxRes);
+        return true;
+    }
+    }
 }

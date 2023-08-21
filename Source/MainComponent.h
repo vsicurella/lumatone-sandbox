@@ -4,6 +4,8 @@
 #include "lumatone_editor_library/LumatoneController.h"
 #include "lumatone_editor_library/LumatoneKeyboardComponent.h"
 
+#include "lumatone_editor_library/color/adjust_layout_colour.h"
+
 #include "gui/connection_status.h"
 
 //==============================================================================
@@ -12,12 +14,15 @@
     your controls and content.
 */
 class MainComponent  : public juce::Component,
-                       public LumatoneEditor::StatusListener
+                       public LumatoneEditor::StatusListener,
+                       public juce::ApplicationCommandTarget
 {
 public:
     //==============================================================================
     MainComponent(LumatoneController* controllerIn);
     ~MainComponent() override;
+
+
 
     //==============================================================================
     void paint (juce::Graphics&) override;
@@ -25,6 +30,14 @@ public:
 
     void addKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->addListener(listener); }
     void removeKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->removeListener(listener); }
+
+
+protected:
+
+    juce::ApplicationCommandTarget* getNextCommandTarget () { return nullptr; }
+    void getAllCommands(juce::Array <juce::CommandID>& commands) override;
+	void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result) override;
+	bool perform(const juce::ApplicationCommandTarget::InvocationInfo& info) override;
 
 private:
     //==============================================================================
@@ -34,6 +47,8 @@ private:
 
     std::unique_ptr<ConnectionStatus> connectionStatus;
     std::unique_ptr<LumatoneKeyboardComponent> lumatoneComponent;
+
+    AdjustLayoutColour colourAdjust;
 
     // UI helpers
     const float connectionStatusHeightRatio = 0.1f;

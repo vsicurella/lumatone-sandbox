@@ -28,7 +28,10 @@ namespace LumatoneSandbox {
             pasteOctaveBoardTypes = 0x200106,
 
 			adjustColour = 0x200110,
-            
+
+			setRenderModeKeys = 0x200120,
+			setRenderModeMaxRes = 0x200121,
+
 			undo = 0x200200,
 			redo = 0x200201,
 
@@ -51,6 +54,7 @@ namespace LumatoneSandbox {
 
 			virtual void createFileMenu(juce::PopupMenu& menu);
 			virtual void createEditMenu(juce::PopupMenu& menu);
+			virtual void createViewMenu(juce::PopupMenu& menu);
 			virtual void createGameMenu(juce::PopupMenu& menu);
 			virtual void createHelpMenu(juce::PopupMenu& menu);
 

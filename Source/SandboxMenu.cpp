@@ -19,7 +19,7 @@ LumatoneSandbox::Menu::Model::Model(juce::ApplicationCommandManager* commandMana
 
 juce::StringArray LumatoneSandbox::Menu::Model::getMenuBarNames()
 {
-  const char* const names[] = { "File", "Edit", "Game", "Help", nullptr };
+  const char* const names[] = { "File", "Edit", "View", "Game", "Help", nullptr };
   return juce::StringArray(names);
 }
 
@@ -58,6 +58,14 @@ void LumatoneSandbox::Menu::Model::createEditMenu(juce::PopupMenu& menu)
   menu.addCommandItem(theManager, redo);
 }
 
+void LumatoneSandbox::Menu::Model::createViewMenu(juce::PopupMenu& menu)
+{
+  juce::PopupMenu renderMenu;
+  renderMenu.addCommandItem(theManager, setRenderModeKeys);
+  renderMenu.addCommandItem(theManager, setRenderModeMaxRes);
+  menu.addSubMenu("Render Mode", renderMenu, true);
+}
+
 void LumatoneSandbox::Menu::Model::createGameMenu(juce::PopupMenu& menu)
 {
     menu.addCommandItem(theManager, openRandomColorsGame);
@@ -75,6 +83,7 @@ juce::PopupMenu LumatoneSandbox::Menu::Model::getMenuForIndex(int topLevelMenuIn
 
   if (menuName == "File")           createFileMenu(menu);
   else if (menuName == "Edit")		createEditMenu(menu);
+  else if (menuName == "View")		createViewMenu(menu);
   else if (menuName == "Game")      createGameMenu(menu);
   else if (menuName == "Help")		createHelpMenu(menu);
   else                                jassertfalse; // names have changed?
