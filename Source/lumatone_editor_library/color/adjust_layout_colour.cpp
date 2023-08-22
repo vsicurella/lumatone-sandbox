@@ -4,13 +4,11 @@ AdjustLayoutColour::AdjustLayoutColour(LumatoneController* controllerIn)
     : controller(controllerIn)
     , hexMap(controllerIn->shareMappingData())
 {
-    controller->addEditorListener(this);
     endAction();
 }
 
 AdjustLayoutColour::~AdjustLayoutColour()
 {
-    controller->removeEditorListener(this);
 }
 
 void AdjustLayoutColour::replaceColour(juce::Colour oldColour, juce::Colour newColour, bool sendUpdate)
@@ -218,26 +216,14 @@ void AdjustLayoutColour::resetChanges()
     endAction();
 }
 
-void AdjustLayoutColour::sendSelectionUpdate(const juce::Array<MappedLumatoneKey>& keyUpdates)
+void AdjustLayoutColour::sendSelectionUpdate(const juce::Array<MappedLumatoneKey>& keyUpdates, bool bufferUpdates)
 {
-    auto updateAction = new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates);
+    auto updateAction = new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, bufferUpdates);
     controller->performUndoableAction(updateAction);
 }
 
-void AdjustLayoutColour::sendMappingUpdate(const LumatoneLayout& updatedLayout)
+void AdjustLayoutColour::sendMappingUpdate(const LumatoneLayout& updatedLayout, bool bufferUpdates)
 {
     for (int i = 0; i < controller->getNumBoards(); i++)
-        controller->performUndoableAction(new LumatoneEditAction::SectionEditAction(controller, i, *updatedLayout.readBoard(i)), i == 0, "AdjustLayoutColour");
-}
-
-void AdjustLayoutColour::completeMappingLoaded(LumatoneLayout mappingData)
-{
-}
-
-void AdjustLayoutColour::boardChanged(LumatoneBoard boardData)
-{
-}
-
-void AdjustLayoutColour::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
-{
+        controller->performUndoableAction(new LumatoneEditAction::SectionEditAction(controller, i, *updatedLayout.readBoard(i), bufferUpdates), i == 0, "AdjustLayoutColour");
 }
