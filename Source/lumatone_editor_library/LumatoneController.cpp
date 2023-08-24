@@ -115,37 +115,25 @@ Combined (hi-level) commands
 */
 
 
-void LumatoneController::sendAllParamsOfBoard(int boardId, const LumatoneBoard* boardData, bool signalEditorListeners)
+void LumatoneController::sendAllParamsOfBoard(int boardId, const LumatoneBoard* boardData, bool signalEditorListeners, bool bufferKeyUpdates)
 {
-    if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
+    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
     {
-        for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
-        {
-            auto key = &boardData->theKeys[keyIndex];
-            midiDriver.sendKeyFunctionParameters(boardId, keyIndex, key->noteNumber, key->channelNumber, key->keyType);
-            midiDriver.sendKeyLightParameters(boardId, keyIndex, key->colour.getRed(), key->colour.getGreen(), key->colour.getBlue());
-        }
+        auto key = &boardData->theKeys[keyIndex];
+        sendKeyParam(boardId, keyIndex, *key, false, bufferKeyUpdates);
     }
-    else
-    {
-        for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
-        {
-            auto key = &boardData->theKeys[keyIndex];
-            midiDriver.sendKeyFunctionParameters(boardId, keyIndex, key->noteNumber, key->channelNumber, key->keyType);
-            midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, key->colour.getRed() / 2, key->colour.getGreen() / 2, key->colour.getBlue() / 2);
-        }
 
-        if (signalEditorListeners)
-            editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *boardData);
-    }
+    if (signalEditorListeners)
+        editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *boardData);
 }
 
-void LumatoneController::sendCompleteMapping(LumatoneLayout mappingData)
+void LumatoneController::sendCompleteMapping(LumatoneLayout mappingData, bool signalEditorListeners, bool bufferKeyUpdates)
 {
     for (int boardId = 1; boardId <= getNumBoards(); boardId++)
-        sendAllParamsOfBoard(boardId, mappingData.getBoard(boardId - 1));
+        sendAllParamsOfBoard(boardId, mappingData.getBoard(boardId - 1), false, bufferKeyUpdates);
 
-    editorListeners.call(&LumatoneEditor::EditorListener::completeMappingLoaded, mappingData);
+    if (signalEditorListeners)
+        editorListeners.call(&LumatoneEditor::EditorListener::completeMappingLoaded, mappingData);
 }
 
 void LumatoneController::sendGetMappingOfBoardRequest(int boardId)
@@ -237,31 +225,32 @@ void LumatoneController::testCurrentDeviceConnection()
 }
 
 // Send parametrization of one key to the device
-void LumatoneController::sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData)
+void LumatoneController::sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData, bool signalEditorListeners, bool bufferKeyUpdates)
 {    
     // Default CC polarity = 1, Inverted CC polarity = 0
-    sendKeyConfig(boardId, keyIndex, keyData, false);
-    sendKeyColourConfig(boardId, keyIndex, keyData, false);
+    sendKeyConfig(boardId, keyIndex, keyData, false, bufferKeyUpdates);
+    sendKeyColourConfig(boardId, keyIndex, keyData, false, bufferKeyUpdates);
 
-    editorListeners.call(&LumatoneEditor::EditorListener::keyChanged, boardId - 1, keyIndex, keyData);
+    if (signalEditorListeners)
+        editorListeners.call(&LumatoneEditor::EditorListener::keyChanged, boardId - 1, keyIndex, keyData);
 }
 
-void LumatoneController::sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners)
+void LumatoneController::sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners, bool bufferKeyUpdates)
 {
     for (auto mappedKey : selection)
     {
-        sendKeyConfig(mappedKey.boardIndex + 1, mappedKey.keyIndex, (LumatoneKey)mappedKey, false);
+        sendKeyConfig(mappedKey.boardIndex + 1, mappedKey.keyIndex, (LumatoneKey)mappedKey, false, bufferKeyUpdates);
     }
 
     if (signalEditorListeners)
         editorListeners.call(&LumatoneEditor::EditorListener::selectionChanged, selection);
 }
 
-void LumatoneController::sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners)
+void LumatoneController::sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners, bool bufferKeyUpdates)
 {
     for (auto mappedKey : selection)
     {
-        sendKeyColourConfig(mappedKey.boardIndex + 1, mappedKey.keyIndex, (LumatoneKey)mappedKey, false);
+        sendKeyColourConfig(mappedKey.boardIndex + 1, mappedKey.keyIndex, (LumatoneKey)mappedKey, false, bufferKeyUpdates);
     }
 
     if (signalEditorListeners)
@@ -294,34 +283,47 @@ void LumatoneController::sendTableConfig(LumatoneConfigTable::TableType velocity
 // Mid-level firmware functions
 
 // Send note, channel, cc, and fader polarity data
-void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& keyData, bool signalEditorListeners)
+void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& keyData, bool signalEditorListeners, bool bufferKeyUpdates)
 {
     // midiDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
 
-    updateBuffer.sendKeyConfig(boardId, keyIndex, keyData);
+    if (bufferKeyUpdates)
+        updateBuffer.sendKeyConfig(boardId, keyIndex, keyData);
+    else
+        midiDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
+
     *getEditKey(boardId - 1, keyIndex) = keyData;
     
     if (signalEditorListeners)
         editorListeners.call(&LumatoneEditor::EditorListener::keyConfigChanged, boardId - 1, keyIndex, keyData);
 }
 
-void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners)
+void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners, bool bufferKeyUpdates)
 {
     // if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
     //     midiDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
     // else
     //     midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
 
-    updateBuffer.sendKeyColourConfig(boardId, keyIndex, colour);
+    if (bufferKeyUpdates)
+        updateBuffer.sendKeyColourConfig(boardId, keyIndex, colour);
+    else
+    {
+        if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
+            midiDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
+        else
+            midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+    }
+
     getEditKey(boardId - 1, keyIndex)->colour = colour;
 
     if (signalEditorListeners)
         editorListeners.call(&LumatoneEditor::EditorListener::keyColourChanged, boardId - 1, keyIndex, colour);
 }
 
-void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, const LumatoneKey& keyColourConfig, bool signalEditorListeners)
+void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, const LumatoneKey& keyColourConfig, bool signalEditorListeners, bool bufferKeyUpdates)
 {
-    sendKeyColourConfig(boardId, keyIndex, keyColourConfig.colour, signalEditorListeners);
+    sendKeyColourConfig(boardId, keyIndex, keyColourConfig.colour, signalEditorListeners, bufferKeyUpdates);
 }
 
 

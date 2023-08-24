@@ -75,13 +75,14 @@ namespace LumatoneEditAction {
     class SectionEditAction : public LumatoneAction
     {
     public:
-        SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue);
+        SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates=false);
 
         SectionEditAction(const SectionEditAction& second)
             : LumatoneAction(second.controller)
             , boardId(second.boardId)
             , previousData(second.previousData)
             , newData(second.newData)
+            , useKeyBuffer(second.useKeyBuffer)
         {}
 
         bool isValid() const;
@@ -95,16 +96,19 @@ namespace LumatoneEditAction {
 
         LumatoneBoard previousData;
         LumatoneBoard newData;
+
+        bool useKeyBuffer;
     };
 
     class MultiKeyAssignAction : public LumatoneAction
     {
     public:
-        MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys);
+        MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys, bool bufferKeyUpdates=false);
         MultiKeyAssignAction(const MultiKeyAssignAction& copy)
             : LumatoneAction(copy.controller)
 			, previousKeys(copy.previousKeys)
             , newData(copy.newData)
+            , useKeyBuffer(copy.useKeyBuffer)
         {}
 
         bool isValid() const;
@@ -118,6 +122,8 @@ namespace LumatoneEditAction {
 		void applyMappedKeyData(const juce::Array<MappedLumatoneKey>& newKeys, const juce::Array<MappedLumatoneKey>& oldKeys);
 
 	private:
+        bool useKeyBuffer = false;
+
 		juce::Array<MappedLumatoneKey> previousKeys;
 		juce::Array<MappedLumatoneKey> newData;
     };

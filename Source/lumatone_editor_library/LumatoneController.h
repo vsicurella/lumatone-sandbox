@@ -72,10 +72,10 @@ public:
     // Combined (hi-level) commands
 
     // Send all parametrizations of one sub board
-    void sendAllParamsOfBoard(int boardId, const LumatoneBoard* boardData, bool signalEditorListeners=false);
+    void sendAllParamsOfBoard(int boardId, const LumatoneBoard* boardData, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
 
     // Send and save a complete key mapping
-    void sendCompleteMapping(LumatoneLayout mappingData);
+    void sendCompleteMapping(LumatoneLayout mappingData, bool signalEditorListeners=true, bool bufferKeyUpdates=true);
 
     // Send request to receive the current mapping of one sub board on the controller
     void sendGetMappingOfBoardRequest(int boardId);
@@ -84,11 +84,11 @@ public:
     void sendGetCompleteMappingRequest();
 
     // Send parametrization of one key to the device
-    void sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData);
+    void sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
 
-    void sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners=false);
+    void sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
 
-    void sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners=false);
+    void sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
 
     // Send configuration of a certain look up table
     void sendTableConfig(LumatoneConfigTable::TableType velocityCurveType, const juce::uint8* table);
@@ -106,11 +106,11 @@ public:
     // Single (mid-level) commands
 
     // Send note, channel, cc, and fader polarity data
-    void sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& noteDataConfig, bool signalEditorListeners=true);
+    void sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& noteDataConfig, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
 
     // Send RGB colour data
-    void sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners = true);
-    void sendKeyColourConfig(int boardId, int keyIndex, const LumatoneKey& keyColourConfig, bool signalEditorListeners = true);
+    void sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners = true, bool bufferKeyUpdates=false);
+    void sendKeyColourConfig(int boardId, int keyIndex, const LumatoneKey& keyColourConfig, bool signalEditorListeners = true, bool bufferKeyUpdates=false);
 
     // Send expression pedal sensivity
     void sendExpressionPedalSensivity(unsigned char value);

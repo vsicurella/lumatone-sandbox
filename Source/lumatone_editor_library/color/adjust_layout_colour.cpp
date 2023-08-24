@@ -23,7 +23,7 @@ void AdjustLayoutColour::replaceColour(juce::Colour oldColour, juce::Colour newC
     }
 
     if (sendUpdate)
-        sendSelectionUpdate(keyUpdates);
+        sendSelectionUpdate(keyUpdates, true);
 }
 
 void AdjustLayoutColour::rotateHue(float change, bool sendUpdate)
@@ -31,7 +31,7 @@ void AdjustLayoutColour::rotateHue(float change, bool sendUpdate)
     auto coords = currentLayout.getAllKeyCoords();
     rotateHue(change, coords, false);
     if (sendUpdate)
-        sendMappingUpdate(currentLayout);
+        sendMappingUpdate(currentLayout, true);
 }
 
 void AdjustLayoutColour::rotateHue(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate)
@@ -58,7 +58,7 @@ void AdjustLayoutColour::rotateHue(float change, const juce::Array<LumatoneKeyCo
     }
 
     if (sendUpdate)
-        sendSelectionUpdate(updateKeys);
+        sendSelectionUpdate(updateKeys, true);
 }
 
 void AdjustLayoutColour::multiplyBrightness(float change, bool sendUpdate)
@@ -66,7 +66,7 @@ void AdjustLayoutColour::multiplyBrightness(float change, bool sendUpdate)
     auto coords = currentLayout.getAllKeyCoords();
     multiplyBrightness(change, coords, false);
     if (sendUpdate)
-        sendMappingUpdate(currentLayout);
+        sendMappingUpdate(currentLayout, true);
 }
 
 void AdjustLayoutColour::multiplyBrightness(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate)
@@ -91,7 +91,7 @@ void AdjustLayoutColour::multiplyBrightness(float change, const juce::Array<Luma
     }
 
     if (sendUpdate)
-        sendSelectionUpdate(updateKeys);
+        sendSelectionUpdate(updateKeys, true);
 }
 
 void AdjustLayoutColour::setGradient(SetGradientOptions options)
@@ -180,7 +180,7 @@ void AdjustLayoutColour::setGradient(SetGradientOptions options)
         keyUpdates.add(MappedLumatoneKey(*key, mappedKey.boardIndex, mappedKey.keyIndex));
     }
 
-    sendSelectionUpdate(keyUpdates);
+    sendSelectionUpdate(keyUpdates, false);
 }
 
 void AdjustLayoutColour::beginAction(AdjustLayoutColour::Type type)
@@ -220,7 +220,7 @@ void AdjustLayoutColour::sendSelectionUpdate(const juce::Array<MappedLumatoneKey
 {
     auto updateAction = new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, bufferUpdates);
     controller->performUndoableAction(updateAction);
-}
+    }
 
 void AdjustLayoutColour::sendMappingUpdate(const LumatoneLayout& updatedLayout, bool bufferUpdates)
 {

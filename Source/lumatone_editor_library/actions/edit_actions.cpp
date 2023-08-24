@@ -39,7 +39,7 @@ SingleNoteAssignAction::SingleNoteAssignAction(
     LumatoneController* controller,
     int boardIndex,
     int keyIndex,
-    juce::Colour newColour ) 
+    juce::Colour newColour) 
     : SingleNoteAssignAction(controller, 
                             boardIndex, keyIndex, 
                             false, false, false, true, false, 
@@ -170,10 +170,11 @@ bool SingleNoteAssignAction::undo()
 // ==============================================================================
 // Implementation of SectionEditAction
 
-SectionEditAction::SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue)
+SectionEditAction::SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates)
     : LumatoneAction(controller)
     , boardId(boardIndexIn + 1)
     , newData(newSectionValue)
+    , useKeyBuffer(bufferKeyUpdates)
 {
     previousData = *controller->getBoard(boardIndexIn);
 }
@@ -219,8 +220,9 @@ bool SectionEditAction::undo()
 }
 
 
-MultiKeyAssignAction::MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys)
+MultiKeyAssignAction::MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys, bool bufferKeyUpdates)
     : LumatoneAction(controller)
+    , useKeyBuffer(bufferKeyUpdates)
 {
     for (auto updatedKey : updatedKeys)
     {
@@ -242,8 +244,8 @@ bool MultiKeyAssignAction::isValid() const
 
 void MultiKeyAssignAction::applyMappedKeyData(const juce::Array<MappedLumatoneKey>& newKeys, const juce::Array<MappedLumatoneKey>& oldKeys)
 {
-    controller->sendSelectionParam(newKeys, false);
-    controller->sendSelectionColours(newKeys, true);
+    controller->sendSelectionParam(newKeys, false, useKeyBuffer);
+    controller->sendSelectionColours(newKeys, true, useKeyBuffer);
 }
 
 bool MultiKeyAssignAction::perform()
