@@ -72,7 +72,6 @@ public:
     static juce::Colour kelvinToColour(int kelvin)
     {
         int temperature = kelvin;
-        float tempFloat;
 
         // range check
         if (temperature < 1000)

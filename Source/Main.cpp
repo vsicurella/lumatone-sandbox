@@ -112,32 +112,28 @@ public:
     {
         JUCEApplication::getAllCommands(commands);
 
-        const juce::CommandID ids[] = {
-            LumatoneSandbox::Menu::commandIDs::openSysExMapping,
-            LumatoneSandbox::Menu::commandIDs::saveSysExMapping,
-            LumatoneSandbox::Menu::commandIDs::saveSysExMappingAs,
-            LumatoneSandbox::Menu::commandIDs::resetSysExMapping,
+        commands.add(LumatoneSandbox::Menu::commandIDs::openSysExMapping);
+        commands.add(LumatoneSandbox::Menu::commandIDs::saveSysExMapping);
+        commands.add(LumatoneSandbox::Menu::commandIDs::saveSysExMappingAs);
+        commands.add(LumatoneSandbox::Menu::commandIDs::resetSysExMapping);
 
-            LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard,
-            LumatoneSandbox::Menu::commandIDs::copyOctaveBoard,
-            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard,
-            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardChannels,
-            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes,
-            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours,
-            LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes,
+        commands.add(LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard);
+        commands.add(LumatoneSandbox::Menu::commandIDs::copyOctaveBoard);
+        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard);
+        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardChannels);
+        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes);
+        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours);
+        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes);
 
-            LumatoneSandbox::Menu::commandIDs::adjustColour,
+        commands.add(LumatoneSandbox::Menu::commandIDs::adjustColour);
 
-            LumatoneSandbox::Menu::commandIDs::undo,
-            LumatoneSandbox::Menu::commandIDs::redo,
+        commands.add(LumatoneSandbox::Menu::commandIDs::undo);
+        commands.add(LumatoneSandbox::Menu::commandIDs::redo);
 
-            LumatoneSandbox::Menu::commandIDs::aboutSysEx,
-
-            LumatoneSandbox::Menu::commandIDs::openRandomColorsGame,
-            LumatoneSandbox::Menu::commandIDs::openHexRingsGame
-        };
-
-        commands.addArray(ids, 16);
+        commands.add(LumatoneSandbox::Menu::commandIDs::aboutSysEx);
+        
+        commands.add(LumatoneSandbox::Menu::commandIDs::openRandomColorsGame);
+        commands.add(LumatoneSandbox::Menu::commandIDs::openHexRingsGame);
     }
 
 	void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result) override
@@ -242,7 +238,8 @@ public:
         {
         case LumatoneSandbox::Menu::commandIDs::openSysExMapping:
         {
-            fileChooser.reset(new juce::FileChooser("Open .LTN file", juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory), "*.ltn"));
+            auto directory = controller->getLastMappingsDirectory();
+            fileChooser.reset(new juce::FileChooser("Open .LTN file", directory, "*.ltn"));
             fileChooser->launchAsync(
                 juce::FileBrowserComponent::FileChooserFlags::canSelectFiles + juce::FileBrowserComponent::FileChooserFlags::openMode,
                 [&](const juce::FileChooser& chooser)

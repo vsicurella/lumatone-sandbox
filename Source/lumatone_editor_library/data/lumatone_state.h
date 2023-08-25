@@ -53,6 +53,10 @@ namespace LumatoneEditorProperty
     static const juce::Identifier InvertSustain = juce::Identifier("InvertSustain");
     static const juce::Identifier ExpressionSensitivity = juce::Identifier("ExpressionSensitivity");
 
+    // Settings
+    static const juce::Identifier DefaultMappingsDirectory = juce::Identifier("DefaultMappingsDirectory");
+    static const juce::Identifier LastMappingsDirectory = juce::Identifier("LastMappingsDirectory");
+
 };
 
 class LumatoneState : public LumatoneStateBase, private juce::ValueTree::Listener
@@ -94,6 +98,8 @@ public:
     bool getInvertSustain() const { return invertSustain; }
     juce::uint8 getExpressionSensitivity() const { return expressionSensitivity; }
 
+    juce::File getDefaultMappingsDirectory();
+    juce::File getLastMappingsDirectory();
     virtual bool loadLayoutFromFile(const juce::File& layoutFile);
 
 public:

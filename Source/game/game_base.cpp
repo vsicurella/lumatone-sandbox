@@ -73,28 +73,12 @@ void LumatoneSandboxGameBase::addToQueue(juce::UndoableAction* action)
 
 LumatoneLayout LumatoneSandboxGameBase::queueIdentityLayout(bool resetColors)
 {
-    LumatoneLayout layout = *controller->getMappingData();
+    LumatoneLayout layout = LumatoneLayout::IdentityMapping(controller->getNumBoards(), controller->getOctaveBoardSize());
 
     for (int i = 0; i < controller->getNumBoards(); i++)
     {
-        LumatoneBoard& newBoard = *layout.getBoard(i);
-        newBoard.board_idx = i;
-
-        int midiChannel = i + 1;
-
-        for (int k = 0; k < controller->getOctaveBoardSize(); k++)
-        {
-            newBoard.theKeys[k].channelNumber = midiChannel;
-            newBoard.theKeys[k].noteNumber = k;
-            newBoard.theKeys[k].keyType = LumatoneKeyType::noteOnNoteOff;
-
-            if (resetColors)
-            {
-                newBoard.theKeys[k].colour = juce::Colour();
-            }
-        }
-
-        addToQueue(new LumatoneEditAction::SectionEditAction(controller, i, newBoard));
+        LumatoneBoard* newBoard = layout.getBoard(i);
+        addToQueue(new LumatoneEditAction::SectionEditAction(controller, i, *newBoard));
     }
 
     return layout;

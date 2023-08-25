@@ -218,6 +218,13 @@ juce::Array<Hex::Point> Hex::Point::ring(int distance) const
         points.add(Hex::Point(q + distance, r - distance + d));
         points.add(Hex::Point(q - d, r + distance));
         points.add(Hex::Point(q - distance + d, r - d));
+
+        for (int dd = 1; dd < d; dd++)
+        {
+            // points.add(Hex::Point(q + dd, r + dd));
+            // points.add(Hex::Point(q - dd, r - distance));
+            // points.add(Hex::Point(q + dd, r - distance));
+        }
     }
 
     return points;

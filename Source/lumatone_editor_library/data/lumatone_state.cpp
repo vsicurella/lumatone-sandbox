@@ -284,6 +284,39 @@ void LumatoneState::setExpressionSensitivity(juce::uint8 sensitivity)
     expressionSensitivity = sensitivity;
 }
 
+juce::File LumatoneState::getDefaultMappingsDirectory()
+{
+    juce::File directory;
+    juce::String path = getStringProperty(LumatoneEditorProperty::DefaultMappingsDirectory);
+
+    if (path.isNotEmpty())
+    {
+        directory = juce::File(path);
+        if (directory.exists() && directory.isDirectory())
+            return directory;
+    }
+
+    directory = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory);
+    auto mappingDirectory = directory.getChildFile("Lumatone Editor").getChildFile("Mappings");
+    if (mappingDirectory.exists() && mappingDirectory.isDirectory())
+        return mappingDirectory;
+
+    return directory;
+}
+
+juce::File LumatoneState::getLastMappingsDirectory()
+{
+    juce::File directory;
+    juce::String path = getStringProperty(LumatoneEditorProperty::LastMappingsDirectory);
+    if (path.isNotEmpty())
+    {
+        directory = juce::File(path);
+        if (directory.exists() && directory.isDirectory())
+            return directory;
+    }
+
+    return getDefaultMappingsDirectory();
+}
 
 bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
 {

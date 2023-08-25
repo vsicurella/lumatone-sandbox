@@ -201,7 +201,6 @@ void LumatoneKeyDisplay::startDrag()
     {
         isClicked = true;
         noteOn();
-        repaintIfInteractive();
     }
 }
 
@@ -214,7 +213,6 @@ void LumatoneKeyDisplay::endDrag()
         if (noteOffMode != NoteOffModifier::Sustain)
         {
             noteOff();
-            repaintIfInteractive();
         }
 
     }

@@ -90,6 +90,8 @@ public:
 public:
 
 	juce::Array<LumatoneKeyCoord> getAllKeyCoords() const;
+	
+	static LumatoneLayout IdentityMapping(int numBoards=MAXNUMBOARDS, int octaveBoardSize=56, LumatoneKeyType keyType=LumatoneKeyType::noteOnNoteOff);
 
 public:
 

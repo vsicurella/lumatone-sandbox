@@ -57,6 +57,10 @@ private:
 
     Hex::Point addBoardIndex(Hex::Point point, int numIndexes);
 
+public:
+
+    static bool testIdentityMap();
+
 private:
 
     std::shared_ptr<LumatoneLayout> layout;
