@@ -235,6 +235,7 @@ protected:
     void octaveColourConfigReceived(int boardId, juce::uint8 rgbFlag, const int* colourData) override;
     void octaveChannelConfigReceived(int octaveIndex, const int* channelData) override;
     void octaveNoteConfigReceived(int octaveIndex, const int* noteData) override;
+    void keyTypeConfigReceived(int boardId, const int* keyTypeData) override;
 
     //============================================================================
     // Test functions

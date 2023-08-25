@@ -697,6 +697,16 @@ void LumatoneController::octaveNoteConfigReceived(int boardId, const int* noteDa
     editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *getBoard(boardId - 1));
 }
 
+void LumatoneController::keyTypeConfigReceived(int boardId, const int* keyTypeData)
+{
+    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+    {
+        // Check note values?
+        getEditKey(boardId - 1, keyIndex)->keyType = LumatoneKeyType(keyTypeData[keyIndex]);
+    }
+
+    editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *getBoard(boardId - 1));
+}
 
 //FirmwareSupport::Error LumatoneController::handlePingResponse(const juce::MidiMessage& midiMessage)
 //{
