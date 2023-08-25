@@ -73,7 +73,7 @@ public:
 
 private:
     // Playing mode implementations
-    void showKeyDown(int boardIndex, int keyIndex, bool keyIsDown);
+    void updateKeyState(int boardIndex, int keyIndex, bool keyIsDown);
 
 protected:
     // juce::Component UI implementations

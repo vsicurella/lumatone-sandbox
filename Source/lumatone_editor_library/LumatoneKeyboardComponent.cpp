@@ -330,7 +330,7 @@ void LumatoneKeyboardComponent::lumatoneKeyDown(int boardIndex, int keyIndex)
         {
         case LumatoneKeyType::noteOnNoteOff:
             noteOn(key->channelNumber, key->noteNumber, (juce::uint8)127);
-            showKeyDown(boardIndex, keyIndex, true);
+            updateKeyState(boardIndex, keyIndex, true);
             break;
         default:
             break;
@@ -350,7 +350,7 @@ void LumatoneKeyboardComponent::lumatoneKeyUp(int boardIndex, int keyIndex)
         {
         case LumatoneKeyType::noteOnNoteOff:
             noteOff(key->channelNumber, key->noteNumber, 0);
-            showKeyDown(boardIndex, keyIndex, false);
+            updateKeyState(boardIndex, keyIndex, false);
             break;
         default:
             break;
@@ -358,7 +358,7 @@ void LumatoneKeyboardComponent::lumatoneKeyUp(int boardIndex, int keyIndex)
     }
 }
 
-void LumatoneKeyboardComponent::showKeyDown(int boardIndex, int keyIndex, bool keyIsDown)
+void LumatoneKeyboardComponent::updateKeyState(int boardIndex, int keyIndex, bool keyIsDown)
 {
     auto keyComponent = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
 
@@ -401,10 +401,10 @@ void LumatoneKeyboardComponent::mouseMove(const juce::MouseEvent& e)
         keyCoord = key->getCoord();
     }
 
-    if (state.isKeyCoordValid(lastOver))
-    {
-        auto lastOverForMouse = octaveBoards[lastOver.boardIndex]->keyMiniDisplay[lastOver.keyIndex];
-    }
+    // if (state.isKeyCoordValid(lastOver))
+    // {
+    //     auto lastOverForMouse = octaveBoards[lastOver.boardIndex]->keyMiniDisplay[lastOver.keyIndex];
+    // }
 
 
     keysOverPerMouse.set(mouseIndex, keyCoord);
@@ -458,15 +458,16 @@ void LumatoneKeyboardComponent::mouseDrag(const juce::MouseEvent& e)
     }
 
     bool validKey = state.isKeyCoordValid(keyCoord);
-    onNewKey = validKey && (mouseKeyLastDown == nullptr || lastDownCoord != keyCoord);
-
+    bool keyChanged = lastDownCoord != keyCoord;
+    onNewKey = validKey && (mouseKeyLastDown == nullptr || keyChanged);
+    
     bool setLastNoteOff = !e.mods.isShiftDown() && (onNewKey || !validKey);
     if (mouseKeyLastDown != nullptr && setLastNoteOff)
     {
         switch (mouseKeyLastDown->keyType)
         {
         case LumatoneKeyType::noteOnNoteOff:
-            mouseKeyLastDown->endDrag();
+            noteOff(mouseKeyLastDown->channelNumber, mouseKeyLastDown->noteNumber, 0);
             keysOn.removeFirstMatchingValue(mouseKeyLastDown);
             break;
         default:
@@ -482,7 +483,7 @@ void LumatoneKeyboardComponent::mouseDrag(const juce::MouseEvent& e)
         switch (key->keyType)
         {
         case LumatoneKeyType::noteOnNoteOff:
-            key->startDrag();
+            noteOn(key->channelNumber, key->noteNumber, 100);
             keysOn.addIfNotAlreadyThere(key);
             break;
         default:
@@ -616,7 +617,7 @@ void LumatoneKeyboardComponent::handleNoteOn(LumatoneMidiState* midiState, int m
     {
         if (state.isKeyCoordValid(coord))
         {
-            showKeyDown(coord.boardIndex, coord.keyIndex, true);
+            updateKeyState(coord.boardIndex, coord.keyIndex, true);
         }
     }
 }
@@ -628,7 +629,7 @@ void LumatoneKeyboardComponent::handleNoteOff(LumatoneMidiState* midiState, int 
     {
         if (state.isKeyCoordValid(coord))
         {
-            showKeyDown(coord.boardIndex, coord.keyIndex, false);
+            updateKeyState(coord.boardIndex, coord.keyIndex, false);
         }
     }
 }

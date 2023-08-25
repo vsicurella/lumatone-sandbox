@@ -104,7 +104,7 @@ void LumatoneMidiState::noteOff(const int midiChannel, const int midiNote, const
     {
         const int timeNow = (int)juce::Time::getMillisecondCounter();
 
-        auto msg = juce::MidiMessage::noteOn(midiChannel, midiNote, velocity);
+        auto msg = juce::MidiMessage::noteOff(midiChannel, midiNote, velocity);
         eventsToAdd.addEvent(msg, timeNow);
         eventsToAdd.clear(0, timeNow - 500);
 
