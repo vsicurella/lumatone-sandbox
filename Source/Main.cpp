@@ -242,7 +242,8 @@ public:
         {
         case LumatoneSandbox::Menu::commandIDs::openSysExMapping:
         {
-            fileChooser.reset(new juce::FileChooser("Open .LTN file", juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory), "*.ltn"));
+            auto directory = controller->getLastMappingsDirectory();
+            fileChooser.reset(new juce::FileChooser("Open .LTN file", directory, "*.ltn"));
             fileChooser->launchAsync(
                 juce::FileBrowserComponent::FileChooserFlags::canSelectFiles + juce::FileBrowserComponent::FileChooserFlags::openMode,
                 [&](const juce::FileChooser& chooser)
