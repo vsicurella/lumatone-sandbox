@@ -67,6 +67,9 @@ public:
     StraightLine horizontalLineOfField(int fieldIndex) const { return getLineOfField(fieldIndex, this->horizontalLines); };
     StraightLine rightUpwardLineOfField(int fieldIndex) const { return getLineOfField(fieldIndex, this->rightUpwardLines); };
 
+    StraightLine horizontalLine(int rowIndex) const { return horizontalLines[rowIndex]; }
+    StraightLine rightUpwardLine(int colIndex) const { return rightUpwardLines[colIndex]; }
+
     int horizontalLineCount() const { return this->horizontalLines.size(); }
     int rightUpwardLineCount() const { return this->rightUpwardLines.size(); }
 

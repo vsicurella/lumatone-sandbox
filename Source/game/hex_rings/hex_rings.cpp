@@ -60,9 +60,8 @@ juce::Colour HexRings::getRandomColourVelocity(juce::uint8 velocity)
 
 int HexRings::getRingSizeVelocity(juce::uint8 velocity) const
 {
-    return juce::roundToInt(velocity / 127) * 2;
+    return juce::roundToInt(velocity / 127) * 4;
 }
-
 
 void HexRings::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity)
 {
@@ -71,17 +70,14 @@ void HexRings::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int m
 
     auto hexOrigin = hexMap->keyCoordsToHex(midiChannel - 1, midiNote);
 
-    for (int i = 1; i <= ringSize; i++)
+    auto neighbors = hexOrigin.neighbors(ringSize);
+    for (auto point : neighbors)
     {
-        auto neighbors = hexOrigin.neighbors(i);
-        for (auto point : neighbors)
-        {
-            auto coord = hexMap->hexToKeyCoords(point);
-            if (!controller->isKeyCoordValid(coord))
-                continue;
+        auto coord = hexMap->hexToKeyCoords(point);
+        if (!controller->isKeyCoordValid(coord))
+            continue;
 
-            frameQueue.add({ coord, true, false, false, velocity, colour });
-        }
+        frameQueue.add({ coord, true, false, false, velocity, colour });
     }
 }
 void HexRings::handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote)

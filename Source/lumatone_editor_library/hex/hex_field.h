@@ -59,6 +59,7 @@ namespace Hex
         juce::String toString() const { return juce::String(q) + "," + juce::String(r); }
 
         bool operator==(const Hex::Point& compare) const;
+        bool operator!=(const Hex::Point& compare) const { return !operator==(compare); }
 
         Hex::Point operator+(const Hex::Point& toAdd) const;
         void operator+=(const Hex::Point& toAdd);

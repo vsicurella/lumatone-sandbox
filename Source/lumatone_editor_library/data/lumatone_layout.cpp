@@ -552,3 +552,26 @@ juce::Array<LumatoneKeyCoord> LumatoneLayout::getKeysWithColour(const juce::Colo
 
     return keyCoords;
 }
+
+LumatoneLayout LumatoneLayout::IdentityMapping(int numBoards, int octaveBoardSize, LumatoneKeyType keyType)
+{
+    LumatoneLayout layout(numBoards, octaveBoardSize);
+
+    for (int i = 0; i < layout.getNumBoards(); i++)
+    {
+        LumatoneBoard& newBoard = *layout.getBoard(i);
+        newBoard.board_idx = i;
+
+        int midiChannel = i + 1;
+
+        for (int k = 0; k < layout.getOctaveBoardSize(); k++)
+        {
+            newBoard.theKeys[k].channelNumber = midiChannel;
+            newBoard.theKeys[k].noteNumber = k;
+            newBoard.theKeys[k].keyType = keyType;
+            newBoard.theKeys[k].colour = juce::Colours::black;
+        }
+    }
+
+    return layout;
+}

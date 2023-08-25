@@ -89,6 +89,10 @@ public:
 
 public:
 
+	static LumatoneLayout IdentityMapping(int numBoards=MAXNUMBOARDS, int octaveBoardSize=56, LumatoneKeyType keyType=LumatoneKeyType::noteOnNoteOff);
+
+public:
+
 	int numBoards = 0;
 	int octaveBoardSize = 0;
 
