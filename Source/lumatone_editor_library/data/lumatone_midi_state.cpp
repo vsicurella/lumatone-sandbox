@@ -37,7 +37,7 @@ void LumatoneMidiState::processNextMidiEvent(const juce::MidiMessage& message)
     {
         noteOnInternal(message, message.getChannel(), message.getNoteNumber(), message.getVelocity());
     }
-    else if (message.isNoteOn())
+    else if (message.isNoteOff())
     {
         noteOffInternal(message, message.getChannel(), message.getNoteNumber(), message.getVelocity());
     }
