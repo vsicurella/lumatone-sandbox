@@ -209,22 +209,60 @@ Hex::Point Hex::Point::stepDownQDownR(int steps_q, int steps_r)
     return Hex::Point(q - steps_q, r - steps_r);
 }
 
+Hex::Point Hex::Point::rotate60(int numRotations, Hex::Point origin)
+{
+    int rotateMod = ((numRotations % 6) + 6) % 6;
+    if (rotateMod == 0)
+        return *this;
+
+    auto vec = *this - origin;
+
+    switch (rotateMod)
+    {
+    default:
+        return *this;
+    case 1:
+        return origin + Hex::Point(-vec.r, vec.q + vec.r);
+    case 2:
+        return origin + Hex::Point(-vec.q - vec.r, vec.q);
+    case 3:
+        return origin + Hex::Point(-vec.q, -vec.r);
+    case 4:
+        return origin + Hex::Point(vec.r, -vec.q - vec.r);
+    case 5:
+        return origin + Hex::Point(vec.q + vec.r, -vec.q);
+    }
+}
+
+Hex::Point Hex::Point::rotate120(int numRotations, Hex::Point origin)
+{
+    return rotate60(numRotations * 2, origin);
+}
+
+
 juce::Array<Hex::Point> Hex::Point::ring(int distance) const
 {
     juce::Array<Hex::Point> points;
 
-    if (distance > 0) for (int d = 0; d <= distance; d++)
-    {
-        points.add(Hex::Point(q + distance, r - distance + d));
-        points.add(Hex::Point(q - d, r + distance));
-        points.add(Hex::Point(q - distance + d, r - d));
+    int axisLength = distance * 2;
 
-        for (int dd = 1; dd < d; dd++)
-        {
-            // points.add(Hex::Point(q + dd, r + dd));
-            // points.add(Hex::Point(q - dd, r - distance));
-            // points.add(Hex::Point(q + dd, r - distance));
-        }
+    for (int d = 0; d < distance; d++)
+    {
+        points.add(Hex::Point(q + distance - d, r + d));
+    }
+
+    if (axisLength == 0)
+        return points;
+
+    for (int i = 0; i < distance; i++)
+    {
+        points.add(points[i].rotate60(1, *this));
+    }
+
+    for (int i = 0; i < axisLength; i++)
+    {
+        points.add(points[i].rotate120(1, *this));
+        points.add(points[i].rotate120(2, *this));
     }
 
     return points;

@@ -88,6 +88,9 @@ namespace Hex
         Hex::Point stepDownQUpR(int steps_q = 1, int steps_r = 1);
         Hex::Point stepDownQDownR(int steps_q = 1, int steps_r = 1);
 
+        Hex::Point rotate60(int numRotations = 1, Hex::Point origin=Hex::Point(0,0));
+        Hex::Point rotate120(int numRotations = 1, Hex::Point origin=Hex::Point(0,0));
+
         juce::Array<Hex::Point> ring(int distance = 1) const;
         juce::Array<Hex::Point> neighbors(int maxDistance = 1) const;
 
