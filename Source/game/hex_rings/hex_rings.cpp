@@ -60,7 +60,7 @@ juce::Colour HexRings::getRandomColourVelocity(juce::uint8 velocity)
 
 int HexRings::getRingSizeVelocity(juce::uint8 velocity) const
 {
-    return juce::roundToInt(velocity / 127) * 4;
+    return juce::roundToInt((float)velocity / 127.0f * 4);
 }
 
 void HexRings::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity)
