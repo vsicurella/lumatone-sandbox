@@ -3,3 +3,4 @@ build
 JuceLibraryCode
 .DS_STORE
 archive
+.vscode
