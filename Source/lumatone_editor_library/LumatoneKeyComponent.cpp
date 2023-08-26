@@ -91,7 +91,7 @@ void LumatoneKeyDisplay::paint(juce::Graphics& g)
     {
         if (drawColour != hexagonColour && shadowGraphic.isValid())
         {
-            g.setColour(juce::Colours::black.withAlpha(0.2f).overlaidWith(drawColour));
+            g.setColour(drawColour.overlaidWith(juce::Colours::black.withAlpha(0.88f)));
             g.drawImageAt(shadowGraphic, 0, 0, true);
         }
         break;
