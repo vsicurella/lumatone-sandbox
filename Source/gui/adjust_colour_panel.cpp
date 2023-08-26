@@ -74,6 +74,13 @@ AdjustColourPanel::AdjustColourPanel(LumatoneController* controllerIn,  Lumatone
     satSlider->setValue(1.0);
     satSlider->onValueChange = [&]() { saturationValueCallback(); };
     addAndMakeVisible(satSlider.get());
+
+    kelvinSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
+    kelvinSlider->setRange(1000, 40000, 1);
+    kelvinSlider->setSkewFactor(1.0f / 3.0f);
+    kelvinSlider->setValue(6500);
+    kelvinSlider->onValueChange = [&]() { adjustWhiteValueCallback(); };
+    addAndMakeVisible(kelvinSlider.get());
 }
 
 AdjustColourPanel::~AdjustColourPanel()
@@ -97,8 +104,8 @@ void AdjustColourPanel::resized()
 
     int boxX = controlBounds.getX();
     int boxY = controlBounds.getY();
-    int boxMargin = juce::roundToInt(getWidth() * boxMarginX);
-    int boxSize = juce::roundToInt(getWidth() * boxSizeX);
+    int boxMargin = juce::roundToInt(getHeight() * boxMarginX);
+    int boxSize = juce::roundToInt(getHeight() * boxSizeX);
 
     for (int i = 0; i < colourBoxes.size(); i++)
     {
@@ -120,6 +127,7 @@ void AdjustColourPanel::resized()
     hueSlider->setBounds(controlBounds.getX(), boxY + boxSize * 2 + boxMargin, getWidth() * 0.5, boxSize);
     brightnessSlider->setBounds(controlBounds.getX(), hueSlider->getY() + boxSize + boxMargin, getWidth() * 0.5, boxSize);
     satSlider->setBounds(controlBounds.getX(), brightnessSlider->getY() + boxSize + boxMargin, getWidth() * 0.5, boxSize);
+    kelvinSlider->setBounds(controlBounds.getX(), satSlider->getY() + boxSize + boxMargin, getWidth() * 0.5, boxSize);
 }
 
 void AdjustColourPanel::setSelectedBox(Box* box)
@@ -245,3 +253,7 @@ void AdjustColourPanel::brightnessValueCallback()
     colourAdjuster.multiplyBrightness(brightnessSlider->getValue());
 }
 
+void AdjustColourPanel::adjustWhiteValueCallback()
+{
+    colourAdjuster.adjustWhiteBalance(kelvinSlider->getValue());
+}

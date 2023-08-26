@@ -58,6 +58,7 @@ private:
     void hueValueCallback();
     void saturationValueCallback();
     void brightnessValueCallback();
+    void adjustWhiteValueCallback();
 
 private:
 
@@ -80,6 +81,7 @@ private:
     std::unique_ptr<juce::Slider> hueSlider;
     std::unique_ptr<juce::Slider> satSlider;
     std::unique_ptr<juce::Slider> brightnessSlider;
+    std::unique_ptr<juce::Slider> kelvinSlider;
 
     std::unique_ptr<ColourPaletteWindow> palettePanel;
     std::unique_ptr<juce::CallOutBox> callout;

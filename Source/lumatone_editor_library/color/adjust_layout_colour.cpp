@@ -157,6 +157,60 @@ void AdjustLayoutColour::multiplySaturation(float change, const juce::Array<Luma
         sendSelectionUpdate(updateKeys, true);
 }
 
+void AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, bool sendUpdate)
+{
+    auto coords = currentLayout.getAllKeyCoords();
+    
+    whiteKelvinValue = newWhitePoint;
+    auto updatedKeys = updateAdjustedColoursState(coords);
+    
+    // multiplySaturation(change, coords, false);
+    if (sendUpdate)
+        sendSelectionUpdate(updatedKeys, true);
+}
+
+void AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate)
+{
+    if (currentAction != AdjustLayoutColour::Type::ADJUSTWHITE)
+    {
+        beginAction(AdjustLayoutColour::Type::ADJUSTWHITE);
+        currentLayout= *controller->getMappingData();
+    }
+
+    juce::Array<MappedLumatoneKey> updateKeys;
+    for (auto coord : selection)
+    {
+        auto key = *currentLayout.readKey(coord.boardIndex, coord.keyIndex);
+        key.colour = (&layoutBeforeAdjust.getBoard(coord.boardIndex)->theKeys[coord.keyIndex])->colour;
+
+        if (adjustWhiteBalance(newWhitePoint, key))
+            updateKeys.add(MappedLumatoneKey(key, coord));
+    }
+
+    if (sendUpdate)
+        sendSelectionUpdate(updateKeys, true);
+}
+
+bool AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, LumatoneKey& key) const
+{
+    auto newWhiteColour = kelvinToColour(newWhitePoint);
+    
+    if (key.colour.isTransparent())
+        return false;
+
+    auto colourLab = rgbToLab(key.colour);
+    auto oldWhiteLab = rgbToLab(juce::Colours::white);
+    auto newWhiteLab = rgbToLab(newWhiteColour);
+    LAB adjustedLab = { 
+        colourLab.L + (newWhiteLab.L - oldWhiteLab.L) / 3.0f, 
+        colourLab.A + (newWhiteLab.A - oldWhiteLab.A) / 3.0f, 
+        colourLab.B + (newWhiteLab.B - oldWhiteLab.B) / 3.0f, 
+        };
+
+    key.colour = labToRgb(adjustedLab);
+    return true;
+}
+
 void AdjustLayoutColour::setGradient(SetGradientOptions options)
 {
     float originColumn = 0;
@@ -295,8 +349,13 @@ juce::Array<MappedLumatoneKey> AdjustLayoutColour::updateAdjustedColoursState(co
             rotateHue(hueRotateValue, key);
         }
 
-    if (!key.colourIsEqual(keyCopy))
-        updateKeys.add(MappedLumatoneKey(key, coord));
+        if (whiteKelvinValue != 6500)
+        {
+            adjustWhiteBalance(whiteKelvinValue, key);
+        }
+
+        if (!key.colourIsEqual(keyCopy))
+            updateKeys.add(MappedLumatoneKey(key, coord));
     }
 
     return updateKeys;
@@ -309,6 +368,7 @@ void AdjustLayoutColour::commitChanges()
     hueRotateValue = 0.0f;
     multiplySaturationValue = 1.0f;
     multiplyBrightnessValue = 1.0f;
+    whiteKelvinValue = 6500;
 }
 void AdjustLayoutColour::resetChanges()
 {
@@ -318,6 +378,7 @@ void AdjustLayoutColour::resetChanges()
     hueRotateValue = 0.0f;
     multiplySaturationValue = 1.0f;
     multiplyBrightnessValue = 1.0f;
+    whiteKelvinValue = 6500;
 }
 
 void AdjustLayoutColour::sendSelectionUpdate(const juce::Array<MappedLumatoneKey>& keyUpdates, bool bufferUpdates)
@@ -330,4 +391,275 @@ void AdjustLayoutColour::sendMappingUpdate(const LumatoneLayout& updatedLayout, 
 {
     for (int i = 0; i < controller->getNumBoards(); i++)
         controller->performUndoableAction(new LumatoneEditAction::SectionEditAction(controller, i, *updatedLayout.readBoard(i), bufferUpdates), i == 0, "AdjustLayoutColour");
+}
+
+// juce::Colour AdjustLayoutColour::inverseSRGB(juce::Colour rgb)
+// {
+//     float lr, lg, lb;
+
+//     for (int ch = 0; ch < 3; ch++)
+//     {
+//         float v = 0.0f;
+//         switch (ch)
+//         {
+//         case 0:
+//             v = rgb.getFloatRed();
+//             break;
+//         case 1:
+//             v = rgb.getFloatBlue();
+//             break;
+//         case 2:
+//             v = rgb.getFloatGreen();
+//             break;
+//         }
+
+//         if (v < 0.04045f)
+//             v = v / 12.92f;
+//         else
+//             v = powf((v + 0.055f) / 1.055f, 2.4);
+
+//         switch (ch)
+//         {
+//         case 0:
+//             lr = v;
+//             break;
+//         case 1:
+//             lg = v;
+//             break;
+//         case 2:
+//             lb = v;
+//             break;
+//         }        
+//     }
+
+//     juce::Colour srgb = juce::Colour((juce::uint8)juce::roundToInt(lr * 255.0f),
+//                                     (juce::uint8)juce::roundToInt(lg * 255.0f),
+//                                     (juce::uint8)juce::roundToInt(lb * 255.0f));
+
+//     return srgb.withAlpha(1.0f);
+// }
+
+AdjustLayoutColour::LAB AdjustLayoutColour::rgbToLab(juce::Colour rgb)
+{
+    float lr, lg, lb;
+    for (int ch = 0; ch < 3; ch++)
+    {
+        float v = 0.0f;
+        switch (ch)
+        {
+        case 0:
+            v = rgb.getFloatRed();
+            break;
+        case 1:
+            v = rgb.getFloatGreen();
+            break;
+        case 2:
+            v = rgb.getFloatBlue();
+            break;
+        }
+
+        if (v <= 0.04045f)
+            v = v / 12.92f;
+        else
+            v = powf((v + 0.055f) / 1.055f, 2.4f);
+
+        switch (ch)
+        {
+        case 0:
+            lr = v;
+            break;
+        case 1:
+            lg = v;
+            break;
+        case 2:
+            lb = v;
+            break;
+        }        
+    }
+
+    // float x, y, z;
+
+    // x = lr*0.4124564f + lr*0.3575761f + lr*0.1804375f;
+    // y = lg*0.2126729f + lg*0.7151522f + lg*0.0721750f;
+    // z = lb*0.0193339f + lb*0.1191920f + lb*0.9503041f;
+
+    float x = lr * 0.4124564f + lg * 0.3575761f + lb * 0.1804375f;
+    float y = lr * 0.2126729f + lg * 0.7151522f + lb * 0.0721750f;
+    float z = lr * 0.0193339f + lg * 0.1191920f + lb * 0.9503041f;
+
+    // juce::Colour xyz = juce::Colour((juce::uint8)juce::roundToInt(x * 255.0f),
+    //                                 (juce::uint8)juce::roundToInt(y * 255.0f),
+    //                                 (juce::uint8)juce::roundToInt(z * 255.0f));
+    // return xyz.withAlpha(1.0f);
+
+    const float epsilon = 0.008856f;
+    const float kappa = 903.3f;
+
+    float fx, fy, fz;
+
+    for (int ch = 0; ch < 3; ch++)
+    {
+        float v;
+
+        switch (ch)
+        {
+        case 0:
+            v = x;
+            break;
+        case 1:
+            v = y;
+            break;
+        case 2:
+            v = z;
+            break;
+        }
+
+        if (v > epsilon)
+            v = powf(v, 1.0f/3.0f);
+        else
+            v = (kappa * v + 16.0f) / 116.0f;
+
+        switch (ch)
+        {
+        case 0:
+            fx = v;
+            break;
+        case 1:
+            fy = v;
+            break;
+        case 2:
+            fz = v;
+            break;
+        }
+    }
+
+    float L = 116.0f * fy - 16.0f;
+    float A = 500.0f * (fx - fy);
+    float B = 200.0f * (fy - fz);
+
+    return { L, A, B };
+}
+
+juce::Colour AdjustLayoutColour::labToRgb(LAB lab)
+{
+    float fy = (lab.L + 16.0f) / 116.0f;
+    float fx = lab.A / 500.0f + fy;
+    float fz = fy - lab.B / 200.0f;
+    
+    const float epsilon = 0.008856f;
+    const float kappa = 903.3f;
+
+    float xr, yr, zr;
+
+    float fxCbd = powf(fx, 3.0f);
+    if (fxCbd > epsilon)
+        xr = fxCbd;
+    else
+        xr = (116.0f * fx - 16.0f) / kappa;
+
+    if (lab.L > (kappa * epsilon))
+        yr = powf((lab.L + 16.0f) / 116.0f, 3.0f);
+    else
+        yr = lab.L / kappa;
+
+    float fzCbd = powf(fz, 3.0f);
+    if (fzCbd > epsilon)
+        zr = fzCbd;
+    else
+        zr = (116.0f * fz - 16.0f) / kappa;
+
+    float x = xr;
+    float y = yr;
+    float z = zr;
+
+    // for (int ch = 0; ch < 3; ch++)
+    // {
+    //     float v;
+    //     switch (ch)
+    //     {
+    //     case 0:
+    //         v = fx;
+    //         break;
+    //     case 1:
+    //         v = fy;
+    //         break;
+    //     case 2:
+    //         v = fz;
+    //         break;
+    //     }
+
+    //     if (v > (6.0f / 29.0f))
+    //         v = powf(v, 3);
+    //     else
+    //         v = (v - 16.0f / 116.0f) * 3.0f * (6.0f / 29.0f) * (6.0f / 29.0f);
+
+    //     switch (ch)
+    //     {
+    //     case 0:
+    //         x = v;
+    //         break;
+    //     case 1:
+    //         y = v;
+    //         break;
+    //     case 2:
+    //         z = v;
+    //         break;
+    //     }
+    // }
+
+    // float Xr = 0.4124564f, Yr = 0.2126729f, Zr = 0.0193339f;
+    // float YrF = Yr * (100.0f / 100.0f);
+    
+    float r = x *  3.2404542f + y * -1.5371385f + z * -0.4985314f;
+    float g = x * -0.9692660f + y *  1.8760108f + z *  0.0415560f;
+    float b = x *  0.0556434f + y * -0.2040259f + z *  1.0572252f;
+
+    // float lr = x*3.24045f + x*-1.53714f + x*-0.498532f;
+    // float lg = y*-0.969266f + y*1.87601f + y*0.0415561f;
+    // float lb = z*0.0556434f + z*-0.204026f + z*1.05723f;
+
+    // float lr = x *  3.2404542f + y * -1.5371385f + z * -0.4985314f;
+    // float lg = x * -0.9692660f + y *  1.8760108f + z *  0.0415560f;
+    // float lb = x *  0.0556434f + y * -0.2040259f + z *  1.0572252f;
+
+    for (int ch = 0; ch < 3; ch++)
+    {
+        float v;
+        switch (ch)
+        {
+        case 0:
+            v = r;
+            break;
+        case 1:
+            v = g;
+            break;
+        case 2:
+            v = b;
+            break;
+        }
+
+        if (v <= 0.0031308f)
+            v *= 12.92f;
+        else
+            v = 1.055f * powf(v, 1.0f / 2.4f) - 0.055f;
+
+        switch (ch)
+        {
+        case 0:
+            r = v;
+            break;
+        case 1:
+            g = v;
+            break;
+        case 2:
+            b = v;
+            break;
+        }
+    }
+
+    juce::Colour rgb((juce::uint8)juce::roundToInt(r * 255.0f),
+                        (juce::uint8)juce::roundToInt(g * 255.0f),
+                        (juce::uint8)juce::roundToInt(b * 255.0f));
+    
+    return rgb.withAlpha(1.0f);
 }

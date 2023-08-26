@@ -56,7 +56,9 @@ public:
     void multiplySaturation(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
     bool multiplySaturation(float change, LumatoneKey& key) const;
 
-    void adjustWhiteBalance(float newKelvin, float compensation=1, int compensationMode=0);
+    void adjustWhiteBalance(int newWhitePoint, bool sendUpdate=true);
+    void adjustWhiteBalance(int newWhitePoint, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
+    bool adjustWhiteBalance(int newWhitePoint, LumatoneKey& key) const;
 
     void setGradient(SetGradientOptions options);
     
@@ -69,6 +71,20 @@ private:
 
     void applyAdjustmentToSelection(AdjustLayoutColour::Type type, float value, const juce::Array<LumatoneKeyCoord>& selection);
     juce::Array<MappedLumatoneKey> updateAdjustedColoursState(const juce::Array<LumatoneKeyCoord>& selection) const;
+
+public:
+    
+    struct LAB
+    {
+        float L;
+        float A;
+        float B;
+    };
+
+    // TODO make proper structs for these values
+    // static juce::Colour inverseSRGB(juce::Colour rgb);
+    static LAB rgbToLab(juce::Colour rgb);
+    static juce::Colour labToRgb(LAB lab);
 
 private:
     void sendColourUpdate(juce::Colour oldColour, juce::Colour newColour, bool bufferUpdates=true);
@@ -169,6 +185,7 @@ private:
     float hueRotateValue = 0.0f;
     float multiplySaturationValue = 1.0f;
     float multiplyBrightnessValue = 1.0f;
+    int whiteKelvinValue = 6500;
 
     AdjustLayoutColour::Type currentAction;
 };
