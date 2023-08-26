@@ -12,6 +12,7 @@ public:
         NONE,
         FINDREPLACE,
         ROTATEHUE,
+        ADJUSTSATURATION,
         ADJUSTBRIGHTNESS,
         ADJUSTCONTRAST,
         ADJUSTWHITE,
@@ -45,9 +46,15 @@ public:
 
     void rotateHue(float change, bool sendUpdate=true);
     void rotateHue(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
+    bool rotateHue(float change, LumatoneKey& key) const;
 
     void multiplyBrightness(float change, bool sendUpdate=true);
     void multiplyBrightness(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
+    bool multiplyBrightness(float change, LumatoneKey& key) const;
+
+    void multiplySaturation(float change, bool sendUpdate=true);
+    void multiplySaturation(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
+    bool multiplySaturation(float change, LumatoneKey& key) const;
 
     void adjustWhiteBalance(float newKelvin, float compensation=1, int compensationMode=0);
 
@@ -59,6 +66,9 @@ public:
 private:
     void beginAction(AdjustLayoutColour::Type type);
     void endAction();
+
+    void applyAdjustmentToSelection(AdjustLayoutColour::Type type, float value, const juce::Array<LumatoneKeyCoord>& selection);
+    juce::Array<MappedLumatoneKey> updateAdjustedColoursState(const juce::Array<LumatoneKeyCoord>& selection) const;
 
 private:
     void sendColourUpdate(juce::Colour oldColour, juce::Colour newColour, bool bufferUpdates=true);
@@ -152,8 +162,13 @@ private:
 
     LumatoneHexMap hexMap;
 
+    LumatoneLayout originalLayout;
     LumatoneLayout layoutBeforeAdjust;
     LumatoneLayout currentLayout;
+
+    float hueRotateValue = 0.0f;
+    float multiplySaturationValue = 1.0f;
+    float multiplyBrightnessValue = 1.0f;
 
     AdjustLayoutColour::Type currentAction;
 };

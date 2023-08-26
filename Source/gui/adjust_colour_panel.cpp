@@ -68,6 +68,12 @@ AdjustColourPanel::AdjustColourPanel(LumatoneController* controllerIn,  Lumatone
     brightnessSlider->setValue(1.0);
     brightnessSlider->onValueChange = [&]() { brightnessValueCallback(); };
     addAndMakeVisible(brightnessSlider.get());
+
+    satSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
+    satSlider->setRange(0.0, 2.0, 0.01);
+    satSlider->setValue(1.0);
+    satSlider->onValueChange = [&]() { saturationValueCallback(); };
+    addAndMakeVisible(satSlider.get());
 }
 
 AdjustColourPanel::~AdjustColourPanel()
@@ -113,6 +119,7 @@ void AdjustColourPanel::resized()
 
     hueSlider->setBounds(controlBounds.getX(), boxY + boxSize * 2 + boxMargin, getWidth() * 0.5, boxSize);
     brightnessSlider->setBounds(controlBounds.getX(), hueSlider->getY() + boxSize + boxMargin, getWidth() * 0.5, boxSize);
+    satSlider->setBounds(controlBounds.getX(), brightnessSlider->getY() + boxSize + boxMargin, getWidth() * 0.5, boxSize);
 }
 
 void AdjustColourPanel::setSelectedBox(Box* box)
@@ -226,6 +233,11 @@ void AdjustColourPanel::colourChangedCallback(ColourSelectionBroadcaster* source
 void AdjustColourPanel::hueValueCallback()
 {
     colourAdjuster.rotateHue(hueSlider->getValue());
+}
+
+void AdjustColourPanel::saturationValueCallback()
+{
+    colourAdjuster.multiplySaturation(satSlider->getValue());
 }
 
 void AdjustColourPanel::brightnessValueCallback()

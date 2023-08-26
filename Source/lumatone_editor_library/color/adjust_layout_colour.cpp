@@ -26,12 +26,29 @@ void AdjustLayoutColour::replaceColour(juce::Colour oldColour, juce::Colour newC
         sendSelectionUpdate(keyUpdates, true);
 }
 
+bool AdjustLayoutColour::rotateHue(float change, LumatoneKey& key) const
+{
+    if  (   key.colour.isTransparent()
+        ||  (   (key.colour.getRed() == key.colour.getGreen())
+            &&  (key.colour.getRed() == key.colour.getBlue())
+            )
+        )
+        return false;
+    
+    key.colour = key.colour.withRotatedHue(change);
+    return true;
+}
+
 void AdjustLayoutColour::rotateHue(float change, bool sendUpdate)
 {
     auto coords = currentLayout.getAllKeyCoords();
-    rotateHue(change, coords, false);
+    
+    hueRotateValue = change;
+    auto updatedKeys = updateAdjustedColoursState(coords);
+    
+    // rotateHue(change, coords, false);
     if (sendUpdate)
-        sendMappingUpdate(currentLayout, true);
+        sendSelectionUpdate(updatedKeys, true);
 }
 
 void AdjustLayoutColour::rotateHue(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate)
@@ -45,28 +62,35 @@ void AdjustLayoutColour::rotateHue(float change, const juce::Array<LumatoneKeyCo
     juce::Array<MappedLumatoneKey> updateKeys;
     for (auto coord : selection)
     {
-        auto key = &currentLayout.getBoard(coord.boardIndex)->theKeys[coord.keyIndex];
-        auto colour = (&layoutBeforeAdjust.getBoard(coord.boardIndex)->theKeys[coord.keyIndex])->colour;
-        if (colour.isTransparent() 
-            || (colour.getRed() == colour.getGreen() && colour.getRed() == colour.getBlue())
-            )
-            continue;
-
-        auto rotated = colour.withRotatedHue(change);
-        key->colour = rotated;
-        updateKeys.add(MappedLumatoneKey(*key, coord));
+        LumatoneKey key = *currentLayout.readKey(coord.boardIndex, coord.keyIndex);
+        key.colour = (&layoutBeforeAdjust.getBoard(coord.boardIndex)->theKeys[coord.keyIndex])->colour;
+        if (rotateHue(change, key))
+            updateKeys.add(MappedLumatoneKey(key, coord));
     }
 
     if (sendUpdate)
         sendSelectionUpdate(updateKeys, true);
 }
 
+bool AdjustLayoutColour::multiplyBrightness(float change, LumatoneKey& key) const
+{
+    if (key.colour.isTransparent())
+        return false;
+
+     key.colour = key.colour.withMultipliedBrightness(change);
+     return true;
+}
+
 void AdjustLayoutColour::multiplyBrightness(float change, bool sendUpdate)
 {
     auto coords = currentLayout.getAllKeyCoords();
-    multiplyBrightness(change, coords, false);
+    
+    multiplyBrightnessValue = change;
+    auto updatedKeys = updateAdjustedColoursState(coords);
+
+    // multiplyBrightness(change, coords, false);
     if (sendUpdate)
-        sendMappingUpdate(currentLayout, true);
+        sendSelectionUpdate(updatedKeys, true);
 }
 
 void AdjustLayoutColour::multiplyBrightness(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate)
@@ -80,14 +104,53 @@ void AdjustLayoutColour::multiplyBrightness(float change, const juce::Array<Luma
     juce::Array<MappedLumatoneKey> updateKeys;
     for (auto coord : selection)
     {
-        auto key = &currentLayout.getBoard(coord.boardIndex)->theKeys[coord.keyIndex];
-        auto colour = (&layoutBeforeAdjust.getBoard(coord.boardIndex)->theKeys[coord.keyIndex])->colour;
-        if (colour.isTransparent())
-            continue;
+        auto key = *currentLayout.readKey(coord.boardIndex, coord.keyIndex);
+        key.colour = (&layoutBeforeAdjust.getBoard(coord.boardIndex)->theKeys[coord.keyIndex])->colour;
+        if (multiplyBrightness(change, key))
+            updateKeys.add(MappedLumatoneKey(key, coord));
+    }
 
-        auto adjusted = colour.withMultipliedBrightness(change);
-        key->colour = adjusted;
-        updateKeys.add(MappedLumatoneKey(*key, coord));
+    if (sendUpdate)
+        sendSelectionUpdate(updateKeys, true);
+}
+
+bool AdjustLayoutColour::multiplySaturation(float change, LumatoneKey& key) const
+{
+    if (key.colour.isTransparent())
+        return false;
+
+    key.colour = key.colour.withMultipliedSaturation(change);
+    return true;
+}
+
+void AdjustLayoutColour::multiplySaturation(float change, bool sendUpdate)
+{
+    auto coords = currentLayout.getAllKeyCoords();
+    
+    multiplySaturationValue = change;
+    auto updatedKeys = updateAdjustedColoursState(coords);
+    
+    // multiplySaturation(change, coords, false);
+    if (sendUpdate)
+        sendSelectionUpdate(updatedKeys, true);
+}
+
+void AdjustLayoutColour::multiplySaturation(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate)
+{
+    if (currentAction != AdjustLayoutColour::Type::ADJUSTSATURATION)
+    {
+        beginAction(AdjustLayoutColour::Type::ADJUSTSATURATION);
+        currentLayout= *controller->getMappingData();
+    }
+
+    juce::Array<MappedLumatoneKey> updateKeys;
+    for (auto coord : selection)
+    {
+        auto key = *currentLayout.readKey(coord.boardIndex, coord.keyIndex);
+        key.colour = (&layoutBeforeAdjust.getBoard(coord.boardIndex)->theKeys[coord.keyIndex])->colour;
+
+        if (multiplySaturation(change, key))
+            updateKeys.add(MappedLumatoneKey(key, coord));
     }
 
     if (sendUpdate)
@@ -192,8 +255,10 @@ void AdjustLayoutColour::beginAction(AdjustLayoutColour::Type type)
     {
         if (currentAction == AdjustLayoutColour::Type::NONE)
         {
-            layoutBeforeAdjust = *controller->getMappingData();
+            originalLayout = *controller->getMappingData();
+        layoutBeforeAdjust = *controller->getMappingData();
         }
+
     }
     
     currentAction = type;
@@ -206,14 +271,53 @@ void AdjustLayoutColour::endAction()
     currentAction = AdjustLayoutColour::Type::NONE;
 }
 
+juce::Array<MappedLumatoneKey> AdjustLayoutColour::updateAdjustedColoursState(const juce::Array<LumatoneKeyCoord>& selection) const
+{
+    juce::Array<MappedLumatoneKey> updateKeys;
+
+    for (auto coord : selection)
+    {
+        auto key = *layoutBeforeAdjust.readKey(coord.boardIndex, coord.keyIndex);
+        auto keyCopy = key;
+
+        if (multiplySaturationValue != 1.0f)
+        {
+            multiplySaturation(multiplySaturationValue, key);
+        }
+
+        if (multiplyBrightnessValue != 1.0f)
+        {
+            multiplyBrightness(multiplyBrightnessValue, key);
+        }
+
+        if (hueRotateValue != 0.0f)
+        {
+            rotateHue(hueRotateValue, key);
+        }
+
+    if (!key.colourIsEqual(keyCopy))
+        updateKeys.add(MappedLumatoneKey(key, coord));
+    }
+
+    return updateKeys;
+}
+
 void AdjustLayoutColour::commitChanges()
 {
     endAction();
+
+    hueRotateValue = 0.0f;
+    multiplySaturationValue = 1.0f;
+    multiplyBrightnessValue = 1.0f;
 }
 void AdjustLayoutColour::resetChanges()
 {
-    controller->sendCompleteMapping(layoutBeforeAdjust);
+    controller->sendCompleteMapping(originalLayout);
     endAction();
+
+    hueRotateValue = 0.0f;
+    multiplySaturationValue = 1.0f;
+    multiplyBrightnessValue = 1.0f;
 }
 
 void AdjustLayoutColour::sendSelectionUpdate(const juce::Array<MappedLumatoneKey>& keyUpdates, bool bufferUpdates)
