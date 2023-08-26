@@ -34,7 +34,7 @@ public:
 
 protected:
 
-    juce::ApplicationCommandTarget* getNextCommandTarget () { return nullptr; }
+    juce::ApplicationCommandTarget* getNextCommandTarget () override { return nullptr; }
     void getAllCommands(juce::Array <juce::CommandID>& commands) override;
 	void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result) override;
 	bool perform(const juce::ApplicationCommandTarget::InvocationInfo& info) override;

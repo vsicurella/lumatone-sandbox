@@ -54,12 +54,8 @@ void MainComponent::resized()
 
 void MainComponent::getAllCommands(juce::Array <juce::CommandID>& commands)
 {
-    const juce::CommandID ids[] = {
-        LumatoneSandbox::Menu::commandIDs::setRenderModeKeys,
-        LumatoneSandbox::Menu::commandIDs::setRenderModeMaxRes
-    };
-
-    commands.addArray(ids, 2);
+    commands.add(LumatoneSandbox::Menu::commandIDs::setRenderModeKeys);
+    commands.add(LumatoneSandbox::Menu::commandIDs::setRenderModeMaxRes);
 }
 
 void MainComponent::getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result)

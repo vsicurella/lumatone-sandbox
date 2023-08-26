@@ -49,8 +49,7 @@ public:
 
         commandManager = std::make_unique<juce::ApplicationCommandManager>();
         commandManager->registerAllCommandsForTarget(this);
-        commandManager->registerAllCommandsForTarget(dynamic_cast<juce::ApplicationCommandTarget*>((juce::ApplicationCommandTarget*)mainWindow->getContentComponent()));
-
+        commandManager->registerAllCommandsForTarget(mainWindow->getMainComponent());
         menuModel = std::make_unique<LumatoneSandbox::Menu::Model>(commandManager.get());
 
     #if JUCE_MAC
