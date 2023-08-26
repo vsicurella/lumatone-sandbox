@@ -189,7 +189,7 @@ bool SectionEditAction::perform()
     if (boardId > 0 && boardId <= controller->getNumBoards())
     {
         // Send to device
-        controller->sendAllParamsOfBoard(boardId, &newData, true);
+        controller->sendAllParamsOfBoard(boardId, &newData, true, useKeyBuffer);
 
         // Notify that there are changes: in calling function
         return true;
@@ -206,7 +206,7 @@ bool SectionEditAction::undo()
     if (boardId >= 0 && boardId <= numOctaveBoards)
     {
         // Send to device
-        controller->sendAllParamsOfBoard(boardId, &previousData, true);
+        controller->sendAllParamsOfBoard(boardId, &previousData, true, useKeyBuffer);
 
         // Notify that there are changes: in calling function
         return true;
