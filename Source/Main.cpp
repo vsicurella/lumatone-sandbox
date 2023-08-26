@@ -49,7 +49,7 @@ public:
 
         commandManager = std::make_unique<juce::ApplicationCommandManager>();
         commandManager->registerAllCommandsForTarget(this);
-        commandManager->registerAllCommandsForTarget(dynamic_cast<juce::ApplicationCommandTarget*>(mainWindow->getContentComponent()));
+        commandManager->registerAllCommandsForTarget(dynamic_cast<juce::ApplicationCommandTarget*>((juce::ApplicationCommandTarget*)mainWindow->getContentComponent()));
 
         menuModel = std::make_unique<LumatoneSandbox::Menu::Model>(commandManager.get());
 
@@ -57,7 +57,7 @@ public:
         LumatoneSandbox::Menu::Model::setMacMainMenu(menuModel.get());
     #endif
 
-        mainWindow->setMenuBar(menuModel.get(), 32);
+        mainWindow->setMenuBar((juce::MenuBarModel*)menuModel.get(), 32);
         // mainWindow->getMenuBarComponent()->getProperties().set(LumatoneEditorStyleIDs::popupMenuBackgroundColour, 
         // 	lookAndFeel.findColour(LumatoneEditorColourIDs::MenuBarBackground).toString());
 
@@ -75,9 +75,9 @@ public:
         fileChooser = nullptr;
         
     #if JUCE_MAC
-        LumatoneSandbox::Menu::Model::setMacMainMenu(nullptr);
+        LumatoneSandbox::Menu::Model::setMacMainMenu((juce::MenuBarModel*)(nullptr));
     #endif
-        mainWindow->setMenuBarComponent(nullptr);
+        mainWindow->setMenuBarComponent((juce::Component*)nullptr);
 
         menuModel = nullptr;
         commandManager = nullptr;
@@ -258,7 +258,7 @@ public:
             launch.content.setOwned(new AdjustColourPanel(controller.get(), paletteLibrary.get()));
             launch.content->setSize(600, 400);
 
-            launch.componentToCentreAround = mainWindow.get();
+            launch.componentToCentreAround = (juce::Component*)mainWindow.get();
             launch.launchAsync();
 
             return true;
@@ -331,7 +331,7 @@ public:
     {
     public:
         MainWindow (juce::String name, LumatoneController* controller)
-            : DocumentWindow (name,
+        :   juce::DocumentWindow (name,
                               juce::Desktop::getInstance().getDefaultLookAndFeel()
                                                           .findColour (juce::ResizableWindow::backgroundColourId),
                               DocumentWindow::allButtons)
