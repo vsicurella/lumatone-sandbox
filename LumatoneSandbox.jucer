@@ -49,52 +49,6 @@
           <GROUP id="{C8D50E78-0B61-9AB8-6CF3-D12DC5752CB2}" name="colours">
             <FILE id="WwYTI7" name="model.json" compile="0" resource="1" file="Source/lumatone_editor_library/assets/colours/model.json"/>
           </GROUP>
-          <GROUP id="{E1BB881D-F658-67B6-EAF6-5D98F7943CB7}" name="fonts">
-            <FILE id="zrTv2g" name="framd.ttf" compile="0" resource="1" file="Source/lumatone_editor_library/assets/fonts/framd.ttf"/>
-            <FILE id="DJxwpB" name="framdit.ttf" compile="0" resource="1" file="Source/lumatone_editor_library/assets/fonts/framdit.ttf"/>
-            <FILE id="OhSqfS" name="GothamNarrow-Black.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-Black.otf"/>
-            <FILE id="bEBCNX" name="GothamNarrow-BlackItalic.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-BlackItalic.otf"/>
-            <FILE id="u6fmb9" name="GothamNarrow-Bold.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-Bold.otf"/>
-            <FILE id="sCMACg" name="GothamNarrow-BoldItalic.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-BoldItalic.otf"/>
-            <FILE id="riOQDY" name="GothamNarrow-Book.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-Book.otf"/>
-            <FILE id="d1qVhD" name="GothamNarrow-BookItalic.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-BookItalic.otf"/>
-            <FILE id="ocOwbG" name="GothamNarrow-Light.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-Light.otf"/>
-            <FILE id="YBYmvk" name="GothamNarrow-LightItalic.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-LightItalic.otf"/>
-            <FILE id="VqqzSa" name="GothamNarrow-Medium.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-Medium.otf"/>
-            <FILE id="JcA3Pg" name="GothamNarrow-MediumItalic.otf" compile="0"
-                  resource="1" file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-MediumItalic.otf"/>
-            <FILE id="iDRATX" name="GothamNarrow-Thin.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-Thin.otf"/>
-            <FILE id="DIxuIL" name="GothamNarrow-ThinItalic.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-ThinItalic.otf"/>
-            <FILE id="eOVzGD" name="GothamNarrow-Ultra.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-Ultra.otf"/>
-            <FILE id="mJVxh7" name="GothamNarrow-UltraItalic.otf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/GothamNarrow-UltraItalic.otf"/>
-            <FILE id="Pl1kHA" name="UniviaPro-Black.ttf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/UniviaPro-Black.ttf"/>
-            <FILE id="xsRYzZ" name="UniviaPro-Bold.ttf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/UniviaPro-Bold.ttf"/>
-            <FILE id="R2hl4C" name="UniviaPro-Light.ttf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/UniviaPro-Light.ttf"/>
-            <FILE id="CqS5qH" name="UniviaPro-LightItalic.ttf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/UniviaPro-LightItalic.ttf"/>
-            <FILE id="HE47FI" name="UniviaPro-Medium.ttf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/UniviaPro-Medium.ttf"/>
-            <FILE id="w0isD7" name="UniviaPro-MediumItalic.ttf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/UniviaPro-MediumItalic.ttf"/>
-            <FILE id="BzBpQH" name="UniviaPro-Regular.ttf" compile="0" resource="1"
-                  file="Source/lumatone_editor_library/assets/fonts/UniviaPro-Regular.ttf"/>
-          </GROUP>
           <GROUP id="{329AD118-B393-FCC5-F174-976DE7E18EBF}" name="png">
             <FILE id="rx5Msv" name="AppIcon@1x.png" compile="0" resource="1" file="Source/lumatone_editor_library/assets/png/AppIcon@1x.png"/>
             <FILE id="gJhy7x" name="AppIcon@3x.png" compile="0" resource="1" file="Source/lumatone_editor_library/assets/png/AppIcon@3x.png"/>
