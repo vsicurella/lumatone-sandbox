@@ -59,7 +59,11 @@ public:
     void adjustWhiteBalance(int newWhitePoint, bool sendUpdate=true);
     void adjustWhiteBalance(int newWhitePoint, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
     bool adjustWhiteBalance(int newWhitePoint, LumatoneKey& key) const;
+private:
+    void adjustWhiteBalanceRgb(int newWhitePoint, LumatoneKey& key) const;
+    void adjustWhiteBalanceLab(int newWhitePoint, LumatoneKey& key) const;
 
+public:
     void setGradient(SetGradientOptions options);
     
     void commitChanges();

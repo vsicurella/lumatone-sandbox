@@ -193,10 +193,26 @@ void AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, const juce::Array
 
 bool AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, LumatoneKey& key) const
 {
-    auto newWhiteColour = kelvinToColour(newWhitePoint);
-    
     if (key.colour.isTransparent())
         return false;
+        
+    // adjustWhiteBalanceLab(newWhitePoint, key);
+    adjustWhiteBalanceRgb(newWhitePoint, key);
+
+    return true;
+}
+
+void AdjustLayoutColour::adjustWhiteBalanceRgb(int newWhitePoint, LumatoneKey& key) const
+{
+    auto newWhiteColour = kelvinToColour(newWhitePoint);
+    key.colour = juce::Colour(LumatoneEditor::roundToUint8(key.colour.getRed() * newWhiteColour.getFloatRed()),
+                            LumatoneEditor::roundToUint8(key.colour.getGreen() * newWhiteColour.getFloatGreen()),
+                            LumatoneEditor::roundToUint8(key.colour.getBlue() * newWhiteColour.getFloatBlue()));
+}
+
+void AdjustLayoutColour::adjustWhiteBalanceLab(int newWhitePoint, LumatoneKey& key) const
+{
+    auto newWhiteColour = kelvinToColour(newWhitePoint);
 
     auto colourLab = rgbToLab(key.colour);
     auto oldWhiteLab = rgbToLab(juce::Colours::white);
@@ -208,7 +224,6 @@ bool AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, LumatoneKey& key)
         };
 
     key.colour = labToRgb(adjustedLab);
-    return true;
 }
 
 void AdjustLayoutColour::setGradient(SetGradientOptions options)
