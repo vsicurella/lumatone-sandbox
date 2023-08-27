@@ -44,9 +44,9 @@ juce::Colour LumatoneColourModel::calculateModelColour(LumatoneColourModel::Type
     float gi = Interpolate::trilinear(params.green);
     float bi = Interpolate::trilinear(params.blue);
     
-    juce::uint8 r = roundToUint8(ri);
-    juce::uint8 g = roundToUint8(gi);
-    juce::uint8 b = roundToUint8(bi);
+    juce::uint8 r = LumatoneEditor::roundToUint8(ri);
+    juce::uint8 g = LumatoneEditor::roundToUint8(gi);
+    juce::uint8 b = LumatoneEditor::roundToUint8(bi);
 
     auto modeled = juce::Colour(r, g, b);
 
@@ -158,21 +158,4 @@ LumatoneColourModel::TrilinearInterpolationParams LumatoneColourModel::getInterp
     );
 
     return LumatoneColourModel::TrilinearInterpolationParams(redParams, greenParams, blueParams);
-}
-
-LumatoneColourModel::uint8 LumatoneColourModel::roundToUint8(float value)
-{
-    if (value >= 255)
-        return (uint8)255;
-
-    if (value <= 0)
-        return (uint8)(0);
-
-    uint8 rounded = (uint8)value;
-    float delta = value - (float)rounded;
-
-    if (delta >= 0.5f)
-        rounded += 1;
-
-    return rounded;
 }

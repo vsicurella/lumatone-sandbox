@@ -57,8 +57,6 @@ private:
 
     TrilinearInterpolationParams getInterpolationParams(LumatoneColourModel::Type type, const juce::Colour& c);
 
-    static uint8 roundToUint8(float value);
-
 private:
     int increment = MAX_INCREMENT;
 
