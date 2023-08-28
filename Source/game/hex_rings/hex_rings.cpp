@@ -74,7 +74,7 @@ void HexRings::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int m
     for (auto point : neighbors)
     {
         auto coord = hexMap->hexToKeyCoords(point);
-        if (!controller->isKeyCoordValid(coord))
+        if (!controller->getMappingData()->isKeyCoordValid(coord))
             continue;
 
         frameQueue.add({ coord, true, false, false, velocity, colour });

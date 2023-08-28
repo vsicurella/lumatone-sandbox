@@ -31,6 +31,14 @@ LumatoneKeyCoord LumatoneHexMap::hexToKeyCoords(Hex::Point point) const
     return (*map)[key].key;
 }
 
+int LumatoneHexMap::hexToKeyNum(Hex::Point point) const
+{
+    auto coord = hexToKeyCoords(point);
+    if (layout->isKeyCoordValid(coord))
+        return coord.boardIndex * layout->getOctaveBoardSize() + coord.keyIndex;
+    return -1;
+}
+
 Hex::Point LumatoneHexMap::keyCoordsToHex(int boardIndex, int keyIndex) const
 {
     return boards[boardIndex].keys[keyIndex].point;
@@ -39,6 +47,11 @@ Hex::Point LumatoneHexMap::keyCoordsToHex(int boardIndex, int keyIndex) const
 Hex::Point LumatoneHexMap::keyCoordsToHex(const LumatoneKeyCoord& keyCoord) const
 {
     return keyCoordsToHex(keyCoord.boardIndex, keyCoord.keyIndex);
+}
+
+Hex::Point LumatoneHexMap::keyNumToHex(int keyNum) const
+{
+    return keyCoordsToHex(keyNum / layout->getOctaveBoardSize(), keyNum % layout->getOctaveBoardSize());
 }
 
 Hex::Point LumatoneHexMap::addBoardIndex(Hex::Point point, int numIndexes)

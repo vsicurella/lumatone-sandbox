@@ -31,6 +31,11 @@ public:
     void addKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->addListener(listener); }
     void removeKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->removeListener(listener); }
 
+    void setGameControlComponent(juce::Component* gameControlIn);
+
+    bool getShowGameControl() const { return gameControl; }
+    void setShowGameControl(bool showControl);
+
 
 protected:
 
@@ -49,6 +54,9 @@ private:
     std::unique_ptr<LumatoneKeyboardComponent> lumatoneComponent;
 
     AdjustLayoutColour colourAdjust;
+
+    juce::Component* gameControl = nullptr;
+    bool showGameControl = true;
 
     // UI helpers
     const float connectionStatusHeightRatio = 0.1f;

@@ -45,9 +45,12 @@ public:
     ~LumatoneHexMap();
 
     LumatoneKeyCoord hexToKeyCoords(Hex::Point point) const;
+    int hexToKeyNum(Hex::Point point) const;
    
     Hex::Point keyCoordsToHex(int boardIndex, int keyIndex) const;
     Hex::Point keyCoordsToHex(const LumatoneKeyCoord& keyCoord) const;
+
+    Hex::Point keyNumToHex(int keyNum) const;
 
 private:
 

@@ -13,6 +13,16 @@
           <FILE id="Bnbr6J" name="hex_rings_launcher.h" compile="0" resource="0"
                 file="Source/game/hex_rings/hex_rings_launcher.h"/>
         </GROUP>
+        <GROUP id="{6EB90C8D-0A60-7D0E-1E27-415B197AD8E9}" name="hexagon_automata">
+          <FILE id="wicetw" name="hexagon_automata.cpp" compile="1" resource="0"
+                file="Source/game/hexagon_automata/hexagon_automata.cpp"/>
+          <FILE id="JpY2J4" name="hexagon_automata.h" compile="0" resource="0"
+                file="Source/game/hexagon_automata/hexagon_automata.h"/>
+          <FILE id="XiWxKj" name="hexagon_automata_launcher.cpp" compile="1"
+                resource="0" file="Source/game/hexagon_automata/hexagon_automata_launcher.cpp"/>
+          <FILE id="s0IRVG" name="hexagon_automata_launcher.h" compile="0" resource="0"
+                file="Source/game/hexagon_automata/hexagon_automata_launcher.h"/>
+        </GROUP>
         <GROUP id="{A7DA6DDC-30A5-4F87-0C3E-BFDFEEBAD4A8}" name="random_colors">
           <FILE id="fE6H1V" name="random_colors.cpp" compile="1" resource="0"
                 file="Source/game/random_colors/random_colors.cpp"/>

@@ -41,6 +41,7 @@ namespace LumatoneSandbox {
 
 			openRandomColorsGame	= 0x300100,
 			openHexRingsGame		= 0x300200,
+			openHexagonAutomata		= 0x300300
 		};
 
 		class Model : public juce::MenuBarModel

@@ -26,6 +26,8 @@ MainComponent::~MainComponent()
     controller->removeStatusListener(connectionStatus.get());
     controller->removeEditorListener(lumatoneComponent.get());
 
+    gameControl = nullptr;
+
     lumatoneComponent = nullptr;
     connectionStatus = nullptr;
     controller = nullptr;
@@ -47,8 +49,40 @@ void MainComponent::resized()
     const float connectionStatusHeight = 32.0f;// proportionOfHeight(connectionStatusHeightRatio);
     connectionStatus->setBounds(0, 0, getWidth(), connectionStatusHeight);
 
+    bool gameIsShown = (gameControl != nullptr) && showGameControl;
+    float lumatoneHeight = (gameIsShown) ? 0.8f : 1.0f;
+
     const float widthMargin = proportionOfWidth(lumatoneComponentWidthMarginRatio * 0.5f);
-    lumatoneComponent->setBounds(widthMargin, connectionStatus->getBottom(), getWidth() - widthMargin * 2, getHeight() - connectionStatusHeight * 2);
+    lumatoneComponent->setBounds(widthMargin, connectionStatus->getBottom(), getWidth() - widthMargin * 2, getHeight() * lumatoneHeight - connectionStatusHeight * 2);
+
+    if (gameIsShown)
+    {
+        auto gameHeight = getHeight() - lumatoneComponent->getBottom();
+        gameControl->setBounds(0, lumatoneComponent->getBottom(), getWidth(), gameHeight);
+    }
+}
+
+void MainComponent::setGameControlComponent(juce::Component* gameControlIn)
+{
+    if (gameControlIn == nullptr)
+    {
+        if (gameControl != nullptr)
+        {
+            removeChildComponent(gameControl);
+            gameControl = nullptr;
+        }
+    }
+    else
+    {
+        gameControl = gameControlIn;
+
+        if (showGameControl)
+            addAndMakeVisible(gameControl);
+        else
+            addChildComponent(gameControl);
+    }
+
+    resized();
 }
 
 
@@ -96,5 +130,14 @@ bool MainComponent::perform(const juce::ApplicationCommandTarget::InvocationInfo
         lumatoneComponent->setRenderMode(LumatoneComponentRenderMode::MaxRes);
         return true;
     }
+    }
+}
+
+void MainComponent::setShowGameControl(bool showControls)
+{
+    if (gameControl != nullptr && gameControl->isVisible() != showControls)
+    {
+        gameControl->setVisible(showControls);
+        resized();
     }
 }

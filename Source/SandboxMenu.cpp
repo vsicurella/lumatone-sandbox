@@ -70,6 +70,7 @@ void LumatoneSandbox::Menu::Model::createGameMenu(juce::PopupMenu& menu)
 {
     menu.addCommandItem(theManager, openRandomColorsGame);
     menu.addCommandItem(theManager, openHexRingsGame);
+    menu.addCommandItem(theManager, openHexagonAutomata);
 }
 
 void LumatoneSandbox::Menu::Model::createHelpMenu(juce::PopupMenu& menu)

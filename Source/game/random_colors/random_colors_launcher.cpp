@@ -7,6 +7,7 @@
 
   ==============================================================================
 */
+#pragma once
 
 #include <JuceHeader.h>
 #include "random_colors_launcher.h"
