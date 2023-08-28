@@ -244,13 +244,6 @@ LumatoneColourModel* LumatoneState::getColourModel() const
     return colourModel.get();
 }
 
-bool LumatoneState::isKeyCoordValid(const LumatoneKeyCoord& coord) const
-{
-    return coord.isInitialized()
-        && coord.boardIndex < getNumBoards()
-        && coord.keyIndex < getOctaveBoardSize();
-}
-
 LumatoneBoard* LumatoneState::getEditBoard(int boardIndex)
 {
     return mappingData->getBoard(boardIndex);

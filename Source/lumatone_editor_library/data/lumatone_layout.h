@@ -86,6 +86,13 @@ public:
 	LumatoneBoard* getBoard(int index);
 
 	const LumatoneKey* readKey(int boardIndex, int keyIndex) const;
+	const LumatoneKey* readKey(int keyNum) const;
+
+	MappedLumatoneKey getMappedKey(int boardIndex, int keyIndex) const;
+
+    bool isKeyCoordValid(const LumatoneKeyCoord& coord) const;
+	int keyCoordToKeyNum(const LumatoneKeyCoord& coord) const;
+	LumatoneKeyCoord keyNumToKeyCoord(int keyNum) const;
 
 public:
 

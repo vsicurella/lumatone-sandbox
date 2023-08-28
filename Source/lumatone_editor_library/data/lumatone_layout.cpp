@@ -231,6 +231,36 @@ const LumatoneKey* LumatoneLayout::readKey(int boardIndex, int keyIndex) const
     return &boards[boardIndex].theKeys[keyIndex];
 }
 
+const LumatoneKey* LumatoneLayout::readKey(int keyNum) const
+{
+    auto coord = keyNumToKeyCoord(keyNum);
+    return readKey(coord.boardIndex, coord.keyIndex);
+}
+
+MappedLumatoneKey LumatoneLayout::getMappedKey(int boardIndex, int keyIndex) const
+{
+    return MappedLumatoneKey(boards[boardIndex].theKeys[keyIndex], boardIndex, keyIndex);
+}
+
+bool LumatoneLayout::isKeyCoordValid(const LumatoneKeyCoord& coord) const
+{
+    return coord.isInitialized()
+        && coord.boardIndex < getNumBoards()
+        && coord.keyIndex < getOctaveBoardSize();
+}
+
+int LumatoneLayout::keyCoordToKeyNum(const LumatoneKeyCoord& coord) const
+{
+    if (!isKeyCoordValid(coord))
+        return -1;
+    return coord.boardIndex * getOctaveBoardSize() + coord.keyIndex;
+}
+
+LumatoneKeyCoord LumatoneLayout::keyNumToKeyCoord(int keyNum) const
+{
+    return LumatoneKeyCoord(keyNum / getOctaveBoardSize(), keyNum % getOctaveBoardSize());
+}
+
 void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)
 {
     auto newKeyType = (initializeWithNoteKeyType) ? LumatoneKeyType::noteOnNoteOff : LumatoneKeyType::disabled;

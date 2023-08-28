@@ -227,7 +227,7 @@ MultiKeyAssignAction::MultiKeyAssignAction(LumatoneController* controller, const
     for (auto updatedKey : updatedKeys)
     {
         auto coord = updatedKey.getKeyCoord();
-        if (controller->isKeyCoordValid(coord))
+        if (controller->getMappingData()->isKeyCoordValid(coord))
         {
             newData.add(updatedKey);
 

@@ -90,8 +90,6 @@ public:
 
     LumatoneColourModel* getColourModel() const;
 
-    bool isKeyCoordValid(const LumatoneKeyCoord& coord) const;
-
     const FirmwareSupport& getFirmwareSupport() const;
 
     bool getInvertExpression() const { return invertExpression; }
