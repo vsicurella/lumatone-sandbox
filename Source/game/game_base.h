@@ -43,9 +43,12 @@ public:
 
     virtual void reset(bool clearActionQueue);
     virtual void nextTick() = 0;
+    virtual void pauseTick() { }
 
     virtual void clearQueue();
     void readQueue(juce::UndoableAction** buffer, int& numActions);
+
+    virtual double getLockedFps() const { return 0; }
 
     juce::String getName() const { return name; }
 

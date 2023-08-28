@@ -13,7 +13,7 @@
 LumatoneSandboxGameEngine::LumatoneSandboxGameEngine(LumatoneController* controllerIn, int fps)
     : LumatoneMidiState(*controllerIn)
     , controller(controllerIn)
-    , desiredFps(fps)
+    , runGameFps(fps)
 {
     controller->addMidiListener(this);
 }
@@ -28,9 +28,9 @@ LumatoneSandboxGameEngine::~LumatoneSandboxGameEngine()
     controller = nullptr;
 }
 
-int LumatoneSandboxGameEngine::getTimeInterval() const
+double LumatoneSandboxGameEngine::getTimeIntervalMs() const
 {
-    return juce::roundToInt((float)1000 / (float)desiredFps);
+    return 1000.0 / runGameFps;
 }
 
 void LumatoneSandboxGameEngine::handleLumatoneMidi(LumatoneMidiState* midiState, const juce::MidiMessage& msg)
@@ -46,31 +46,73 @@ void LumatoneSandboxGameEngine::setGame(LumatoneSandboxGameBase* newGameIn)
 
 bool LumatoneSandboxGameEngine::startGame()
 {
-    if (!gameIsRunning && game != nullptr)
+    if (gameIsRunning)
+    {
+        jassert(game != nullptr);
+        if (gameIsPaused)
+        {
+            gameIsPaused = false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    else if (game != nullptr)
     {
         addListener(game.get());
         game->reset(true);
         gameIsRunning = true;
 
-        startTimer(getTimeInterval());
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameStarted);
-        return true;
+    }
+    else
+    {
+        return false;
     }
 
-    return false;
+    int fps = game->getLockedFps();
+    if (fps == 0)
+        fps = defaultFps;
+
+    if (runGameFps != fps)
+    {
+        runGameFps = fps;
+    }
+    
+    startTimer(getTimeIntervalMs());
+    return true;
 }
 
+void LumatoneSandboxGameEngine::forceFps(double fps)
+{
+    runGameFps = fps;
+    startTimer(getTimeIntervalMs());
+}
+
+void LumatoneSandboxGameEngine::pauseGame()
+{
+    if (gameIsRunning)
+    {
+        gameIsPaused = true;
+        // stopTimer();
+    }
+}
 
 bool LumatoneSandboxGameEngine::endGame()
 {
     stopTimer();
 
     gameIsRunning = false;
-    sentFirstGameMessage = false;
 
-    if (game != nullptr)
+    if (sentFirstGameMessage)
     {
         removeListener(game.get());
+        sentFirstGameMessage = false;
+    }
+    
+    if (game != nullptr)
+    {
         game->reset(true);
 
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameEnded);
@@ -94,7 +136,15 @@ void LumatoneSandboxGameEngine::timerCallback()
         return;
     }
 
-    game->nextTick();
+    if (gameIsPaused)
+    {
+        game->pauseTick();
+    }
+    else
+    {
+        game->nextTick();
+    }
+
     game->readQueue(actionQueue, numActions);
 
     if (numActions == 0)

@@ -44,10 +44,13 @@ public:
     void setGame(LumatoneSandboxGameBase* newGameIn);
 
     bool startGame();
+    void pauseGame();
     bool endGame();
     void resetGame();
 
-    int getTimeInterval() const;
+    double getTimeIntervalMs() const;
+
+    void forceFps(double fps);
 
     bool isGameRunning() const { return gameIsRunning; }
 
@@ -78,8 +81,10 @@ private:
     juce::UndoableAction* actionQueue[MAX_QUEUE_SIZE];
     int numActions = 0;
 
-    int desiredFps = 30;
+    double defaultFps = 30;
+    double runGameFps = 30;
 
     bool gameIsRunning = false;
+    bool gameIsPaused = false;
     bool sentFirstGameMessage = false;
 };

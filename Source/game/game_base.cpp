@@ -61,6 +61,10 @@ void LumatoneSandboxGameBase::readQueue(juce::UndoableAction** buffer, int& numA
 
 void LumatoneSandboxGameBase::addToQueue(juce::UndoableAction* action)
 {
+    // jassert(action != nullptr);
+    if (action == nullptr)
+        return;
+
     if (queueSize < 0)
         queueSize = 1;
     else if (queueSize < MAX_QUEUE_SIZE)
