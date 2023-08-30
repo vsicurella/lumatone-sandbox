@@ -129,7 +129,25 @@ bool LumatoneSandboxGameEngine::endGame()
 
 void LumatoneSandboxGameEngine::resetGame()
 {
-    endGame();
+    if (gameIsRunning)
+    {
+        jassert(game != nullptr);
+        if (gameIsPaused)
+        {
+            gameIsPaused = false;
+        }
+
+        game->reset(true);
+    }
+    else if (game != nullptr)
+    {
+        addListener(game.get());
+        game->reset(true);
+
+        DBG("LumatoneSandboxGameEngine: restarted " + game->getName());
+
+        engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameStarted);
+    }
 }
 
 void LumatoneSandboxGameEngine::timerCallback()

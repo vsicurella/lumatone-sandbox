@@ -24,6 +24,8 @@ namespace HexagonAutomata
         bool isEmpty() const { return health <= 0.0f && age == 0; }
 
         void setBorn() { health = 1.0f; }
+
+        void setEmpty() { health = 0.0f; age = 0; }
     };
 
 
@@ -306,7 +308,7 @@ public:
         int ticksPerGeneration = 10;
         int ticksToNextGeneration = 0;
 
-        int verbose = 0;
+        int verbose = 1;
         
         // int ticksPerAge = 0;
         // int ticksToNextAge = 0;
@@ -314,6 +316,7 @@ public:
         juce::Array<MappedHexState> populatedCells;
         // juce::Array<MappedHexState, juce::CriticalSection> updatedCells;
 
+        juce::Array<MappedHexState> newCells;
         juce::Array<MappedHexState> bornCells;
         juce::Array<MappedHexState> diedCells;
         juce::Array<MappedHexState> agingCells;

@@ -37,7 +37,6 @@ HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* ga
     resetButton = std::make_unique<juce::TextButton>("Reset", "Restart game");
     resetButton->onClick = [&]
     {
-        gameEngine->endGame();
         gameEngine->resetGame();
     };
     addAndMakeVisible(*resetButton);
