@@ -1,11 +1,20 @@
 #include "./hexagon_automata.h"
 
-juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::GameState::getNeighbors(const MappedHexState& cell, const juce::Array<Hex::Point>& vector) const
+HexagonAutomata::MappedHexState HexagonAutomata::GameState::getMappedCell(int cellNum)
+{
+    auto hex = hexMap.keyNumToHex(cellNum);
+    auto keyCoord = layout->keyNumToKeyCoord(cellNum);
+
+    auto mappedKey = MappedLumatoneKey(*layout->readKey(keyCoord.boardIndex, keyCoord.keyIndex), keyCoord.boardIndex, keyCoord.keyIndex);
+    return MappedHexState(cells[cellNum], mappedKey, hex);
+}
+
+juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::GameState::getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const
 {
     juce::Array<MappedHexState> mappedCells;
     for (auto point : vector)
     {
-        auto neighbor = (Hex::Point)cell + point;
+        auto neighbor = cellCoord + point;
         auto keyCoord = hexMap.hexToKeyCoords(neighbor);
         int cellNum = layout->keyCoordToKeyNum(keyCoord);
         if (cellNum < 0)
@@ -19,9 +28,8 @@ juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::GameState::getNeig
     return mappedCells;
 }
 
-juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::GameState::getAliveNeighbors(const HexagonAutomata::MappedHexState& cell, const juce::Array<Hex::Point>& vector) const
+juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::GameState::getAliveNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const
 {
-    auto cellCoord = (Hex::Point)cell;
     juce::Array<MappedHexState> mappedCells;
     for (auto point : vector)
     {
@@ -256,7 +264,7 @@ juce::UndoableAction* HexagonAutomata::Game::renderFrame()
     // TODO fix bug with managed version - loses living population after addSeed during pause
     // populatedCells.swapWith(populated);
 
-    redoCensus();
+    // redoCensus();
 
     lock.exit();
 
@@ -360,6 +368,33 @@ void HexagonAutomata::Game::setAliveColour(juce::Colour newColour)
     render->setColour(newColour);
 }
 
+void HexagonAutomata::Game::setBornSurviveRules(juce::Array<int> bornNums, juce::Array<int> surviveNums)
+{
+    lock.enter();
+
+    rules.reset(new BornSurviveRule(bornNums, surviveNums));
+
+    lock.exit();
+}
+
+void HexagonAutomata::Game::setBornSurviveRules(juce::String bornInput, juce::String surviveInput)
+{
+    lock.enter();
+
+    rules.reset(new BornSurviveRule(bornInput, surviveInput));
+
+    lock.exit();
+}
+
+void HexagonAutomata::Game::setNeighborDistance(int distance)
+{
+    lock.enter();
+
+    neighborsVector.swapWith(rules->getNeighborsVector(distance));
+
+    lock.exit();
+}
+
 void HexagonAutomata::Game::updateNextGeneration()
 {
 	lock.enter();
@@ -367,61 +402,84 @@ void HexagonAutomata::Game::updateNextGeneration()
     juce::Array<Hex::Point> emptyCells;
     juce::Array<MappedHexState> emptyNeighbors;
 
-    for (int c = 0; c < populatedCells.size(); c++)
+    // for (int c = 0; c < populatedCells.size(); c++)
+    // {
+    //     auto cell = populatedCells[c];
+
+    //     // Check cell status
+    //     auto neighbors = getNeighbors(cell, neighborsVector);
+    //     juce::Array<MappedHexState> livingNeighbors;
+    //     for (int n = 0; n < neighbors.size(); n++)
+    //     {
+    //         if (neighbors[n].isAlive())
+    //             livingNeighbors.add(neighbors[n]);
+    //         else if (emptyCells.addIfNotAlreadyThere((Hex::Point)neighbors[n]))
+    //             emptyNeighbors.add(neighbors[n]);
+    //     }
+
+    //     if (cell.isDead())
+    //     {
+    //         cell.age = 0;
+    //         diedCells.add(cell);
+    //     }
+    //     else
+    //     {
+    //         float healthFactor = rules->getLifeFactor(cell, neighbors.getRawDataPointer(), livingNeighbors.size());
+    //         cell.applyFactor(healthFactor);
+    //         cell.age++;
+    //         agingCells.add(cell);
+    //     }
+
+    //     // updatedCells.add(cell);
+    // }
+
+    // for (int e = 0; e < emptyCells.size(); e++)
+    // {
+    //     auto point = emptyCells[e];
+    //     auto cell = emptyNeighbors[e];
+
+    //     auto neighbors = getAliveNeighbors(cell, neighborsVector);
+    //     if (rules->generateNewLife(cell, neighbors.getRawDataPointer(), neighbors.size()))
+    //     {
+    //         cell.setBorn();
+    //         bornCells.add(cell);
+    //         // bool cellUpdated = false;
+    //         // for (int u = 0; u < updatedCells.size(); u++)
+    //         // {
+    //         //     if ((Hex::Point)updatedCells[u] == (Hex::Point)cell)
+    //         //     {
+    //         //         updatedCells.set(u, cell);
+    //         //         cellUpdated = true;
+    //         //     }
+    //         // }
+
+    //         // if (!cellUpdated)
+    //             // updatedCells.add(cell);
+    //     }
+    // }
+
+    for (int i = 0; i < numCells; i++)
     {
-        auto cell = populatedCells[c];
-
-        // Check cell status
-        auto neighbors = getNeighbors(cell, neighborsVector);
-        juce::Array<MappedHexState> livingNeighbors;
-        for (int n = 0; n < neighbors.size(); n++)
+        auto cell = getMappedCell(i);
+        auto neighbors = getAliveNeighbors(hexMap.keyNumToHex(i), neighborsVector);
+                
+        if (cell.isDead() || cell.HexState::isEmpty())
         {
-            if (neighbors[n].isAlive())
-                livingNeighbors.add(neighbors[n]);
-            else if (emptyCells.addIfNotAlreadyThere((Hex::Point)neighbors[n]))
-                emptyNeighbors.add(neighbors[n]);
+            if (rules->generateNewLife(cell, neighbors.getRawDataPointer(), neighbors.size()))
+            {
+                cell.setBorn();
+                bornCells.add(cell);
+            }
         }
 
-        if (cell.isDead())
+        else if (cell.isAlive())
         {
-            cell.age = 0;
-            diedCells.add(cell);
-        }
-        else
-        {
-            float healthFactor = rules->getLifeFactor(cell, neighbors.getRawDataPointer(), livingNeighbors.size());
+            auto healthFactor = rules->getLifeFactor(cell,neighbors.getRawDataPointer(), neighbors.size());
             cell.applyFactor(healthFactor);
-            cell.age++;
-            agingCells.add(cell);
-        }
-
-        // updatedCells.add(cell);
-    }
-
-    for (int e = 0; e < emptyCells.size(); e++)
-    {
-        auto point = emptyCells[e];
-        auto cell = emptyNeighbors[e];
-
-        auto neighbors = getAliveNeighbors(cell, neighborsVector);
-        if (rules->generateNewLife(cell, neighbors.getRawDataPointer(), neighbors.size()))
-        {
-            jassert(neighbors.size() >= 2);
-            
-            cell.setBorn();
-            bornCells.add(cell);
-            // bool cellUpdated = false;
-            // for (int u = 0; u < updatedCells.size(); u++)
-            // {
-            //     if ((Hex::Point)updatedCells[u] == (Hex::Point)cell)
-            //     {
-            //         updatedCells.set(u, cell);
-            //         cellUpdated = true;
-            //     }
-            // }
-
-            // if (!cellUpdated)
-                // updatedCells.add(cell);
+            if (cell.isAlive())
+                agingCells.add(cell);
+            else
+                diedCells.add(cell);
         }
     }
 

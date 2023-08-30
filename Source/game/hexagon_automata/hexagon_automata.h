@@ -70,25 +70,60 @@ namespace HexagonAutomata
 
     struct BornSurviveRule : public NeighborFunction
     {
-        int numForBorn = 0;
-        int numLowSurvive = 0;
-        int numHighSurvive = 0;
-
-        BornSurviveRule(int numBorn, int surviveLower, int surviveUpper)
-            : numForBorn(numBorn)
-            , numLowSurvive(surviveLower)
-            , numHighSurvive(surviveUpper) {}
+        juce::Array<int> numsBorn;
+        juce::Array<int> numsSurvive;
         
+        BornSurviveRule(int numBorn, int surviveLower, int surviveUpper)
+        {
+            numsBorn.add(numBorn);
+            numsSurvive.add(surviveLower);
+            numsSurvive.add(surviveUpper);
+        }
+
+        BornSurviveRule(juce::Array<int> bornNums, juce::Array<int> surviveNums)
+            : numsBorn(bornNums)
+            , numsSurvive(surviveNums) {}
+
+        BornSurviveRule(juce::String bornString, juce::String surviveString)
+        {
+            numsBorn = ParseListArgument(bornString);
+            numsSurvive = ParseListArgument(surviveString);
+        }
+
+        static juce::Array<int> ParseListArgument(juce::String numberList)
+        {
+            juce::Array<int> list;
+            juce::String dbgStr;
+
+            auto tks = juce::StringArray::fromTokens(numberList, juce::String(","), juce::String());
+            for (auto tk : tks)
+            { 
+                if (tk.trim().isNotEmpty())
+                {
+                    auto num = tk.getIntValue();
+                    if (num > 0 && num < 280)
+                    {
+                        list.addIfNotAlreadyThere(num);
+                        dbgStr += juce::String(num) + ",";
+                    }
+                }
+            }
+
+            DBG("BornSurviveRule::ParseListArgument: " + dbgStr);
+
+            return list;
+        }
+
         virtual float getLifeFactor(const MappedHexState& origin, const MappedHexState* neighbors, int numNeighbors) const override
         {
-            if (numNeighbors < numLowSurvive || numNeighbors > numHighSurvive)
-                return 0.0f;
-            return 1.0f;
+            if (numsSurvive.contains(numNeighbors))
+                return 1.0f;
+            return 0.0f;
         }
 
         virtual bool generateNewLife(const MappedHexState& origin, const MappedHexState* neighbors, int numNeighbors) const override
         {
-            if (numNeighbors == numForBorn)
+            if (numsBorn.contains(numNeighbors))
                 return true;
             return false;
         }
@@ -124,8 +159,10 @@ namespace HexagonAutomata
             cells.fill(HexState());
         }
 
-        virtual juce::Array<MappedHexState> getNeighbors(const MappedHexState& cell, const juce::Array<Hex::Point>& vector) const;
-        virtual juce::Array<MappedHexState> getAliveNeighbors(const MappedHexState& cell, const juce::Array<Hex::Point>& vector) const;
+        MappedHexState getMappedCell(int cellNum);
+
+        virtual juce::Array<MappedHexState> getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const;
+        virtual juce::Array<MappedHexState> getAliveNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const;
     };
 
     class Renderer
@@ -221,9 +258,11 @@ namespace HexagonAutomata
 
         juce::UndoableAction* renderFrame() override;
 
+        void rerenderState();
+
         double getLockedFps() const { return 0; }
 
-
+public:
         void addSeed(Hex::Point coord);
         void addSeeds(juce::Array<Hex::Point> seedCoords);
         void addSeeds(int numSeeds);
@@ -233,7 +272,11 @@ namespace HexagonAutomata
 
         void setAliveColour(juce::Colour newColour);
 
-        void rerenderState();
+        void setBornSurviveRules(juce::Array<int> bornNums, juce::Array<int> surviveNums);
+        void setBornSurviveRules(juce::String bornInput, juce::String surviveInput);
+        
+        void setNeighborDistance(int distance);
+        
 
     private:
 
