@@ -19,6 +19,10 @@ namespace HexagonAutomata
         
         bool isAlive() const { return health > 0.0f; }
 
+        bool isDead() const { return health <= 0.0f && age > 0; }
+        
+        bool isEmpty() const { return health <= 0.0f && age == 0; }
+
         void setBorn() { health = 1.0f; }
     };
 
@@ -98,7 +102,6 @@ namespace HexagonAutomata
         int numCells = 0;
 
         juce::Array<HexState> cells;
-        juce::Array<MappedHexState> livingHexes;
 
         GameState(std::shared_ptr<LumatoneLayout> layoutIn)
             : layout(layoutIn)
@@ -111,44 +114,40 @@ namespace HexagonAutomata
             : layout(copy.layout)
             , hexMap(copy.layout)
             , numCells(copy.numCells)
-            , cells(copy.cells)
-            , livingHexes(copy.livingHexes) {}
+            , cells(copy.cells) {}
 
         virtual void resetState()
         {
             numCells = layout->getOctaveBoardSize() * layout->getNumBoards();
 
             cells.resize(numCells);
-            cells.clearQuick();
-            
-            remapLivingHexes();
+            cells.fill(HexState());
         }
 
         virtual juce::Array<MappedHexState> getNeighbors(const MappedHexState& cell, const juce::Array<Hex::Point>& vector) const;
         virtual juce::Array<MappedHexState> getAliveNeighbors(const MappedHexState& cell, const juce::Array<Hex::Point>& vector) const;
-
-    protected:
-
-        void remapLivingHexes();
     };
 
     class Renderer
     {
+    public:
         juce::Colour aliveColour;
-        juce::Colour emptyColour;
+        juce::Colour deadColour;
+        juce::Colour emptyColour = juce::Colours::black;
 
         juce::Colour oldColour;
         juce::Colour ageColour;
         int maxAge = 20;
 
+    private:
         juce::ColourGradient healthGradient;
         juce::ColourGradient ageGradient;
 
     public:
 
-        Renderer(juce::Colour aliveColourIn=juce::Colours::white, juce::Colour emptyColourIn=juce::Colours::black)
+        Renderer(juce::Colour aliveColourIn=juce::Colours::white, juce::Colour deadColourIn=juce::Colours::grey)
         {
-            setColour(aliveColourIn, emptyColourIn);
+            setColour(aliveColourIn, deadColourIn);
         }
 
         void setColour(juce::Colour aliveColourIn, juce::Colour emptyColourIn=juce::Colours::transparentBlack)
@@ -157,22 +156,43 @@ namespace HexagonAutomata
             oldColour = aliveColour.contrasting(1.0f);
 
             if (emptyColourIn != juce::Colours::transparentBlack)
-                emptyColour = emptyColourIn;
+                deadColour = emptyColourIn;
 
             ageGradient = juce::ColourGradient(aliveColour, 0.0f, 0.0f,
                 oldColour, 1.0f, 1.0f, false);
         }
 
-        virtual juce::Colour renderCellColour(const MappedHexState& state)
+        virtual juce::Colour renderAliveColour(const MappedHexState& state)
         {
+            if (state.HexState::isEmpty())
+                return emptyColour;
+            if (state.isAlive())
+                return aliveColour;
+            return deadColour;
+        }
+
+        virtual juce::Colour renderGradientColour(const MappedHexState& state)
+        {
+            if (state.HexState::isEmpty())
+                return emptyColour;
+
+            if (state.isDead())
+                return deadColour;
+
             auto ageFactor = (double)state.age / (double)maxAge;
+            auto colour = oldColour;
 
             if (ageFactor <= 1.0f)
-                ageColour = ageGradient.getColourAtPosition(ageFactor);
+                colour = ageGradient.getColourAtPosition(ageFactor);
 
-            healthGradient = juce::ColourGradient(emptyColour, 0.0f, 0.0f,
-                                                  ageColour, 1.0f, 1.0f, false);
+            healthGradient = juce::ColourGradient(deadColour, 0.0f, 0.0f,
+                                                  colour, 1.0f, 1.0f, false);
             return healthGradient.getColourAtPosition(state.health);
+        }
+
+        virtual juce::Colour renderCellColour(const MappedHexState& state)
+        {
+            return renderAliveColour(state);
         }
 
         virtual MappedLumatoneKey renderCellKey(const MappedHexState& state)
@@ -191,7 +211,9 @@ namespace HexagonAutomata
 
         Game(LumatoneController* controller);
         Game(LumatoneController* controller, const HexagonAutomata::GameState& stateIn);
+        
         void reset(bool clearQueue) override;
+        
         void nextTick() override;
         void pauseTick() override;
 
@@ -217,23 +239,43 @@ namespace HexagonAutomata
 
         void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
 
+        // Apply cell updates to game state
+        // Returns whether or not cell is still populated
+        bool applyUpdatedCell(const MappedHexState& cellUpdate);
+
     private:
+
+        void resetState() override;
 
         void initialize();
+        void redoCensus();
 
     private:
+
+        juce::CriticalSection lock;
 
         std::unique_ptr<NeighborFunction> rules;
 
         juce::Array<Hex::Point> neighborsVector;
 
         int ticks = 0;
+
         int ticksPerGeneration = 10;
         int ticksToNextGeneration = 0;
 
-        juce::Array<MappedHexState> updatedCells;
+        int verbose = 0;
+        
+        // int ticksPerAge = 0;
+        // int ticksToNextAge = 0;
 
-        std::unique_ptr<Renderer> gfx;
+        juce::Array<MappedHexState> populatedCells;
+        // juce::Array<MappedHexState, juce::CriticalSection> updatedCells;
+
+        juce::Array<MappedHexState> bornCells;
+        juce::Array<MappedHexState> diedCells;
+        juce::Array<MappedHexState> agingCells;
+
+        std::unique_ptr<Renderer> render;
 
         juce::Random random;
     };
