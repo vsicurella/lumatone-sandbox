@@ -64,6 +64,8 @@ bool LumatoneSandboxGameEngine::startGame()
         game->reset(true);
         gameIsRunning = true;
 
+        DBG("LumatoneSandboxGameEngine: Starting game " + game->getName());
+
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameStarted);
     }
     else
@@ -79,6 +81,8 @@ bool LumatoneSandboxGameEngine::startGame()
     {
         runGameFps = fps;
     }
+
+    DBG("Running at " + juce::String(fps) + " fps | " + juce::String(getTimeIntervalMs()) + "ms.");
     
     startTimer(getTimeIntervalMs());
     return true;
