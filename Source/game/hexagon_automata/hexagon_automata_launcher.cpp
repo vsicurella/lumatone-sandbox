@@ -64,6 +64,33 @@ HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* ga
     };
     addAndMakeVisible(*speedSlider);
 
+    bornText = std::make_unique<juce::TextEditor>("BornRuleText");
+    bornText->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(0, "0123456789, "), true);
+    bornText->setText("2");
+    bornText->onTextChange = [&]
+    {
+        onRulesChange();
+    };
+    addAndMakeVisible(*bornText);
+    
+    surviveText = std::make_unique<juce::TextEditor>("SurviveRuleText");
+    surviveText->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(0, "0123456789, "), true);
+    surviveText->setText("3,4");
+    surviveText->onTextChange = [&]
+    {
+        onRulesChange();
+    };
+    addAndMakeVisible(*surviveText);
+
+    distanceSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::IncDecButtons, juce::Slider::TextBoxLeft);
+    distanceSlider->setRange(0, 7, 1);
+    distanceSlider->setValue(1, juce::NotificationType::dontSendNotification);
+    distanceSlider->onValueChange = [&]
+    {
+        game->setNeighborDistance(distanceSlider->getValue());
+    };
+    addAndMakeVisible(*distanceSlider);
+
     paletteWindow = std::make_unique<ColourPaletteWindow>(palettesDummy);
     paletteWindow->listenToColourSelection(this);
     addAndMakeVisible(*paletteWindow);
@@ -106,10 +133,21 @@ void HexagonAutomataComponent::resized()
 
     numSeedsSlider->setBounds(addSeedButton->getRight() + margin, addSeedButton->getY(), addLength * 2, controlHeight);
 
+    auto textLength = buttonFont.getStringWidth("1, 2, 3, 4");
+    bornText->setBounds(margin, numSeedsSlider->getBottom() + margin, textLength, controlHeight);
+    surviveText->setBounds(bornText->getRight() + margin, numSeedsSlider->getBottom() + margin, textLength, controlHeight);
+
+    distanceSlider->setBounds(margin, bornText->getBottom() + margin, getWidth() * 0.33, controlHeight);
+
     paletteWindow->setBounds(numSeedsSlider->getRight() + margin, addSeedButton->getY() + margin, getWidth() - numSeedsSlider->getRight() - margin, getHeight() - addSeedButton->getY() - margin);
 }
 
 void HexagonAutomataComponent::colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour)
 {
     game->setAliveColour(newColour);
+}
+
+void HexagonAutomataComponent::onRulesChange()
+{
+    game->setBornSurviveRules(bornText->getText(), surviveText->getText());
 }

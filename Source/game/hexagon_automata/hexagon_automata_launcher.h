@@ -31,6 +31,10 @@ public:
 
 private:
 
+    void onRulesChange();
+
+private:
+
     LumatoneSandboxGameEngine* gameEngine;
     HexagonAutomata::Game* game;
 
@@ -38,9 +42,15 @@ private:
     std::unique_ptr<juce::TextButton> resetButton;
 
     std::unique_ptr<juce::TextButton> addSeedButton;
-    std::unique_ptr<juce::Slider> numSeedsSlider;
 
     std::unique_ptr<juce::Slider> speedSlider;
+
+    std::unique_ptr<juce::TextEditor> bornText;
+    std::unique_ptr<juce::TextEditor> surviveText;
+
+    std::unique_ptr<juce::Slider> distanceSlider;
+
+    std::unique_ptr<juce::Slider> numSeedsSlider;
 
     juce::Array<LumatoneEditorColourPalette> palettesDummy;
     std::unique_ptr<ColourPaletteWindow> paletteWindow;
