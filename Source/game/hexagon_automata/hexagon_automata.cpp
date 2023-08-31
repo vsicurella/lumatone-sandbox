@@ -410,7 +410,8 @@ void HexagonAutomata::Game::setNeighborDistance(int distance)
 {
     lock.enter();
 
-    neighborsVector.swapWith(rules->getNeighborsVector(distance));
+    auto vector = rules->getNeighborsVector(distance);
+    neighborsVector.swapWith(vector);
 
     lock.exit();
 }

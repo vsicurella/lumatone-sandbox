@@ -164,14 +164,6 @@ void HexagonAutomataComponent::resized()
     surviveRuleLabel->setSize(surviveRuleLabelWidth, buttonHeight);
     distanceLabel->setSize(distanceLabelWidth, controlHeight);
 
-    // juce::FlexBox labelBox(juce::FlexBox::JustifyContent::flexStart);
-    // labelBox.items.add(juce::FlexItem(*genSpeedLabel).withWidth(labelFont.getStringWidthFloat(genSpeedLabel->getText() + "_")).withHeight(controlHeight));
-    // labelBox.items.add(juce::FlexItem(*numSeedsLabel).withWidth(labelFont.getStringWidthFloat(numSeedsLabel->getText() + "_")).withHeight(buttonHeight));
-    // labelBox.items.add(juce::FlexItem(*bornRuleLabel).withWidth(labelFont.getStringWidthFloat(bornRuleLabel->getText() + "_")).withHeight(buttonHeight));
-    // labelBox.items.add(juce::FlexItem(*surviveRuleLabel).withWidth(labelFont.getStringWidthFloat(surviveRuleLabel->getText() + "_")).withHeight(buttonHeight));
-    // labelBox.items.add(juce::FlexItem(*distanceLabel).withWidth(labelFont.getStringWidthFloat(distanceLabel->getText() + "_")).withHeight(controlHeight));
-    // box.items.add(labelBox)
-
     auto buttonFont = getLookAndFeel().getTextButtonFont(*addSeedButton, buttonHeight);
     int addLength = juce::roundToInt(buttonFont.getStringWidthFloat(addSeedButton->getButtonText()) * 1.5f);
 
@@ -209,27 +201,20 @@ void HexagonAutomataComponent::resized()
         switch (param)
         {
         case HexagonAutomataComponent::Parameter::FramesPerGeneration:
-            item.margin.left = 0;
-            item.associatedComponent = genSpeedSlider.get();
-            item.maxWidth = controlsWidth;
+            // item.margin.left = 0;
+            // item.associatedComponent = genSpeedSlider.get();
+            // item.maxWidth = controlsWidth;
 
             gItem.margin.left = 0;
             gItem.associatedComponent = genSpeedSlider.get();
             gItem.maxWidth = controlsWidth;
             break;
         case HexagonAutomataComponent::Parameter::AddSeed:
-            item.margin.left = margin;
-            item.associatedFlexBox = &seedsBox;
-            item.associatedFlexBox->items.add(juce::FlexItem(*addSeedButton).withWidth(addLength).withHeight(buttonHeight));
-            item.associatedFlexBox->items.add(juce::FlexItem(*numSeedsSlider).withWidth(addLength).withHeight(buttonHeight));
-            item.maxHeight = buttonHeight;
-
-            // gItem.margin.left = margin;
-            // gItem.
-            // gItem. = &seedsBox;
-            // gItem.associatedFlexBox->items.add(juce::FlexItem(*addSeedButton).withWidth(addLength).withHeight(buttonHeight));
-            // gItem.associatedFlexBox->items.add(juce::FlexItem(*numSeedsSlider).withWidth(addLength).withHeight(buttonHeight));
-            // gItem.maxHeight = buttonHeight;
+            // item.margin.left = margin;
+            // item.associatedFlexBox = &seedsBox;
+            // item.associatedFlexBox->items.add(juce::FlexItem(*addSeedButton).withWidth(addLength).withHeight(buttonHeight));
+            // item.associatedFlexBox->items.add(juce::FlexItem(*numSeedsSlider).withWidth(addLength).withHeight(buttonHeight));
+            // item.maxHeight = buttonHeight;
 
             gItem.margin.left = 0;
             gItem.height = buttonHeight;
@@ -238,8 +223,8 @@ void HexagonAutomataComponent::resized()
             break;
         case HexagonAutomataComponent::Parameter::BornRule:
             // item.margin.left = bornRuleLabelWidth;
-            item.associatedComponent = bornRuleInput.get();
-            item.maxWidth = textLength;
+            // item.associatedComponent = bornRuleInput.get();
+            // item.maxWidth = textLength;
 
             gItem.associatedComponent = bornRuleInput.get();
             gItem.width = textLength;
@@ -247,8 +232,8 @@ void HexagonAutomataComponent::resized()
             break;
         case HexagonAutomataComponent::Parameter::SurviveRule:
             // item.margin.left = surviveRuleLabelWidth;
-            item.associatedComponent = suviveRuleInput.get();
-            item.maxWidth = textLength;
+            // item.associatedComponent = suviveRuleInput.get();
+            // item.maxWidth = textLength;
 
             gItem.associatedComponent = suviveRuleInput.get();
             gItem.width = textLength;
@@ -256,8 +241,8 @@ void HexagonAutomataComponent::resized()
             break;
         case HexagonAutomataComponent::Parameter::NeighborDistance:
             // item.margin.left = distanceLabelWidth;
-            item.associatedComponent = distanceSlider.get();
-            item.maxWidth = textLength;
+            // item.associatedComponent = distanceSlider.get();
+            // item.maxWidth = textLength;
 
             gItem.associatedComponent = distanceSlider.get();
             gItem.width = textLength * 2;
@@ -283,18 +268,18 @@ void HexagonAutomataComponent::resized()
     // controlsBox.items.add(juce::FlexItem(*suviveRuleInput).withWidth(textLength).withHeight(controlHeight));
     // controlsBox.items.add(juce::FlexItem(*distanceSlider).withWidth(addLength * 2).withHeight(controlHeight));
 
-    auto controlBoxItem = juce::FlexItem(controlsWidth, flexArea.getHeight(), controlsBox);
-    controlBoxItem.margin.top = margin;
-    box.items.add(controlBoxItem);
+    // auto controlBoxItem = juce::FlexItem(controlsWidth, flexArea.getHeight(), controlsBox);
+    // controlBoxItem.margin.top = margin;
+    // box.items.add(controlBoxItem);
 
     // int colourSelectorsWidth = controlsArea.getWidth() - numSeedsSlider->getRight() - margin * 2;
     int colourSelectorsWidth = flexArea.getWidth() - controlsWidth - margin;
     int selectorWidth = colourSelectorsWidth / 2;
 
-    juce::FlexBox colourBoxes(juce::FlexBox::JustifyContent::spaceAround);
-    colourBoxes.items.add(juce::FlexItem(*aliveColourSelector).withWidth(selectorWidth).withAlignSelf(juce::FlexItem::AlignSelf::stretch));
-    colourBoxes.items.add(juce::FlexItem(*deadColourSelector).withWidth(selectorWidth).withAlignSelf(juce::FlexItem::AlignSelf::stretch));
-    box.items.add(juce::FlexItem(colourSelectorsWidth, flexArea.getHeight(), colourBoxes));
+    // juce::FlexBox colourBoxes(juce::FlexBox::JustifyContent::spaceAround);
+    // colourBoxes.items.add(juce::FlexItem(*aliveColourSelector).withWidth(selectorWidth).withAlignSelf(juce::FlexItem::AlignSelf::stretch));
+    // colourBoxes.items.add(juce::FlexItem(*deadColourSelector).withWidth(selectorWidth).withAlignSelf(juce::FlexItem::AlignSelf::stretch));
+    // box.items.add(juce::FlexItem(colourSelectorsWidth, flexArea.getHeight(), colourBoxes));
 
     // box.performLayout(flexArea);
 
