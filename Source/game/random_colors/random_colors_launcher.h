@@ -12,12 +12,12 @@
 
 #include <JuceHeader.h>
 #include "./random_colors.h"
-#include "../game_engine.h"
+#include "../game_component.h"
 
 //==============================================================================
 /*
 */
-class RandomColorsComponent  : public juce::Component
+class RandomColorsComponent  : public LumatoneSandboxGameComponent
 {
 public:
     RandomColorsComponent(LumatoneSandboxGameEngine* gameEngine);
@@ -28,14 +28,9 @@ public:
 
 private:
 
-    LumatoneSandboxGameEngine* gameEngine;
     RandomColors* game;
 
-    std::unique_ptr<juce::TextButton> toggleButton;
-    std::unique_ptr<juce::TextButton> resetButton;
-
     std::unique_ptr<juce::Slider> speedSlider;
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RandomColorsComponent)
 };

@@ -26,7 +26,7 @@ MainComponent::~MainComponent()
     controller->removeStatusListener(connectionStatus.get());
     controller->removeEditorListener(lumatoneComponent.get());
 
-    gameControl = nullptr;
+    gameEngineComponent = nullptr;
 
     lumatoneComponent = nullptr;
     connectionStatus = nullptr;
@@ -49,8 +49,10 @@ void MainComponent::resized()
     const float connectionStatusHeight = 32.0f;// proportionOfHeight(connectionStatusHeightRatio);
     connectionStatus->setBounds(0, 0, getWidth(), connectionStatusHeight);
 
-    bool gameIsShown = (gameControl != nullptr) && showGameControl;
-    float lumatoneHeight = (gameIsShown) ? 0.8f : 1.0f;
+    bool gameIsShown = (gameEngineComponent != nullptr) && showGameControl;
+    float lumatoneHeight = 1.0f;
+    if (gameIsShown)
+        lumatoneHeight -= gameControlHeightRatio;
 
     const float widthMargin = proportionOfWidth(lumatoneComponentWidthMarginRatio * 0.5f);
     lumatoneComponent->setBounds(widthMargin, connectionStatus->getBottom(), getWidth() - widthMargin * 2, getHeight() * lumatoneHeight - connectionStatusHeight * 2);
@@ -58,33 +60,34 @@ void MainComponent::resized()
     if (gameIsShown)
     {
         auto gameHeight = getHeight() - lumatoneComponent->getBottom();
-        gameControl->setBounds(0, lumatoneComponent->getBottom(), getWidth(), gameHeight);
+        gameEngineComponent->setBounds(0, lumatoneComponent->getBottom(), getWidth(), gameHeight);
     }
 }
 
-void MainComponent::setGameControlComponent(juce::Component* gameControlIn)
+void MainComponent::setGameEngine(LumatoneSandboxGameEngine* engineIn)
 {
-    if (gameControlIn == nullptr)
-    {
-        if (gameControl != nullptr)
-        {
-            removeChildComponent(gameControl);
-            gameControl = nullptr;
-        }
-    }
+    jassert(gameEngineComponent.get() == nullptr);
+    gameEngineComponent = std::make_unique<LumatoneSandboxGameEngineComponent>(engineIn);
+    if (showGameControl)
+        addAndMakeVisible(*gameEngineComponent);
     else
-    {
-        gameControl = gameControlIn;
-
-        if (showGameControl)
-            addAndMakeVisible(gameControl);
-        else
-            addChildComponent(gameControl);
-    }
+        addChildComponent(*gameEngineComponent);
 
     resized();
 }
 
+void MainComponent::setGameComponent(LumatoneSandboxGameComponent *gameIn)
+{
+    gameEngineComponent->setGameComponent(gameIn);
+    gameLoadedCallback();
+}
+
+void MainComponent::gameLoadedCallback()
+{
+    jassert(gameEngineComponent != nullptr);
+    if (showGameControl)
+        gameEngineComponent->resized();
+}
 
 void MainComponent::getAllCommands(juce::Array <juce::CommandID>& commands)
 {
@@ -135,9 +138,9 @@ bool MainComponent::perform(const juce::ApplicationCommandTarget::InvocationInfo
 
 void MainComponent::setShowGameControl(bool showControls)
 {
-    if (gameControl != nullptr && gameControl->isVisible() != showControls)
+    if (gameEngineComponent != nullptr && gameEngineComponent->isVisible() != showControls)
     {
-        gameControl->setVisible(showControls);
+        gameEngineComponent->setVisible(showControls);
         resized();
     }
 }

@@ -189,13 +189,13 @@ namespace HexagonAutomata
             setColour(aliveColourIn, deadColourIn);
         }
 
-        void setColour(juce::Colour aliveColourIn, juce::Colour emptyColourIn=juce::Colours::transparentBlack)
+        void setColour(juce::Colour aliveColourIn, juce::Colour deadColourIn=juce::Colours::transparentBlack)
         {
             aliveColour = aliveColourIn;
             oldColour = aliveColour.contrasting(1.0f);
 
-            if (emptyColourIn != juce::Colours::transparentBlack)
-                deadColour = emptyColourIn;
+            if (deadColourIn != juce::Colours::transparentBlack)
+                deadColour = deadColourIn;
 
             ageGradient = juce::ColourGradient(aliveColour, 0.0f, 0.0f,
                 oldColour, 1.0f, 1.0f, false);
@@ -273,6 +273,10 @@ public:
         void updateGenerationAge(); 
 
         void setAliveColour(juce::Colour newColour);
+        juce::Colour getAliveColour() const;
+
+        void setDeadColour(juce::Colour newColour);
+        juce::Colour getDeadColour() const;
 
         void setBornSurviveRules(juce::Array<int> bornNums, juce::Array<int> surviveNums);
         void setBornSurviveRules(juce::String bornInput, juce::String surviveInput);

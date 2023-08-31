@@ -1,12 +1,14 @@
 #pragma once
 
 #include <JuceHeader.h>
+
 #include "lumatone_editor_library/LumatoneController.h"
 #include "lumatone_editor_library/LumatoneKeyboardComponent.h"
-
 #include "lumatone_editor_library/color/adjust_layout_colour.h"
 
 #include "gui/connection_status.h"
+
+#include "game/game_engine_component.h"
 
 //==============================================================================
 /*
@@ -31,11 +33,13 @@ public:
     void addKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->addListener(listener); }
     void removeKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->removeListener(listener); }
 
-    void setGameControlComponent(juce::Component* gameControlIn);
+    void setGameEngine(LumatoneSandboxGameEngine* engineIn);
+    void setGameComponent(LumatoneSandboxGameComponent* gameIn);
+    
+    void gameLoadedCallback();
 
-    bool getShowGameControl() const { return gameControl; }
+    bool getShowGameControl() const { return showGameControl; }
     void setShowGameControl(bool showControl);
-
 
 protected:
 
@@ -55,7 +59,8 @@ private:
 
     AdjustLayoutColour colourAdjust;
 
-    juce::Component* gameControl = nullptr;
+    float gameControlHeightRatio = 0.2f;
+    std::unique_ptr<LumatoneSandboxGameEngineComponent> gameEngineComponent;
     bool showGameControl = true;
 
     // UI helpers

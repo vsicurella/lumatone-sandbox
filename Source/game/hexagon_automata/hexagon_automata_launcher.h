@@ -11,20 +11,40 @@
 #pragma once
 
 #include "./hexagon_automata.h"
-#include "../game_engine.h"
-#include "../../lumatone_editor_library/palettes/ColourPaletteWindow.h"
+#include "../game_component.h"
+#include "../../lumatone_editor_library/palettes/ColourSelectionPanels.h"
 
 //==============================================================================
 /*
 */
-class HexagonAutomataComponent  : public juce::Component,
-                                  protected ColourSelectionListener
+class HexagonAutomataComponent  : public LumatoneSandboxGameComponent
+                                , protected ColourSelectionListener
 {
+
+    enum class Parameter
+    {
+        FramesPerGeneration, 
+        AddSeed,
+        NumAddSeeds,
+        BornRule,
+        SurviveRule,
+        NeighborDistance,
+        AliveColour,
+        DeadColour
+    };
+
 public:
     HexagonAutomataComponent(LumatoneSandboxGameEngine* gameEngine);
     ~HexagonAutomataComponent() override;
 
-    void paint (juce::Graphics&) override;
+    // void paint(juce::Graphics& g) override
+    // {
+    //     LumatoneSandboxGameComponent::paint(g);
+
+    //     g.setColour(juce::Colours::red);
+    //     g.drawRect(flexArea, 1.5f);
+    // }
+
     void resized() override;
 
     void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) override;
@@ -34,29 +54,34 @@ private:
     void onRulesChange();
 
 private:
-
-    LumatoneSandboxGameEngine* gameEngine;
+    
     HexagonAutomata::Game* game;
 
-    std::unique_ptr<juce::TextButton> startButton;
-    std::unique_ptr<juce::TextButton> resetButton;
+    std::unique_ptr<juce::Slider> genSpeedSlider;
+    std::unique_ptr<juce::Label> genSpeedLabel;
 
     std::unique_ptr<juce::TextButton> addSeedButton;
+    std::unique_ptr<juce::Slider> numSeedsSlider;
+    std::unique_ptr<juce::Label> numSeedsLabel;
 
-    std::unique_ptr<juce::Slider> speedSlider;
+    std::unique_ptr<juce::TextEditor> bornRuleInput;
+    std::unique_ptr<juce::Label> bornRuleLabel;
 
-    std::unique_ptr<juce::TextEditor> bornText;
-    std::unique_ptr<juce::TextEditor> surviveText;
+    std::unique_ptr<juce::TextEditor> suviveRuleInput;
+    std::unique_ptr<juce::Label> surviveRuleLabel;
 
     std::unique_ptr<juce::Slider> distanceSlider;
+    std::unique_ptr<juce::Label> distanceLabel;
 
-    std::unique_ptr<juce::Slider> numSeedsSlider;
+    std::unique_ptr<CustomPickerPanel> aliveColourSelector;
+    std::unique_ptr<juce::Label> aliveColourLabel;
 
-    juce::Array<LumatoneEditorColourPalette> palettesDummy;
-    std::unique_ptr<ColourPaletteWindow> paletteWindow;
+    std::unique_ptr<CustomPickerPanel> deadColourSelector;
+    std::unique_ptr<juce::Label> deadColourLabel;
 
-    float marginScalar = 0.08f;
+    float marginScalar = 0.1f;
 
+    juce::Rectangle<int> flexArea;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HexagonAutomataComponent)
 };

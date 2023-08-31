@@ -65,6 +65,7 @@ public:
         monitor->initializeDeviceDetection();
 
         gameEngine = std::make_unique<LumatoneSandboxGameEngine>(controller.get(), 30);
+        mainComponent->setGameEngine(gameEngine.get());
         mainComponent->addKeyboardComponentListener(gameEngine.get());
     }
 
@@ -270,67 +271,19 @@ public:
 
         case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
         {
-            game.reset(new RandomColorsComponent(gameEngine.get()));
-            game->setSize(300, 200);
-                
-            //juce::DialogWindow::showDialog(
-            //    "Random Colours Launcher",
-            //    //juce::OptionalScopedPointer<juce::Component>(launcher, true),
-            //    game.get(),
-            //    nullptr,
-            //    juce::Colours::slategrey,
-            //    false,
-            //    true,
-            //    true
-            //);
-
-            //dialogOptions.content = ;
-            //dialogOptions.dialogTitle = "Random Colors Launcher";
-            //dialogOptions.useNativeTitleBar = false;
-            //dialogOptions.launchAsync();
-
-            mainComponent->setGameControlComponent(game.get());
-
+            mainComponent->setGameComponent(new RandomColorsComponent(gameEngine.get()));
             return true;
         }
         
         case LumatoneSandbox::Menu::commandIDs::openHexRingsGame:
         {
-            // auto dialogOptions = juce::DialogWindow::LaunchOptions();
-
-            game.reset(new HexRingLauncher(gameEngine.get()));
-            game->setSize(300, 200);
-
-            //juce::DialogWindow::showDialog(
-            //    "Hex Rings Launcher",
-            //    //juce::OptionalScopedPointer<juce::Component>(launcher, true),
-            //    game.get(),
-            //    nullptr,
-            //    juce::Colours::slategrey,
-            //    false,
-            //    true,
-            //    true
-            //);
-
-            //auto launcher = new HexRingLauncher(gameEngine.get());
-            //launcher->setSize(300, 200);
-            //dialogOptions.content = juce::OptionalScopedPointer<juce::Component>(launcher, true);
-            //dialogOptions.dialogTitle = "Random Hex Launcher";
-            //dialogOptions.useNativeTitleBar = false;
-            //auto window = dialogOptions.launchAsync();
-            //window->exitModalState();
-            //break;
-
-            mainComponent->setGameControlComponent(game.get());
-
+            mainComponent->setGameComponent(new HexRingLauncher(gameEngine.get()));
             return true;
         }
 
         case LumatoneSandbox::Menu::commandIDs::openHexagonAutomata:
         {
-            game.reset(new HexagonAutomataComponent(gameEngine.get()));
-            game->setSize(300, 200);
-            mainComponent->setGameControlComponent(game.get());
+            mainComponent->setGameComponent(new HexagonAutomataComponent(gameEngine.get()));
             return true;
         }
 
@@ -417,7 +370,6 @@ private:
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
-    std::unique_ptr<juce::Component> game;
     std::unique_ptr<LumatoneSandboxGameEngine> gameEngine;
 
 };

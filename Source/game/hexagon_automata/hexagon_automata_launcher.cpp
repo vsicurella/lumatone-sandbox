@@ -12,36 +12,12 @@
 
 //==============================================================================
 HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* gameEngineIn)
-    : gameEngine(gameEngineIn)
+    : LumatoneSandboxGameComponent(gameEngineIn)
 {
     game = new HexagonAutomata::Game(gameEngine->getController());
-    gameEngine->setGame((LumatoneSandboxGameBase*)game);
+    registerGameWithEngine(game);
 
-    startButton = std::make_unique<juce::TextButton>("Start", "Start advancing frames");
-    startButton->setClickingTogglesState(true);
-    startButton->onClick = [&]
-    {
-        if (startButton->getToggleState())
-        {
-            gameEngine->startGame();
-            startButton->setButtonText("Pause");
-        }
-        else
-        {
-            gameEngine->pauseGame();
-            startButton->setButtonText("Start");
-        }
-    };
-    addAndMakeVisible(*startButton);
-
-    resetButton = std::make_unique<juce::TextButton>("Reset", "Restart game");
-    resetButton->onClick = [&]
-    {
-        gameEngine->resetGame();
-    };
-    addAndMakeVisible(*resetButton);
-
-    addSeedButton = std::make_unique<juce::TextButton>("Add Seed", "Add a cluster of cells with 50% per cell");
+    addSeedButton = std::make_unique<juce::TextButton>("Add Seeds", "Add a cluster of cells with 50% per cell");
     addSeedButton->onClick = [&]
     {
         game->addSeeds((int)numSeedsSlider->getValue());
@@ -53,33 +29,53 @@ HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* ga
     numSeedsSlider->setValue(1);
     addAndMakeVisible(*numSeedsSlider);
 
-    speedSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
-    speedSlider->setRange(5, 1200, 1);
-    speedSlider->setSkewFactor(0.5, false);
-    speedSlider->setValue(25, juce::NotificationType::dontSendNotification);
-    speedSlider->onValueChange = [&]
-    {
-        game->setTicksPerGeneration(speedSlider->getValue());
-    };
-    addAndMakeVisible(*speedSlider);
+    // numSeedsLabel = std::make_unique<juce::Label>("Num random seeds to add", "# Seeds:");
+    // numSeedsLabel->setJustificationType(juce::Justification::centredLeft);
+    // numSeedsLabel->attachToComponent(addSeedButton.get(), true);
+    // addAndMakeVisible(*numSeedsLabel);
 
-    bornText = std::make_unique<juce::TextEditor>("BornRuleText");
-    bornText->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(0, "0123456789, "), true);
-    bornText->setText("2");
-    bornText->onTextChange = [&]
+    genSpeedSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
+    genSpeedSlider->setRange(1, 120, 1);
+    genSpeedSlider->setSkewFactor(0.5, false);
+    genSpeedSlider->setValue(25, juce::NotificationType::dontSendNotification);
+    genSpeedSlider->onValueChange = [&]
+    {
+        game->setTicksPerGeneration(genSpeedSlider->getValue());
+    };
+    addAndMakeVisible(*genSpeedSlider);
+
+    genSpeedLabel = std::make_unique<juce::Label>("Generation Speed Label", "Frames per Generation:");
+    genSpeedLabel->setJustificationType(juce::Justification::centredLeft);
+    genSpeedLabel->attachToComponent(genSpeedSlider.get(), false);
+    addAndMakeVisible(*genSpeedLabel);
+
+    bornRuleInput = std::make_unique<juce::TextEditor>("BornRuleText");
+    bornRuleInput->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(0, "0123456789, "), true);
+    bornRuleInput->setText("2");
+    bornRuleInput->onTextChange = [&]
     {
         onRulesChange();
     };
-    addAndMakeVisible(*bornText);
+    addAndMakeVisible(*bornRuleInput);
+
+    bornRuleLabel = std::make_unique<juce::Label>("Cell Born Rule Label", "Born Rules:");
+    bornRuleLabel->setJustificationType(juce::Justification::centredLeft);
+    bornRuleLabel->attachToComponent(bornRuleInput.get(), true);
+    addAndMakeVisible(*bornRuleLabel);
     
-    surviveText = std::make_unique<juce::TextEditor>("SurviveRuleText");
-    surviveText->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(0, "0123456789, "), true);
-    surviveText->setText("3,4");
-    surviveText->onTextChange = [&]
+    suviveRuleInput = std::make_unique<juce::TextEditor>("SurviveRuleText");
+    suviveRuleInput->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(0, "0123456789, "), true);
+    suviveRuleInput->setText("3,4");
+    suviveRuleInput->onTextChange = [&]
     {
         onRulesChange();
     };
-    addAndMakeVisible(*surviveText);
+    addAndMakeVisible(*suviveRuleInput);
+
+    surviveRuleLabel = std::make_unique<juce::Label>("Cell Survive Rule Label", "Survive Rules:");
+    surviveRuleLabel->setJustificationType(juce::Justification::centredLeft);
+    surviveRuleLabel->attachToComponent(suviveRuleInput.get(), true);
+    addAndMakeVisible(*surviveRuleLabel);
 
     distanceSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::IncDecButtons, juce::Slider::TextBoxLeft);
     distanceSlider->setRange(0, 7, 1);
@@ -90,63 +86,268 @@ HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* ga
     };
     addAndMakeVisible(*distanceSlider);
 
-    paletteWindow = std::make_unique<ColourPaletteWindow>(palettesDummy);
-    paletteWindow->listenToColourSelection(this);
-    addAndMakeVisible(*paletteWindow);
+    distanceLabel = std::make_unique<juce::Label>("Neighbor Distance Label", "Neighbor Distance:");
+    distanceLabel->setJustificationType(juce::Justification::centredLeft);
+    distanceLabel->attachToComponent(distanceSlider.get(), true);
+    addAndMakeVisible(*distanceLabel);
+
+    aliveColourSelector = std::make_unique<CustomPickerPanel>();
+    aliveColourSelector->setCurrentColour(game->getAliveColour());
+    aliveColourSelector->addColourSelectionListener(this);
+    addAndMakeVisible(*aliveColourSelector);
+
+    aliveColourLabel = std::make_unique<juce::Label>("Alive Color Label", "Cell Alive Color:");
+    aliveColourLabel->setJustificationType(juce::Justification::centredLeft);
+    aliveColourLabel->attachToComponent(aliveColourSelector.get(), false);
+    addAndMakeVisible(*aliveColourLabel);
+
+    deadColourSelector = std::make_unique<CustomPickerPanel>();
+    deadColourSelector->setCurrentColour(game->getDeadColour());
+    deadColourSelector->addColourSelectionListener(this);
+    addAndMakeVisible(*deadColourSelector);
+
+    deadColourLabel = std::make_unique<juce::Label>("Dead Color Label", "Cell Dead Color:");
+    deadColourLabel->setJustificationType(juce::Justification::centredLeft);
+    deadColourLabel->attachToComponent(deadColourSelector.get(), false);
+    addAndMakeVisible(*deadColourLabel);
 }
 
 HexagonAutomataComponent::~HexagonAutomataComponent()
 { 
     game = nullptr;
 
-    speedSlider = nullptr;
-    resetButton = nullptr;
+    genSpeedSlider = nullptr;
     addSeedButton = nullptr;
-    resetButton = nullptr;
-    startButton = nullptr;
-}
-
-void HexagonAutomataComponent::paint (juce::Graphics& g)
-{
-
 }
 
 void HexagonAutomataComponent::resized()
 {
-    int margin = getHeight() * marginScalar;
-    float controlHeightScalar = 0.12f;
-    int controlHeight = juce::roundToInt(getHeight() * controlHeightScalar);
+    LumatoneSandboxGameComponent::resized();
 
-    auto buttonFont = getLookAndFeel().getTextButtonFont(*startButton, controlHeight);
-    int startLength = buttonFont.getStringWidth(startButton->getButtonText() + "__");
-    startButton->setBounds(margin, margin, startLength, controlHeight);
+    juce::Array<HexagonAutomataComponent::Parameter> layoutParams = 
+    {
+        HexagonAutomataComponent::Parameter::FramesPerGeneration, 
+        HexagonAutomataComponent::Parameter::AddSeed,
+        HexagonAutomataComponent::Parameter::BornRule,
+        HexagonAutomataComponent::Parameter::SurviveRule,
+        HexagonAutomataComponent::Parameter::NeighborDistance,
+        HexagonAutomataComponent::Parameter::AliveColour,
+        HexagonAutomataComponent::Parameter::DeadColour
+    };
 
-    int resetLength = buttonFont.getStringWidth(resetButton->getButtonText() + "__");
-    resetButton->setBounds(startButton->getRight() + margin, margin, resetLength, controlHeight);
+    juce::FlexBox box;
+    box.flexDirection = juce::FlexBox::Direction::row;
 
-    int speedSliderX = resetButton->getRight() + margin;
-    speedSlider->setBounds(speedSliderX, 0, getWidth() - speedSliderX - margin, controlHeight);
+    int margin = controlsArea.proportionOfHeight(marginScalar);
+    int labelMargin = margin / 2;
+    int controlLeft = controlsArea.getX();
 
-    int addLength = buttonFont.getStringWidth(addSeedButton->getButtonText() + "__");
-    addSeedButton->setBounds(margin, controlHeight + margin * 2, addLength, controlHeight);
+    flexArea = controlsArea.withTrimmedTop(margin * 2);
 
-    numSeedsSlider->setBounds(addSeedButton->getRight() + margin, addSeedButton->getY(), addLength * 2, controlHeight);
+    float controlHeightScalar = 0.15f;
+    int controlHeight = juce::roundToInt(flexArea.proportionOfHeight(controlHeightScalar));
 
+    float buttonHeightScalar = 0.18f;
+    int buttonHeight = juce::roundToInt(flexArea.proportionOfHeight(buttonHeightScalar));
+
+    auto labelFont = getLookAndFeel().getLabelFont(*genSpeedLabel).withHeight(controlHeight);
+
+    float genSpeedLabelWidth = labelFont.getStringWidthFloat(genSpeedLabel->getText() );
+    // float numSeedsLabelWidth = labelFont.getStringWidthFloat(numSeedsLabel->getText() );
+    float bornRuleLabelWidth = labelFont.getStringWidthFloat(bornRuleLabel->getText() );
+    float surviveRuleLabelWidth = labelFont.getStringWidthFloat(surviveRuleLabel->getText() );
+    float distanceLabelWidth = labelFont.getStringWidthFloat(distanceLabel->getText());
+    
+    genSpeedLabel->setSize(genSpeedLabelWidth, controlHeight);
+    // numSeedsLabel->setSize(numSeedsLabelWidth, buttonHeight);
+    bornRuleLabel->setSize(bornRuleLabelWidth, buttonHeight);
+    surviveRuleLabel->setSize(surviveRuleLabelWidth, buttonHeight);
+    distanceLabel->setSize(distanceLabelWidth, controlHeight);
+
+    // juce::FlexBox labelBox(juce::FlexBox::JustifyContent::flexStart);
+    // labelBox.items.add(juce::FlexItem(*genSpeedLabel).withWidth(labelFont.getStringWidthFloat(genSpeedLabel->getText() + "_")).withHeight(controlHeight));
+    // labelBox.items.add(juce::FlexItem(*numSeedsLabel).withWidth(labelFont.getStringWidthFloat(numSeedsLabel->getText() + "_")).withHeight(buttonHeight));
+    // labelBox.items.add(juce::FlexItem(*bornRuleLabel).withWidth(labelFont.getStringWidthFloat(bornRuleLabel->getText() + "_")).withHeight(buttonHeight));
+    // labelBox.items.add(juce::FlexItem(*surviveRuleLabel).withWidth(labelFont.getStringWidthFloat(surviveRuleLabel->getText() + "_")).withHeight(buttonHeight));
+    // labelBox.items.add(juce::FlexItem(*distanceLabel).withWidth(labelFont.getStringWidthFloat(distanceLabel->getText() + "_")).withHeight(controlHeight));
+    // box.items.add(labelBox)
+
+    auto buttonFont = getLookAndFeel().getTextButtonFont(*addSeedButton, buttonHeight);
+    int addLength = juce::roundToInt(buttonFont.getStringWidthFloat(addSeedButton->getButtonText()) * 1.5f);
+
+    int controlsWidth = flexArea.proportionOfWidth(0.4f) - margin;
     auto textLength = buttonFont.getStringWidth("1, 2, 3, 4");
-    bornText->setBounds(margin, numSeedsSlider->getBottom() + margin, textLength, controlHeight);
-    surviveText->setBounds(bornText->getRight() + margin, numSeedsSlider->getBottom() + margin, textLength, controlHeight);
 
-    distanceSlider->setBounds(margin, bornText->getBottom() + margin, getWidth() * 0.33, controlHeight);
+    juce::FlexBox controlsBox;
+    controlsBox.flexDirection = juce::FlexBox::Direction::column;
+    
+    juce::FlexBox seedsBox;
+    
+    juce::Grid grid;
+    
+    juce::Array<juce::FlexItem> controlItems;
 
-    paletteWindow->setBounds(numSeedsSlider->getRight() + margin, addSeedButton->getY() + margin, getWidth() - numSeedsSlider->getRight() - margin, getHeight() - addSeedButton->getY() - margin);
+    juce::Grid controlsGrid;
+    juce::Grid seedsGrid;
+
+    for (int i = 0; i < layoutParams.size(); i++)
+    {
+        auto param = layoutParams[i];
+        // auto item = juce::FlexItem(controlsWidth, controlHeight);
+
+        juce::FlexItem item;
+        juce::GridItem gItem;
+
+        item.margin.left = margin * 3;
+        // item.margin.top = margin;
+ 
+        gItem.width = controlsWidth;
+        gItem.height = controlHeight;
+        gItem.margin.left = surviveRuleLabelWidth;
+        gItem.margin.bottom = margin * 0.3f;
+
+        switch (param)
+        {
+        case HexagonAutomataComponent::Parameter::FramesPerGeneration:
+            item.margin.left = 0;
+            item.associatedComponent = genSpeedSlider.get();
+            item.maxWidth = controlsWidth;
+
+            gItem.margin.left = 0;
+            gItem.associatedComponent = genSpeedSlider.get();
+            gItem.maxWidth = controlsWidth;
+            break;
+        case HexagonAutomataComponent::Parameter::AddSeed:
+            item.margin.left = margin;
+            item.associatedFlexBox = &seedsBox;
+            item.associatedFlexBox->items.add(juce::FlexItem(*addSeedButton).withWidth(addLength).withHeight(buttonHeight));
+            item.associatedFlexBox->items.add(juce::FlexItem(*numSeedsSlider).withWidth(addLength).withHeight(buttonHeight));
+            item.maxHeight = buttonHeight;
+
+            // gItem.margin.left = margin;
+            // gItem.
+            // gItem. = &seedsBox;
+            // gItem.associatedFlexBox->items.add(juce::FlexItem(*addSeedButton).withWidth(addLength).withHeight(buttonHeight));
+            // gItem.associatedFlexBox->items.add(juce::FlexItem(*numSeedsSlider).withWidth(addLength).withHeight(buttonHeight));
+            // gItem.maxHeight = buttonHeight;
+
+            gItem.margin.left = 0;
+            gItem.height = buttonHeight;
+            gItem.width = addLength;
+            gItem.associatedComponent = addSeedButton.get();
+            break;
+        case HexagonAutomataComponent::Parameter::BornRule:
+            // item.margin.left = bornRuleLabelWidth;
+            item.associatedComponent = bornRuleInput.get();
+            item.maxWidth = textLength;
+
+            gItem.associatedComponent = bornRuleInput.get();
+            gItem.width = textLength;
+            gItem.maxWidth = textLength * 2;
+            break;
+        case HexagonAutomataComponent::Parameter::SurviveRule:
+            // item.margin.left = surviveRuleLabelWidth;
+            item.associatedComponent = suviveRuleInput.get();
+            item.maxWidth = textLength;
+
+            gItem.associatedComponent = suviveRuleInput.get();
+            gItem.width = textLength;
+            gItem.maxWidth = textLength * 2;
+            break;
+        case HexagonAutomataComponent::Parameter::NeighborDistance:
+            // item.margin.left = distanceLabelWidth;
+            item.associatedComponent = distanceSlider.get();
+            item.maxWidth = textLength;
+
+            gItem.associatedComponent = distanceSlider.get();
+            gItem.width = textLength * 2;
+            break;
+        }
+
+        controlsBox.items.add(item.withWidth(controlsWidth).withHeight(controlHeight));
+        controlsGrid.items.add(gItem);
+    }
+
+
+    // controlsBox.alignContent = juce::FlexBox::AlignContent::flexStart;
+    // controlsBox.items.add(juce::FlexItem(*genSpeedSlider).withWidth(controlsArea.getWidth() - genSpeedLabel->getRight() - margin).withHeight(controlHeight));
+    
+
+    // juce::FlexBox seedsBox(juce::FlexBox::JustifyContent::flexStart);
+    // // seedsBox.flexDirection = juce::FlexBox::Direction::column;
+    // seedsBox.items.add(juce::FlexItem(*addSeedButton).withWidth(addLength).withHeight(buttonHeight));
+    // seedsBox.items.add(juce::FlexItem(*numSeedsSlider).withWidth(addLength * 2).withHeight(buttonHeight));
+    // controlsBox.items.add(juce::FlexItem(seedsBox));
+
+    // controlsBox.items.add(juce::FlexItem(*bornRuleInput).withWidth(textLength).withHeight(controlHeight));
+    // controlsBox.items.add(juce::FlexItem(*suviveRuleInput).withWidth(textLength).withHeight(controlHeight));
+    // controlsBox.items.add(juce::FlexItem(*distanceSlider).withWidth(addLength * 2).withHeight(controlHeight));
+
+    auto controlBoxItem = juce::FlexItem(controlsWidth, flexArea.getHeight(), controlsBox);
+    controlBoxItem.margin.top = margin;
+    box.items.add(controlBoxItem);
+
+    // int colourSelectorsWidth = controlsArea.getWidth() - numSeedsSlider->getRight() - margin * 2;
+    int colourSelectorsWidth = flexArea.getWidth() - controlsWidth - margin;
+    int selectorWidth = colourSelectorsWidth / 2;
+
+    juce::FlexBox colourBoxes(juce::FlexBox::JustifyContent::spaceAround);
+    colourBoxes.items.add(juce::FlexItem(*aliveColourSelector).withWidth(selectorWidth).withAlignSelf(juce::FlexItem::AlignSelf::stretch));
+    colourBoxes.items.add(juce::FlexItem(*deadColourSelector).withWidth(selectorWidth).withAlignSelf(juce::FlexItem::AlignSelf::stretch));
+    box.items.add(juce::FlexItem(colourSelectorsWidth, flexArea.getHeight(), colourBoxes));
+
+    // box.performLayout(flexArea);
+
+    auto leftControlsArea = flexArea.withWidth(controlsWidth);
+    controlsGrid.performLayout(leftControlsArea);
+    numSeedsSlider->setBounds(addSeedButton->getRight() + margin, addSeedButton->getY(), addLength * 2, buttonHeight);
+    numSeedsSlider->setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxLeft, false, controlsWidth * 0.3f, buttonHeight);
+
+    distanceSlider->setTextBoxStyle(juce::Slider::TextEntryBoxPosition::TextBoxLeft, false, distanceSlider->getWidth() * 0.4f, distanceSlider->getHeight());
+
+
+    juce::Grid coloursGrid;
+    coloursGrid.items.add(juce::GridItem(aliveColourSelector.get()).withWidth(selectorWidth).withHeight(flexArea.getHeight()).withAlignSelf(juce::GridItem::AlignSelf::stretch));
+    coloursGrid.items.add(juce::GridItem(deadColourSelector.get()).withWidth(selectorWidth).withHeight(flexArea.getHeight()).withAlignSelf(juce::GridItem::AlignSelf::stretch));
+    coloursGrid.autoFlow = juce::Grid::AutoFlow::column;
+
+    coloursGrid.performLayout(flexArea.withLeft(leftControlsArea.getRight()).withWidth(flexArea.getWidth() - controlsWidth));
+    
+    // int speedSliderX = margin;
+    // genSpeedLabel->setBounds(speedSliderX, controlsArea.getY(), labelFont.getStringWidth(genSpeedLabel->getText() + "_"), controlHeight);
+    // genSpeedSlider->setBounds(genSpeedLabel->getRight() + labelMargin, controlsArea.getY(), controlsArea.getWidth() - genSpeedLabel->getRight() - margin, controlHeight);
+
+    // addSeedButton->setBounds(controlsArea.getX(), genSpeedSlider->getBottom() + margin, addLength, buttonHeight);
+
+    // bornRuleLabel->setBounds(controlLeft, numSeedsSlider->getBottom() + margin, labelFont.getStringWidth(bornRuleLabel->getText() + "_"), controlHeight);
+    // bornRuleInput->setBounds(bornRuleLabel->getRight() + labelMargin, numSeedsSlider->getBottom() + margin, textLength, controlHeight);
+
+    // surviveRuleLabel->setBounds(controlLeft /*bornRuleInput->getRight() + margin*/, bornRuleLabel->getBottom() + margin, labelFont.getStringWidth(surviveRuleLabel->getText()), controlHeight);
+    // suviveRuleInput->setBounds(surviveRuleLabel->getRight() + labelMargin, surviveRuleLabel->getY(), textLength, controlHeight);
+
+    // distanceLabel->setBounds(controlLeft, suviveRuleInput->getBottom() + margin, labelFont.getStringWidth(distanceLabel->getText() + "_"), controlHeight);
+    // distanceSlider->setBounds(distanceLabel->getRight() + labelMargin, distanceLabel->getY(), controlsArea.getWidth() * 0.15f, controlHeight);
+
+
+
+    // aliveColourLabel->setBounds(numSeedsSlider->getRight() + margin, addSeedButton->getY() + margin, selectorWidth, controlHeight);
+    // deadColourLabel->setBounds(aliveColourSelector->getRight() + margin, addSeedButton->getY() + margin, selectorWidth, controlHeight);
+
+
+    // aliveColourSelector->setBounds(numSeedsSlider->getRight() + margin, aliveColourLabel->getY() + margin, selectorWidth, selectorHeight);
+    // deadColourSelector->setBounds(aliveColourSelector->getRight() + margin, deadColourLabel->getY() + margin,  selectorWidth, selectorHeight);
 }
 
 void HexagonAutomataComponent::colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour)
 {
-    game->setAliveColour(newColour);
+    if (source == aliveColourSelector.get())
+        game->setAliveColour(newColour);
+
+    else if (source == deadColourSelector.get())
+        game->setDeadColour(newColour);
 }
 
 void HexagonAutomataComponent::onRulesChange()
 {
-    game->setBornSurviveRules(bornText->getText(), surviveText->getText());
+    game->setBornSurviveRules(bornRuleInput->getText(), suviveRuleInput->getText());
 }

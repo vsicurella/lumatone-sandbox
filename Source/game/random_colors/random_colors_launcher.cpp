@@ -15,48 +15,10 @@
 
 //==============================================================================
 RandomColorsComponent::RandomColorsComponent(LumatoneSandboxGameEngine* gameEngineIn)
-    : gameEngine(gameEngineIn)
+    : LumatoneSandboxGameComponent(gameEngineIn)
 {
     game = new RandomColors(gameEngine->getController());
-    auto gamePtr = dynamic_cast<LumatoneSandboxGameBase*>(game);
-    gameEngine->setGame(gamePtr);
-
-    toggleButton = std::make_unique<juce::TextButton>("Start", "Begin random colors");
-    toggleButton->setClickingTogglesState(true);
-    toggleButton->onClick = [&]
-    {
-        if (toggleButton->getToggleState())
-        {
-            gameEngine->startGame();
-            toggleButton->setButtonText("Stop");
-            toggleButton->setTooltip("Stop sending random colors");
-        }
-        else
-        {
-            gameEngine->endGame();
-            toggleButton->setButtonText("Start");
-            toggleButton->setTooltip("Begin random colors");
-        }
-    };
-    addAndMakeVisible(*toggleButton);
-
-    resetButton = std::make_unique<juce::TextButton>("Reset", "Reset to before random colors were sent");
-    resetButton->onClick = [&]
-    {
-        gameEngine->resetGame();
-        auto controller = gameEngine->getController();
-        auto layout = game->getLayoutBeforeStart();
-
-        for (int i = 0; i < controller->getNumBoards(); i++)
-        {
-            controller->performUndoableAction(
-                new LumatoneEditAction::SectionEditAction(controller, i, *layout.getBoard(i)), 
-                true, 
-                "Game Reset: " + game->getName());
-        }
-
-    };
-    addAndMakeVisible(*resetButton);
+    registerGameWithEngine(game);
 
     auto options = game->getOptions();
     speedSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
@@ -77,11 +39,6 @@ RandomColorsComponent::~RandomColorsComponent()
 {
     game = nullptr;
     gameEngine->endGame();
-
-    speedSlider = nullptr;
-
-    resetButton = nullptr;
-    toggleButton = nullptr;
 }
 
 void RandomColorsComponent::paint (juce::Graphics& g)
@@ -98,6 +55,8 @@ void RandomColorsComponent::paint (juce::Graphics& g)
 
 void RandomColorsComponent::resized()
 {
+    LumatoneSandboxGameComponent::resized();
+
     // This method is where you should set the bounds of any child
     // components that your component contains..
 
@@ -107,11 +66,6 @@ void RandomColorsComponent::resized()
 
     const int buttonPadding = 8;
 
-    auto buttonFont = toggleButton->getLookAndFeel().getTextButtonFont(*toggleButton, buttonHeight);
-    toggleButton->setBounds(margin, margin, buttonFont.getStringWidth("Start") + buttonPadding, buttonHeight);
-    
-    resetButton->setBounds(toggleButton->getRight() + buttonMargin, margin, buttonFont.getStringWidth("Reset") + buttonPadding, buttonHeight);
-
-    const int sliderWidth = proportionOfWidth(1.0f) - margin * 2;
-    speedSlider->setBounds(margin, toggleButton->getBottom() + buttonMargin, sliderWidth, buttonHeight);
+    const int sliderWidth = controlsArea.proportionOfWidth(1.0f) - margin * 2;
+    speedSlider->setBounds(margin, buttonMargin, sliderWidth, buttonHeight);
 }

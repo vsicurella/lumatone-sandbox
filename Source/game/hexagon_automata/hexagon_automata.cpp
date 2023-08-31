@@ -373,6 +373,21 @@ void HexagonAutomata::Game::setAliveColour(juce::Colour newColour)
     render->setColour(newColour);
 }
 
+juce::Colour HexagonAutomata::Game::getAliveColour() const
+{
+    return render->aliveColour;
+}
+
+void HexagonAutomata::Game::setDeadColour(juce::Colour newColour)
+{
+    render->setColour(render->aliveColour, newColour);
+}
+
+juce::Colour HexagonAutomata::Game::getDeadColour() const
+{
+    return render->deadColour;
+}
+
 void HexagonAutomata::Game::setBornSurviveRules(juce::Array<int> bornNums, juce::Array<int> surviveNums)
 {
     lock.enter();

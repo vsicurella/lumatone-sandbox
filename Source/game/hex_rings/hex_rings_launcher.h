@@ -10,23 +10,19 @@
 
 #pragma once
 #include "./hex_rings.h"
-#include "../game_engine.h"
+#include "../game_component.h"
 
-class HexRingLauncher : public juce::Component
+class HexRingLauncher : public LumatoneSandboxGameComponent
 {
 public:
     HexRingLauncher(LumatoneSandboxGameEngine* gameEngine);
     ~HexRingLauncher() override;
 
-    void paint(juce::Graphics&) override;
     void resized() override;
 
 private:
 
-    LumatoneSandboxGameEngine* gameEngine;
     HexRings* game;
-
-    std::unique_ptr<juce::TextButton> toggleButton;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HexRingLauncher)
 };
