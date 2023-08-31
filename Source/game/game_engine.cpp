@@ -28,9 +28,21 @@ LumatoneSandboxGameEngine::~LumatoneSandboxGameEngine()
     controller = nullptr;
 }
 
+const LumatoneSandboxGameBase* LumatoneSandboxGameEngine::getGameRunning() const
+{
+    if (gameIsRunning || gameIsPaused)
+        return game.get();
+    return nullptr;
+}
+
 double LumatoneSandboxGameEngine::getTimeIntervalMs() const
 {
     return 1000.0 / runGameFps;
+}
+
+double LumatoneSandboxGameEngine::getFps() const
+{
+    return runGameFps;
 }
 
 void LumatoneSandboxGameEngine::handleLumatoneMidi(LumatoneMidiState* midiState, const juce::MidiMessage& msg)
@@ -109,15 +121,10 @@ bool LumatoneSandboxGameEngine::endGame()
 
     gameIsRunning = false;
 
-    if (sentFirstGameMessage)
-    {
-        removeListener(game.get());
-        sentFirstGameMessage = false;
-    }
-    
     if (game != nullptr)
     {
         game->reset(true);
+        removeListener(game.get());
 
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameEnded);
 

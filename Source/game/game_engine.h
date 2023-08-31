@@ -48,8 +48,10 @@ public:
     bool endGame();
     void resetGame();
 
-    double getTimeIntervalMs() const;
+    const LumatoneSandboxGameBase* getGameRunning() const;
 
+    double getTimeIntervalMs() const;
+    double getFps() const;
     void forceFps(double fps);
 
     bool isGameRunning() const { return gameIsRunning; }
