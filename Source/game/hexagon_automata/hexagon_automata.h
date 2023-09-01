@@ -10,10 +10,12 @@ namespace HexagonAutomata
        float health;
        int age;
 
+       juce::Colour colour;
+
         HexState()
-            : health(0.0f), age(0) {}
-        HexState(float healthIn, int ageIn=0)
-            : health(healthIn), age(ageIn) {}
+            : health(0.0f), age(0), colour(juce::Colours::white) {}
+        HexState(float healthIn, int ageIn=0, juce::Colour colourIn=juce::Colours::white)
+            : health(healthIn), age(ageIn), colour(colourIn) {}
 
         void applyFactor(float lifeFactor) { health *= lifeFactor; }
         
@@ -23,7 +25,9 @@ namespace HexagonAutomata
         
         bool isEmpty() const { return health <= 0.0f && age == 0; }
 
-        void setBorn() { health = 1.0f; }
+        void setBorn() { health = 1.0f; age = 0; }
+
+        void setDead() { health = 0.0f; }
 
         void setEmpty() { health = 0.0f; age = 0; }
     };
@@ -201,12 +205,14 @@ namespace HexagonAutomata
                 oldColour, 1.0f, 1.0f, false);
         }
 
+        juce::Colour getAliveColour() const { return aliveColour; }
+
         virtual juce::Colour renderAliveColour(const MappedHexState& state)
         {
             if (state.HexState::isEmpty())
                 return emptyColour;
             if (state.isAlive())
-                return aliveColour;
+                return state.HexState::colour;
             return deadColour;
         }
 
@@ -219,10 +225,12 @@ namespace HexagonAutomata
                 return deadColour;
 
             auto ageFactor = (double)state.age / (double)maxAge;
-            auto colour = oldColour;
+            auto colour = state.HexState::colour;
 
-            if (ageFactor <= 1.0f)
-                colour = ageGradient.getColourAtPosition(ageFactor);
+            // if (ageFactor <= 1.0f)
+            //     colour = ageGradient.getColourAtPosition(ageFactor);
+
+
 
             healthGradient = juce::ColourGradient(deadColour, 0.0f, 0.0f,
                                                   colour, 1.0f, 1.0f, false);
@@ -239,6 +247,30 @@ namespace HexagonAutomata
             auto key = (MappedLumatoneKey)state;
             key.colour = renderCellColour(state);
             return key;
+        }
+
+        virtual juce::Colour renderNewbornColour(const juce::Array<MappedHexState>& parents)
+        {
+            if (parents.size() == 0)
+                return juce::Colours::white;
+                
+            float hue = 0;
+            float saturation = 0;
+            float value = 0;
+
+            float _hue;
+
+            for (auto cell : parents)
+            {
+                auto colour = cell.HexState::colour;
+
+                hue += colour.getHue();
+                saturation += colour.getSaturation();
+                value += colour.getBrightness();
+            }
+
+            return juce::Colour(hue - (int)hue, saturation / parents.size(), value / parents.size(), (juce::uint8)0xff);
+            // return parents[0].HexState::colour;
         }
     };
     

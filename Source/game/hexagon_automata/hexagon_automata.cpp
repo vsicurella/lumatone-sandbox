@@ -66,7 +66,7 @@ HexagonAutomata::Game::Game(LumatoneController* controller, const HexagonAutomat
 
 void HexagonAutomata::Game::initialize()
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
 
     if (rules.get() == nullptr)
     {
@@ -82,12 +82,12 @@ void HexagonAutomata::Game::initialize()
     if (render.get() == nullptr)
         render.reset(new Renderer);
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::redoCensus()
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
 
     populatedCells.clear();
 
@@ -101,12 +101,12 @@ void HexagonAutomata::Game::redoCensus()
         }
     }
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::reset(bool clearQueue)
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
 
     LumatoneSandboxGameBase::reset(clearQueue);
     resetState();
@@ -118,12 +118,12 @@ void HexagonAutomata::Game::reset(bool clearQueue)
 
     queueIdentityLayout(true);
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::resetState()
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
 
     populatedCells.clear();
     newCells.clear();
@@ -133,7 +133,7 @@ void HexagonAutomata::Game::resetState()
 
     HexagonAutomata::GameState::resetState();
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::nextTick()
@@ -166,7 +166,7 @@ void HexagonAutomata::Game::nextTick()
     ticks++;
     ticksToNextGeneration++;
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::pauseTick()
@@ -177,7 +177,7 @@ void HexagonAutomata::Game::pauseTick()
     agingCells = juce::Array<MappedHexState>(populatedCells);
     addToQueue(renderFrame());
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::setTicksPerGeneration(int ticks)
@@ -208,7 +208,7 @@ LumatoneAction* HexagonAutomata::Game::renderFrame()
     if (!hasUpdates)
         return nullptr;
 
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
 
     juce::Array<MappedLumatoneKey> keyUpdates;
     juce::Array<MappedHexState> populated;
@@ -271,14 +271,14 @@ LumatoneAction* HexagonAutomata::Game::renderFrame()
 
     // redoCensus();
 
-    lock.exit();
+    
 
     return new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, false);
 }
 
 void HexagonAutomata::Game::rerenderState()
 {
-	lock.enter();
+	auto l = juce::ScopedLock(lock);
 
     juce::Array<MappedHexState> savedBorn;
     savedBorn.swapWith(bornCells);
@@ -305,12 +305,12 @@ void HexagonAutomata::Game::rerenderState()
     agingCells.swapWith(savedAging);
     diedCells.swapWith(savedDied);
 
-	lock.exit();
+	
 }
 
 void HexagonAutomata::Game::addSeed(Hex::Point point)
 {
-	lock.enter();
+	auto l = juce::ScopedLock(lock);
 
     auto keyCoord = hexMap.hexToKeyCoords(point);
     HexState state(1.0f);
@@ -320,22 +320,24 @@ void HexagonAutomata::Game::addSeed(Hex::Point point)
         point
     );
 
+    newCell.HexState::colour = render->getAliveColour();
+
     newCells.add(newCell);
 
     // updatedCells.add(newCell);
-	lock.exit();
+	
 }
 
 void HexagonAutomata::Game::addSeeds(juce::Array<Hex::Point> seedCoords)
 {
-	lock.enter();
+	auto l = juce::ScopedLock(lock);
 
     for (auto point : seedCoords)
     {
         addSeed(point);
     }
 
-	lock.exit();
+	
 }
 
 void HexagonAutomata::Game::addSeeds(int numSeeds)
@@ -390,35 +392,35 @@ juce::Colour HexagonAutomata::Game::getDeadColour() const
 
 void HexagonAutomata::Game::setBornSurviveRules(juce::Array<int> bornNums, juce::Array<int> surviveNums)
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
 
     rules.reset(new BornSurviveRule(bornNums, surviveNums));
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::setBornSurviveRules(juce::String bornInput, juce::String surviveInput)
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
 
     rules.reset(new BornSurviveRule(bornInput, surviveInput));
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::setNeighborDistance(int distance)
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
 
     auto vector = rules->getNeighborsVector(distance);
     neighborsVector.swapWith(vector);
 
-    lock.exit();
+    
 }
 
 void HexagonAutomata::Game::updateNextGeneration()
 {
-	lock.enter();
+	auto l = juce::ScopedLock(lock);
 
     juce::Array<MappedHexState> emptyCells;
     juce::HashMap<juce::String, MappedHexState> emptyNeighbors;
@@ -472,6 +474,7 @@ void HexagonAutomata::Game::updateNextGeneration()
         if (rules->generateNewLife(cell, neighbors.getRawDataPointer(), neighbors.size()))
         {
             cell.setBorn();
+            cell.HexState::colour = render->renderNewbornColour(neighbors);
             bornCells.add(cell);
             // bool cellUpdated = false;
             // for (int u = 0; u < updatedCells.size(); u++)
@@ -518,12 +521,12 @@ void HexagonAutomata::Game::updateNextGeneration()
     //     }
     // }
 
-	lock.exit();
+	
 }
 
 void HexagonAutomata::Game::updateGenerationAge()
 {
-	lock.enter();
+	auto l = juce::ScopedLock(lock);
 
     for (int c = 0; c < populatedCells.size(); c++)
     // for (int i = 0; i < numCells; i++)
@@ -538,7 +541,7 @@ void HexagonAutomata::Game::updateGenerationAge()
         // }
     }
 
-	lock.exit();
+	
 }
 
 void HexagonAutomata::Game::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity)

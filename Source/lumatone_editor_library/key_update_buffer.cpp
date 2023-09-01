@@ -34,7 +34,7 @@ void LumatoneKeyUpdateBuffer::sendKeyColourConfig(int boardId, int keyIndex, juc
 
 void LumatoneKeyUpdateBuffer::updateKeyConfig(int boardIndex, int keyIndex, const LumatoneKey& config)
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
     // while (!lock.tryEnter()) {}
 
     auto keyNum = getKeyNum(boardIndex, keyIndex);
@@ -56,13 +56,13 @@ void LumatoneKeyUpdateBuffer::updateKeyConfig(int boardIndex, int keyIndex, cons
         keysToUpdate.set(keyNum, MappedLumatoneKey(config.withColour(currentUpdateData.colour), boardIndex, keyIndex));
     }
 
-    lock.exit();
+    
     startTimer(updateMs);
 }
 
 void LumatoneKeyUpdateBuffer::updateKeyColour(int boardIndex, int keyIndex, juce::Colour colour)
 {
-    lock.enter();
+    auto l = juce::ScopedLock(lock);
     // while (!lock.tryEnter()) {}
 
     auto keyNum = getKeyNum(boardIndex, keyIndex);
@@ -83,7 +83,7 @@ void LumatoneKeyUpdateBuffer::updateKeyColour(int boardIndex, int keyIndex, juce
         keysToUpdate.set(keyNum, MappedLumatoneKey(currentUpdateData.withColour(colour), boardIndex, keyIndex));
     }
 
-    lock.exit();
+    
     startTimer(updateMs);
 }
 
@@ -123,5 +123,5 @@ void LumatoneKeyUpdateBuffer::timerCallback()
         }
     }
 
-    lock.exit();
+    
 }
