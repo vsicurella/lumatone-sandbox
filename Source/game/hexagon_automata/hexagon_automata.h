@@ -258,7 +258,7 @@ namespace HexagonAutomata
 
         void setTicksPerGeneration(int ticks);
 
-        juce::UndoableAction* renderFrame() override;
+        LumatoneAction* renderFrame() override;
 
         void rerenderState();
 

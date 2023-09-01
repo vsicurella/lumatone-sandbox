@@ -38,7 +38,7 @@ public:
 
 private:
 
-    juce::UndoableAction* renderFrame() override;
+    LumatoneAction* renderFrame() override;
 
 private:
 

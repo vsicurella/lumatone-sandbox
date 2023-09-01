@@ -70,17 +70,23 @@ void LumatoneController::setMidiOutput(int deviceIndex, bool test)
         testCurrentDeviceConnection();
 }
 
-bool LumatoneController::performUndoableAction(juce::UndoableAction* undoableAction, bool newTransaction, juce::String actionName)
+bool LumatoneController::performAction(LumatoneAction* action, bool undoable, bool newTransaction)
 {
-    if (undoManager == nullptr || undoableAction == nullptr)
+    if (action == nullptr)
         return false;
 
-    if (newTransaction)
-        undoManager->beginNewTransaction();
+    if (undoable)
+    {
+        if (undoManager == nullptr)
+            return false;
 
-    undoManager->perform(undoableAction, actionName);
+        if (newTransaction)
+            undoManager->beginNewTransaction();
 
-    return true;
+        return undoManager->perform((juce::UndoableAction*)action, action->getName());
+    }
+
+    return action->perform();
 }
 
 void LumatoneController::refreshAvailableMidiDevices() 

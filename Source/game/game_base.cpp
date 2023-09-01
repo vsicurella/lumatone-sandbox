@@ -39,7 +39,7 @@ void LumatoneSandboxGameBase::clearQueue()
     queuePtr = 0;
 }
 
-void LumatoneSandboxGameBase::readQueue(juce::UndoableAction** buffer, int& numActions)
+void LumatoneSandboxGameBase::readQueue(LumatoneAction** buffer, int& numActions)
 {
     if (queueSize < 0)
     {
@@ -59,7 +59,7 @@ void LumatoneSandboxGameBase::readQueue(juce::UndoableAction** buffer, int& numA
     queueSize = 0;
 }
 
-void LumatoneSandboxGameBase::addToQueue(juce::UndoableAction* action)
+void LumatoneSandboxGameBase::addToQueue(LumatoneAction* action)
 {
     // jassert(action != nullptr);
     if (action == nullptr)

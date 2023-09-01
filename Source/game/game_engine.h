@@ -80,7 +80,7 @@ private:
 
     std::unique_ptr<LumatoneSandboxGameBase> game;
 
-    juce::UndoableAction* actionQueue[MAX_QUEUE_SIZE];
+    LumatoneAction* actionQueue[MAX_QUEUE_SIZE];
     int numActions = 0;
 
     double defaultFps = 30;

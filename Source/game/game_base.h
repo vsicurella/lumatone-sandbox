@@ -9,7 +9,10 @@
 */
 
 #pragma once
+
 #include "../lumatone_editor_library/actions/edit_actions.h"
+
+#include "../lumatone_editor_library/LumatoneController.h"
 
 class KeyColorConstrainer
 {
@@ -46,7 +49,7 @@ public:
     virtual void pauseTick() { }
 
     virtual void clearQueue();
-    void readQueue(juce::UndoableAction** buffer, int& numActions);
+    void readQueue(LumatoneAction** buffer, int& numActions);
 
     virtual double getLockedFps() const { return 0; }
 
@@ -62,12 +65,12 @@ protected:
 
     LumatoneLayout layoutBeforeStart;
 
-    virtual void addToQueue(juce::UndoableAction* action);
-    virtual juce::UndoableAction* renderFrame() = 0;
+    virtual void addToQueue(LumatoneAction* action);
+    virtual LumatoneAction* renderFrame() = 0;
 
     //juce::OwnedArray<juce::UndoableAction, juce::CriticalSection> queuedActions;
 
-    juce::UndoableAction* queuedActions[MAX_QUEUE_SIZE];
+    LumatoneAction* queuedActions[MAX_QUEUE_SIZE];
     int queueSize = 0;
     int queuePtr = 0;
 

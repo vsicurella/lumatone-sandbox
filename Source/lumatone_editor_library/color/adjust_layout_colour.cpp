@@ -398,14 +398,14 @@ void AdjustLayoutColour::resetChanges()
 
 void AdjustLayoutColour::sendSelectionUpdate(const juce::Array<MappedLumatoneKey>& keyUpdates, bool bufferUpdates)
 {
-    auto updateAction = new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, bufferUpdates);
-    controller->performUndoableAction(updateAction);
+    auto updateAction = new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, false, true, bufferUpdates);
+    controller->performAction(updateAction);
     }
 
 void AdjustLayoutColour::sendMappingUpdate(const LumatoneLayout& updatedLayout, bool bufferUpdates)
 {
     for (int i = 0; i < controller->getNumBoards(); i++)
-        controller->performUndoableAction(new LumatoneEditAction::SectionEditAction(controller, i, *updatedLayout.readBoard(i), bufferUpdates), i == 0, "AdjustLayoutColour");
+        controller->performAction(new LumatoneEditAction::SectionEditAction(controller, i, *updatedLayout.readBoard(i), bufferUpdates), true, i == 0);
 }
 
 // juce::Colour AdjustLayoutColour::inverseSRGB(juce::Colour rgb)

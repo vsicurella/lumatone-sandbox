@@ -184,7 +184,7 @@ void LumatoneSandboxGameEngine::timerCallback()
     int queueSize = numActions;
     for (int i = 0; i < queueSize; i++)
     {
-        controller->performUndoableAction(actionQueue[i], true, title);
+        controller->performAction(actionQueue[i], false);
         actionQueue[i] = nullptr;
         numActions--;
     }

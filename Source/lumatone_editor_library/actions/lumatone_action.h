@@ -9,28 +9,26 @@
 */
 
 #pragma once
-#include "../LumatoneController.h"
 
+#include <JuceHeader.h>
+
+class LumatoneController;
 class LumatoneAction : public juce::UndoableAction
 {
 public:
 
-    LumatoneAction(LumatoneController* controllerIn)
-    {
-        if (controllerIn)
-        {
-            controller = controllerIn;
-            octaveBoardSize = controller->getOctaveBoardSize();
-            numOctaveBoards = controller->getNumBoards();
-        }
-    }
+    LumatoneAction(LumatoneController* controllerIn, juce::String nameIn);
 
     virtual bool perform() = 0;
     virtual bool undo() = 0;
 
     int getSizeInUnits() override = 0;
 
+    juce::String getName() const { return name; }
+
 protected:
+
+    juce::String name;
 
     LumatoneController* controller = nullptr;
 

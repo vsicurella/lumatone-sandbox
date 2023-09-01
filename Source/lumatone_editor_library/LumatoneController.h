@@ -13,6 +13,7 @@
 #include "./EditorEmitter.h"
 #include "./data/lumatone_layout.h"
 #include "./data/lumatone_state.h"
+#include "./actions/lumatone_action.h"
 
 #include "key_update_buffer.h"
 #include "LumatoneEventManager.h"
@@ -51,7 +52,7 @@ public:
 
 public:
 
-    bool performUndoableAction(juce::UndoableAction* undoableAction, bool newTransaction = true, juce::String actionName=juce::String());
+    bool performAction(LumatoneAction* action, bool undoable = true, bool newTransaction = true);
 
 private:
     bool connectionConfirmed() const { return midiDriver.hasDevicesDefined() && currentDevicePairConfirmed; }

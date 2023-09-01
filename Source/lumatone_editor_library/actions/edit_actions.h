@@ -10,6 +10,7 @@
 
 #pragma once
 #include "./lumatone_action.h"
+#include "../data/lumatone_layout.h"
 
 namespace LumatoneEditAction {
 
@@ -32,7 +33,7 @@ namespace LumatoneEditAction {
             bool newCCFaderDefault = true);
 
         SingleNoteAssignAction(const SingleNoteAssignAction& second)
-            : LumatoneAction(second.controller)
+            : LumatoneAction(second.controller, "SingleNoteAssign")
             , boardId(second.boardId)
             , keyIndex(second.keyIndex)
             , setKeyType(second.setKeyType)
@@ -78,7 +79,7 @@ namespace LumatoneEditAction {
         SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates=false);
 
         SectionEditAction(const SectionEditAction& second)
-            : LumatoneAction(second.controller)
+            : LumatoneAction(second.controller, "SectionEditAction")
             , boardId(second.boardId)
             , previousData(second.previousData)
             , newData(second.newData)
@@ -103,11 +104,13 @@ namespace LumatoneEditAction {
     class MultiKeyAssignAction : public LumatoneAction
     {
     public:
-        MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys, bool bufferKeyUpdates=false);
+        MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys, bool setConfig=true, bool setColour=true, bool bufferKeyUpdates=false);
         MultiKeyAssignAction(const MultiKeyAssignAction& copy)
-            : LumatoneAction(copy.controller)
+            : LumatoneAction(copy.controller, "MultiKeyAssign")
 			, previousKeys(copy.previousKeys)
             , newData(copy.newData)
+            , setConfig(copy.setConfig)
+            , setColours(copy.setColours)
             , useKeyBuffer(copy.useKeyBuffer)
         {}
 
@@ -122,6 +125,8 @@ namespace LumatoneEditAction {
 		void applyMappedKeyData(const juce::Array<MappedLumatoneKey>& newKeys, const juce::Array<MappedLumatoneKey>& oldKeys);
 
 	private:
+        bool setConfig = true;
+        bool setColours = true;
         bool useKeyBuffer = false;
 
 		juce::Array<MappedLumatoneKey> previousKeys;
@@ -134,7 +139,7 @@ namespace LumatoneEditAction {
         InvertFootControllerEditAction(LumatoneController* controller, bool newValue);
 
         InvertFootControllerEditAction(const InvertFootControllerEditAction& second)
-            : LumatoneAction(second.controller)
+            : LumatoneAction(second.controller, "InvertFootControllerEdit")
             , previousData(second.previousData)
             , newData(second.newData)
         {}
@@ -154,7 +159,7 @@ namespace LumatoneEditAction {
         ExprPedalSensivityEditAction(LumatoneController* controller, int newValue);
 
         ExprPedalSensivityEditAction(const ExprPedalSensivityEditAction& second)
-            : LumatoneAction(second.controller)
+            : LumatoneAction(second.controller, "ExprPedalSensitivityEdit")
             , previousData(second.previousData)
             , newData(second.newData)
         {}
@@ -174,7 +179,7 @@ namespace LumatoneEditAction {
         InvertSustainEditAction(LumatoneController* controller, bool newValue);
         
         InvertSustainEditAction(const InvertSustainEditAction& second)
-            : LumatoneAction(second.controller)
+            : LumatoneAction(second.controller, "InvertSustainEdit")
             , previousData(second.previousData)
             , newData(second.newData)
         {}

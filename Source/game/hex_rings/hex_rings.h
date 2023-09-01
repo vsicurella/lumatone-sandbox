@@ -38,7 +38,7 @@ public:
     void nextTick() override;
 
 protected:
-    juce::UndoableAction* renderFrame() override;
+    LumatoneAction* renderFrame() override;
 
 public:
 

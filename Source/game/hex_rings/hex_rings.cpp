@@ -31,7 +31,7 @@ void HexRings::nextTick()
     }
 }
 
-juce::UndoableAction* HexRings::renderFrame()
+LumatoneAction* HexRings::renderFrame()
 {
     if (frameQueue.size() > 0)
     {

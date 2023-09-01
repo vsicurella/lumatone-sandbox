@@ -9,6 +9,8 @@
 */
 #include "edit_actions.h"
 
+#include "../LumatoneController.h"
+
 using namespace LumatoneEditAction;
 
 // ==============================================================================
@@ -27,7 +29,7 @@ SingleNoteAssignAction::SingleNoteAssignAction(
     int newNoteNumber, 
     juce::Colour newColour,
     bool newCCFaderIsDefault)
-    : LumatoneAction(controller)
+    : LumatoneAction(controller, "SingleNoteAssign")
     , boardId(boardIndexIn + 1), keyIndex(keyIndexIn)
     , setKeyType(setKeyType), setChannel(setChannel), setNote(setNote), setColour(setColour), setCCFaderPolarity(setCCPolarity)
     , newData(newKeyType, newChannelNumber, newNoteNumber, newColour, newCCFaderIsDefault)
@@ -171,7 +173,7 @@ bool SingleNoteAssignAction::undo()
 // Implementation of SectionEditAction
 
 SectionEditAction::SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates)
-    : LumatoneAction(controller)
+    : LumatoneAction(controller, "SectionEdit")
     , boardId(boardIndexIn + 1)
     , newData(newSectionValue)
     , useKeyBuffer(bufferKeyUpdates)
@@ -220,9 +222,11 @@ bool SectionEditAction::undo()
 }
 
 
-MultiKeyAssignAction::MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys, bool bufferKeyUpdates)
-    : LumatoneAction(controller)
+MultiKeyAssignAction::MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys, bool setConfigIn, bool setColourIn, bool bufferKeyUpdates)
+    : LumatoneAction(controller, "MultiKeyAssign")
     , useKeyBuffer(bufferKeyUpdates)
+    , setConfig(setConfigIn)
+    , setColours(setColourIn)
 {
     for (auto updatedKey : updatedKeys)
     {
@@ -244,8 +248,11 @@ bool MultiKeyAssignAction::isValid() const
 
 void MultiKeyAssignAction::applyMappedKeyData(const juce::Array<MappedLumatoneKey>& newKeys, const juce::Array<MappedLumatoneKey>& oldKeys)
 {
-    controller->sendSelectionParam(newKeys, false, useKeyBuffer);
-    controller->sendSelectionColours(newKeys, true, useKeyBuffer);
+    if (setConfig)
+        controller->sendSelectionParam(newKeys, false, useKeyBuffer);
+        
+    if (setColours)
+        controller->sendSelectionColours(newKeys, true, useKeyBuffer);
 }
 
 bool MultiKeyAssignAction::perform()
@@ -264,7 +271,7 @@ bool MultiKeyAssignAction::undo()
 // Implementation of InvertFootControllerEditAction
 
 InvertFootControllerEditAction::InvertFootControllerEditAction(LumatoneController* controller, bool newValue)
-    : LumatoneAction(controller), newData(newValue)
+    : LumatoneAction(controller, "InvertFootControllerEdit"), newData(newValue)
 {
     previousData = controller->getInvertExpression();
 }
@@ -285,7 +292,7 @@ bool InvertFootControllerEditAction::undo()
 // Implementation of ExprPedalSensivityEditAction
 
 ExprPedalSensivityEditAction::ExprPedalSensivityEditAction(LumatoneController* controller, int newValue)
-    : LumatoneAction(controller), newData(newValue)
+    : LumatoneAction(controller, "ExprPedlSensitivity"), newData(newValue)
 {
     previousData = controller->getExpressionSensitivity();
 }
@@ -306,7 +313,7 @@ bool ExprPedalSensivityEditAction::undo()
 // Implementation of InvertSustainEditAction
 
 InvertSustainEditAction::InvertSustainEditAction(LumatoneController* controller, bool newValue)
-    : LumatoneAction(controller), newData(newValue)
+    : LumatoneAction(controller, "InvertSustainEdit"), newData(newValue)
 {
     previousData = controller->getInvertSustain();
 }

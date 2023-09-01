@@ -202,7 +202,7 @@ bool HexagonAutomata::Game::applyUpdatedCell(const HexagonAutomata::MappedHexSta
     return false;
 }
 
-juce::UndoableAction* HexagonAutomata::Game::renderFrame()
+LumatoneAction* HexagonAutomata::Game::renderFrame()
 {
     bool hasUpdates = bornCells.size() > 0 || agingCells.size() > 0 || newCells.size() > 0 || diedCells.size() > 0;
     if (!hasUpdates)
@@ -273,7 +273,7 @@ juce::UndoableAction* HexagonAutomata::Game::renderFrame()
 
     lock.exit();
 
-    return new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates);
+    return new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, false);
 }
 
 void HexagonAutomata::Game::rerenderState()

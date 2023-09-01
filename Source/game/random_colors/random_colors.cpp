@@ -44,7 +44,7 @@ void RandomColors::nextTick()
     addToQueue(renderFrame());
 }
 
-juce::UndoableAction* RandomColors::renderFrame()
+LumatoneAction* RandomColors::renderFrame()
 {
     int boardIndex = random.nextInt(5);
     int keyIndex = random.nextInt(56);
@@ -59,7 +59,7 @@ juce::UndoableAction* RandomColors::renderFrame()
         colour = keyColorConstrainer->validColour(colour, boardIndex, keyIndex);
 
     auto action = new LumatoneEditAction::SingleNoteAssignAction(controller, boardIndex, keyIndex, colour);
-    return dynamic_cast<juce::UndoableAction*>(action);
+    return action;
 }
 
 void RandomColors::setOptions(RandomColors::Options newOptions)
