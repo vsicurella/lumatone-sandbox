@@ -12,15 +12,14 @@
 //#include "Main.h"
 
 
-DeviceActivityMonitor::DeviceActivityMonitor(TerpstraMidiDriver* midiDriverIn, LumatoneController* controllerIn)
-    :   LumatoneState(*controllerIn),
+DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneState stateIn)
+    :   LumatoneState(stateIn),
         midiDriver(midiDriverIn), 
-        controller(controllerIn),
         readQueueSize(0)
 {
-    detectDevicesIfDisconnected = controller->getBoolProperty(LumatoneEditorProperty::DetectDeviceIfDisconnected, true);
-    checkConnectionOnInactivity = controller->getBoolProperty(LumatoneEditorProperty::CheckConnectionIfInactive, true);
-    responseTimeoutMs = controller->getIntProperty(LumatoneEditorProperty::DetectDevicesTimeout, detectRoutineTimeoutMs);
+    detectDevicesIfDisconnected = getBoolProperty(LumatoneEditorProperty::DetectDeviceIfDisconnected, true);
+    checkConnectionOnInactivity = getBoolProperty(LumatoneEditorProperty::CheckConnectionIfInactive, true);
+    responseTimeoutMs = getIntProperty(LumatoneEditorProperty::DetectDevicesTimeout, detectRoutineTimeoutMs);
 
 //    midiDriver->addListener(this);
     reset(readBlockSize);
@@ -87,18 +86,18 @@ void DeviceActivityMonitor::pingAllDevices()
 
 bool DeviceActivityMonitor::testLastConnectedDevice()
 {
-    juce::String inputId = controller->getStringProperty(LumatoneEditorProperty::LastInputDeviceId);
+    juce::String inputId = getStringProperty(LumatoneEditorProperty::LastInputDeviceId);
     if (inputId.length() <= 0)
         return false;
 
-    int inputIndex = midiDriver->getIndexOfInputDevice(inputId);
+    int inputIndex = midiDriver->findIndexOfInputDevice(inputId);
     if (inputIndex >= 0)
     {
-        juce::String outputId = controller->getStringProperty(LumatoneEditorProperty::LastOutputDeviceId);
+        juce::String outputId = getStringProperty(LumatoneEditorProperty::LastOutputDeviceId);
         if (outputId.length() <= 0)
             return false;
         
-        int outputIndex = midiDriver->getIndexOfOutputDevice(outputId);
+        int outputIndex = midiDriver->findIndexOfOutputDevice(outputId);
         if (outputIndex >= 0)
         {
             deviceDetectInProgress = true;
@@ -160,6 +159,9 @@ void DeviceActivityMonitor::testNextOutput()
 
 void DeviceActivityMonitor::initializeDeviceDetection()
 {
+    if (JUCE_STANDALONE_APPLICATION)
+        return;
+        
     // Belongs somewhere else?
     if (!midiDriver->hasDevicesDefined())
     {
@@ -200,7 +202,16 @@ void DeviceActivityMonitor::stopMonitoringDevice()
 
 bool DeviceActivityMonitor::initializeConnectionTest()
 {    
-    controller->testCurrentDeviceConnection();
+    if (getSerialNumber().isNotEmpty() && getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_9)
+    {
+        midiDriver->ping(0xf);
+    }
+
+    else
+    {
+        midiDriver->sendGetSerialIdentityRequest();
+    }
+
     waitingForResponse = true;
     startTimer(inactivityTimeoutMs);
     return true;
@@ -527,7 +538,7 @@ void DeviceActivityMonitor::handleMessageQueue(const juce::MidiBuffer& readBuffe
 }
 
 //=========================================================================
-// TerpstraMidiDriver::Listener Implementation
+// LumatoneFirmwareDriver::Listener Implementation
 
 void DeviceActivityMonitor::midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& msg)
 {
@@ -544,7 +555,7 @@ void DeviceActivityMonitor::midiMessageReceived(juce::MidiInput* source, const j
     readQueueSize.store(size + 1);
 }
 
-void DeviceActivityMonitor::noAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage)
+void DeviceActivityMonitor::noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage)
 {
     stopTimer();
     
@@ -579,8 +590,8 @@ void DeviceActivityMonitor::setConnectedDevices(int inputDeviceIndex, int output
 
         deviceConnectionMode = DetectConnectionMode::confirmingDevice;
 
-        controller->setMidiInput(inputDeviceIndex, false);
-        controller->setMidiOutput(outputDeviceIndex);
+        // controller->setMidiInput(inputDeviceIndex, false);
+        // controller->setMidiOutput(outputDeviceIndex);
     }
 }
 
@@ -628,10 +639,10 @@ void DeviceActivityMonitor::connectionEstablished(int inputIndex, int outputInde
         stopTimer();
     }
 
-    auto inputDevice = midiDriver->getMidiInputList()[confirmedInputIndex];
-    auto outputDevice = midiDriver->getMidiOutputList()[confirmedOutputIndex];
+    // auto inputDevice = midiDriver->getMidiInputList()[confirmedInputIndex];
+    // auto outputDevice = midiDriver->getMidiOutputList()[confirmedOutputIndex];
 
-    statusListeners.call(&LumatoneEditor::StatusListener::connectionEstablished, inputDevice.identifier, outputDevice.identifier);
+    statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::ONLINE);
 }
 
 void DeviceActivityMonitor::connectionLost()
@@ -649,5 +660,5 @@ void DeviceActivityMonitor::connectionLost()
         stopTimer();
     }
 
-    statusListeners.call(&LumatoneEditor::StatusListener::connectionLost);
+    statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::DISCONNECTED);
 }

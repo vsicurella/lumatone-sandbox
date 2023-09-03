@@ -11,44 +11,49 @@
 #include "LumatoneController.h"
 
 
-LumatoneController::LumatoneController(juce::ValueTree state, TerpstraMidiDriver& midiDriverIn, juce::UndoManager* undoManager)
+LumatoneController::LumatoneController(juce::ValueTree state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager)
     : LumatoneState(state, undoManager)
-    , midiDriver(midiDriverIn)
-    , updateBuffer(midiDriver, state)
+    , firmwareDriver(firmwareDriverIn)
+    , updateBuffer(firmwareDriverIn, state)
     , readQueueSize(0)
 {
     reset(bufferReadSize);
-    midiDriver.addMessageCollector(this);
+    firmwareDriver.addMessageCollector(this);
     
-    eventManager = std::make_unique<LumatoneEventManager>(midiDriver, *this);
+    eventManager = std::make_unique<LumatoneEventManager>(firmwareDriver, *this);
     eventManager->addFirmwareListener(this);
 }
 
 LumatoneController::~LumatoneController()
 {
-    midiDriver.removeMessageCollector(this);
+    firmwareDriver.removeMessageCollector(this);
 }
 
-void LumatoneController::connectionFailed()
+void LumatoneController::connectionStateChanged(ConnectionState newState)
 {
-    statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
+    statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, newState);
 }
 
-void LumatoneController::connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId)
-{
-    statusListeners.call(&LumatoneEditor::StatusListener::connectionEstablished, inputDeviceId, outputDeviceId);
-}
+// void LumatoneController::connectionFailed()
+// {
+//     statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
+// }
 
-void LumatoneController::connectionLost()
-{
-    statusListeners.call(&LumatoneEditor::StatusListener::connectionLost);
-}
+// void LumatoneController::connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId)
+// {
+//     statusListeners.call(&LumatoneEditor::StatusListener::connectionEstablished, inputDeviceId, outputDeviceId);
+// }
+
+// void LumatoneController::connectionLost()
+// {
+//     statusListeners.call(&LumatoneEditor::StatusListener::connectionLost);
+// }
 
 void LumatoneController::setMidiInput(int deviceIndex, bool test)
 {
-    const bool changed = midiDriver.getMidiInputIndex() != deviceIndex;
+    const bool changed = firmwareDriver.getMidiInputIndex() != deviceIndex;
 
-    midiDriver.setMidiInput(deviceIndex);
+    firmwareDriver.setMidiInput(deviceIndex);
 
     if (changed)
         currentDevicePairConfirmed = false;
@@ -59,9 +64,9 @@ void LumatoneController::setMidiInput(int deviceIndex, bool test)
 
 void LumatoneController::setMidiOutput(int deviceIndex, bool test)
 {
-    const bool changed = midiDriver.getMidiOutputIndex() != deviceIndex;
+    const bool changed = firmwareDriver.getMidiOutputIndex() != deviceIndex;
 
-    midiDriver.setMidiOutput(deviceIndex);
+    firmwareDriver.setMidiOutput(deviceIndex);
 
     if (changed)
         currentDevicePairConfirmed = false;
@@ -89,12 +94,6 @@ bool LumatoneController::performAction(LumatoneAction* action, bool undoable, bo
     return action->perform();
 }
 
-void LumatoneController::refreshAvailableMidiDevices() 
-{ 
-    if (midiDriver.refreshDeviceLists() && midiDriver.testIsIncomplete())
-        midiDriver.openAvailableDevicesForTesting();
-}
-
 void LumatoneController::midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage)
 {
     if (midiMessage.isSysEx())
@@ -103,14 +102,14 @@ void LumatoneController::midiMessageReceived(juce::MidiInput* source, const juce
     }
 }
 
-void LumatoneController::noAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage)
+void LumatoneController::noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage)
 {
     if (midiMessage.isSysEx())
     {
-        if (currentDevicePairConfirmed)
-            statusListeners.call(&LumatoneEditor::StatusListener::connectionLost);
-        else
-            statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
+        // if (currentDevicePairConfirmed)
+        //     statusListeners.call(&LumatoneEditor::StatusListener::connectionLost);
+        // else
+        //     statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
     }
 }
 
@@ -183,9 +182,9 @@ void LumatoneController::resetVelocityConfig(LumatoneConfigTable::TableType velo
 
 unsigned int LumatoneController::sendTestMessageToDevice(int deviceIndex, unsigned int pingId)
 {
-    if (!midiDriver.testIsIncomplete())
+    if (!firmwareDriver.testIsIncomplete())
     {
-        midiDriver.openAvailableDevicesForTesting();
+        firmwareDriver.openAvailableDevicesForTesting();
     }
 
     int value = (pingId < 0)
@@ -194,11 +193,11 @@ unsigned int LumatoneController::sendTestMessageToDevice(int deviceIndex, unsign
 
     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_9)
     {
-        midiDriver.ping(value, deviceIndex);
+        firmwareDriver.ping(value, deviceIndex);
     }
     else
     {
-        midiDriver.sendGetSerialIdentityRequest(deviceIndex);
+        firmwareDriver.sendGetSerialIdentityRequest(deviceIndex);
     }
 
     lastTestDeviceSent = deviceIndex;
@@ -210,7 +209,7 @@ unsigned int LumatoneController::sendTestMessageToDevice(int deviceIndex, unsign
 void LumatoneController::testCurrentDeviceConnection()
 {
     // On confirmed connection send connection listener message
-    if (midiDriver.hasDevicesDefined())
+    if (firmwareDriver.hasDevicesDefined())
     {
         waitingForTestResponse = true;
 
@@ -291,12 +290,12 @@ void LumatoneController::sendTableConfig(LumatoneConfigTable::TableType velocity
 // Send note, channel, cc, and fader polarity data
 void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& keyData, bool signalEditorListeners, bool bufferKeyUpdates)
 {
-    // midiDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
+    // firmwareDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
 
     if (bufferKeyUpdates)
         updateBuffer.sendKeyConfig(boardId, keyIndex, keyData);
     else
-        midiDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
+        firmwareDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
 
     *getEditKey(boardId - 1, keyIndex) = keyData;
     
@@ -307,18 +306,18 @@ void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const Lumatone
 void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners, bool bufferKeyUpdates)
 {
     // if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
-    //     midiDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
+    //     firmwareDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
     // else
-    //     midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+    //     firmwareDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
 
     if (bufferKeyUpdates)
         updateBuffer.sendKeyColourConfig(boardId, keyIndex, colour);
     else
     {
         if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
-            midiDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
+            firmwareDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
         else
-            midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
+            firmwareDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
     }
 
     getEditKey(boardId - 1, keyIndex)->colour = colour;
@@ -337,7 +336,7 @@ void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, const Lu
 void LumatoneController::sendExpressionPedalSensivity(unsigned char value)
 {
     setExpressionSensitivity(value);
-    midiDriver.sendExpressionPedalSensivity(value); 
+    firmwareDriver.sendExpressionPedalSensivity(value); 
     editorListeners.call(&LumatoneEditor::EditorListener::expressionPedalSensitivityChanged, value);
 }
 
@@ -345,7 +344,7 @@ void LumatoneController::sendExpressionPedalSensivity(unsigned char value)
 void LumatoneController::sendInvertFootController(bool value)
 {
     setInvertExpression(value);
-    midiDriver.sendInvertFootController(value);
+    firmwareDriver.sendInvertFootController(value);
     editorListeners.call(&LumatoneEditor::EditorListener::invertFootControllerChanged, value);
 }
 
@@ -354,9 +353,9 @@ void LumatoneController::sendMacroButtonActiveColour(juce::String colourAsString
 {
     auto c = juce::Colour::fromString(colourAsString);
     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
-        midiDriver.sendMacroButtonActiveColour(c.getRed(), c.getGreen(), c.getBlue());
+        firmwareDriver.sendMacroButtonActiveColour(c.getRed(), c.getGreen(), c.getBlue());
     else
-        midiDriver.sendMacroButtonActiveColour_Version_1_0_0(c.getRed(), c.getGreen(), c.getBlue());
+        firmwareDriver.sendMacroButtonActiveColour_Version_1_0_0(c.getRed(), c.getGreen(), c.getBlue());
     editorListeners.call(&LumatoneEditor::EditorListener::macroButtonActiveColourChagned, c);
 }
 
@@ -365,178 +364,178 @@ void LumatoneController::sendMacroButtonInactiveColour(juce::String colourAsStri
 {
     auto c = juce::Colour::fromString(colourAsString);
     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
-        midiDriver.sendMacroButtonInactiveColour(c.getRed(), c.getGreen(), c.getBlue());
+        firmwareDriver.sendMacroButtonInactiveColour(c.getRed(), c.getGreen(), c.getBlue());
     else
-        midiDriver.sendMacroButtonInactiveColour_Version_1_0_0(c.getRed(), c.getGreen(), c.getBlue());
+        firmwareDriver.sendMacroButtonInactiveColour_Version_1_0_0(c.getRed(), c.getGreen(), c.getBlue());
     editorListeners.call(&LumatoneEditor::EditorListener::macroButtonInactiveColourChanged, c);
 }
 
 // Send parametrization of light on keystrokes
 void LumatoneController::sendLightOnKeyStrokes(bool value)
 {
-    midiDriver.sendLightOnKeyStrokes(value);
+    firmwareDriver.sendLightOnKeyStrokes(value);
     editorListeners.call(&LumatoneEditor::EditorListener::lightOnKeyStrokesChanged, value);
 }
 
 // Send a value for a velocity lookup table
 void LumatoneController::sendVelocityConfig(const juce::uint8 velocityTable[])
 {
-    midiDriver.sendVelocityConfig(velocityTable);
+    firmwareDriver.sendVelocityConfig(velocityTable);
     editorListeners.call(&LumatoneEditor::EditorListener::tableChanged, LumatoneConfigTable::TableType::velocityInterval, velocityTable, VELOCITYINTERVALTABLESIZE);
 }
 
 // Save velocity config to EEPROM
 void LumatoneController::saveVelocityConfig()
 {
-    midiDriver.saveVelocityConfig();
+    firmwareDriver.saveVelocityConfig();
 }
 
 void LumatoneController::resetVelocityConfig()
 {
-    midiDriver.resetVelocityConfig();
+    firmwareDriver.resetVelocityConfig();
 }
 
 void LumatoneController::setFaderConfig(const juce::uint8 faderTable[])
 {
-    midiDriver.sendFaderConfig(faderTable);
+    firmwareDriver.sendFaderConfig(faderTable);
     editorListeners.call(&LumatoneEditor::EditorListener::tableChanged, LumatoneConfigTable::TableType::fader, faderTable, VELOCITYINTERVALTABLESIZE);
 }
 
 void LumatoneController::resetFaderConfig()
 {
-    midiDriver.resetFaderConfig();
+    firmwareDriver.resetFaderConfig();
 }
 
 void LumatoneController::setAftertouchEnabled(bool value)
 {
-    midiDriver.sendAfterTouchActivation(value);
+    firmwareDriver.sendAfterTouchActivation(value);
 }
 
 void LumatoneController::startCalibrateAftertouch()
 {
-    midiDriver.sendCalibrateAfterTouch();
+    firmwareDriver.sendCalibrateAfterTouch();
 }
 
 void LumatoneController::setAftertouchConfig(const juce::uint8 aftertouchTable[])
 {
-    midiDriver.sendAftertouchConfig(aftertouchTable);
+    firmwareDriver.sendAftertouchConfig(aftertouchTable);
     editorListeners.call(&LumatoneEditor::EditorListener::tableChanged, LumatoneConfigTable::TableType::afterTouch, aftertouchTable, VELOCITYINTERVALTABLESIZE);
 }
 
 void LumatoneController::resetAftertouchConfig()
 {
-    midiDriver.resetAftertouchConfig();
+    firmwareDriver.resetAftertouchConfig();
 }
 
 void LumatoneController::setVelocityIntervalConfig(const int velocityIntervalTable[])
 {
-    midiDriver.sendVelocityIntervalConfig(velocityIntervalTable);
+    firmwareDriver.sendVelocityIntervalConfig(velocityIntervalTable);
 }
 
 void LumatoneController::getRedLEDConfig(int boardIndex)
 {
-    midiDriver.sendRedLEDConfigRequest(boardIndex);
+    firmwareDriver.sendRedLEDConfigRequest(boardIndex);
 }
 
 void LumatoneController::getGreenLEDConfig(int boardIndex)
 {
-    midiDriver.sendGreenLEDConfigRequest(boardIndex);
+    firmwareDriver.sendGreenLEDConfigRequest(boardIndex);
 }
 
 void LumatoneController::getBlueLEDConfig(int boardIndex)
 {
-    midiDriver.sendBlueLEDConfigRequest(boardIndex);
+    firmwareDriver.sendBlueLEDConfigRequest(boardIndex);
 }
 
 void LumatoneController::getChannelConfig(int boardIndex)
 {
-    midiDriver.sendChannelConfigRequest(boardIndex);
+    firmwareDriver.sendChannelConfigRequest(boardIndex);
 }
 
 void LumatoneController::getNoteConfig(int boardIndex)
 {
-    midiDriver.sendNoteConfigRequest(boardIndex);
+    firmwareDriver.sendNoteConfigRequest(boardIndex);
 }
 
 void LumatoneController::getKeyTypeConfig(int boardIndex)
 {
-    midiDriver.sendKeyTypeConfigRequest(boardIndex);
+    firmwareDriver.sendKeyTypeConfigRequest(boardIndex);
 }
 
 void LumatoneController::sendVelocityConfigRequest()
 {
-    midiDriver.sendVelocityConfigRequest();
+    firmwareDriver.sendVelocityConfigRequest();
 }
 
 void LumatoneController::sendFaderConfigRequest()
 {
-    midiDriver.sendFaderConfigRequest();
+    firmwareDriver.sendFaderConfigRequest();
 }
 
 void LumatoneController::sendAftertouchConfigRequest()
 {
-    midiDriver.sendAftertouchConfigRequest();
+    firmwareDriver.sendAftertouchConfigRequest();
 }
 
 void LumatoneController::sendVelocityIntervalConfigRequest()
 {
-    midiDriver.sendVelocityIntervalConfigRequest();
+    firmwareDriver.sendVelocityIntervalConfigRequest();
 }
 
 void LumatoneController::getFaderTypeConfig(int boardIndex)
 {
-    midiDriver.sendFaderTypeConfigRequest(boardIndex);
+    firmwareDriver.sendFaderTypeConfigRequest(boardIndex);
 }
 
 // This command is used to read back the serial identification number of the keyboard.
 void LumatoneController::sendGetSerialIdentityRequest()
 {
-    midiDriver.sendGetSerialIdentityRequest();
+    firmwareDriver.sendGetSerialIdentityRequest();
 }
 
 void LumatoneController::startCalibrateKeys()
 {
-    midiDriver.sendCalibrateKeys();
+    firmwareDriver.sendCalibrateKeys();
 }
 
 void LumatoneController::setCalibratePitchModWheel(bool startCalibration)
 {
-    midiDriver.sendCalibratePitchModWheel(startCalibration);
+    firmwareDriver.sendCalibratePitchModWheel(startCalibration);
 }
 
 void LumatoneController::setLumatouchConfig(const juce::uint8 lumatouchTable[])
 {
-    midiDriver.setLumatouchConfig(lumatouchTable);
+    firmwareDriver.setLumatouchConfig(lumatouchTable);
     editorListeners.call(&LumatoneEditor::EditorListener::tableChanged, LumatoneConfigTable::TableType::lumaTouch, lumatouchTable, VELOCITYINTERVALTABLESIZE);
 }
 
 void LumatoneController::resetLumatouchConfig()
 {
-    midiDriver.resetLumatouchConfig();
+    firmwareDriver.resetLumatouchConfig();
 }
 
 void LumatoneController::getLumatouchConfig()
 {
-    midiDriver.sendLumatouchConfigRequest();
+    firmwareDriver.sendLumatouchConfigRequest();
 }
 
 // This command is used to read back the current Lumatone firmware revision.
 void LumatoneController::sendGetFirmwareRevisionRequest()
 {
-    midiDriver.sendGetFirmwareRevisionRequest();
+    firmwareDriver.sendGetFirmwareRevisionRequest();
 }
 
 // Send a value for the Lumatone to echo back; used for auto device connection and monitoring
 int LumatoneController::pingLumatone(juce::uint8 pingId)
 {
-    return midiDriver.ping(pingId);
+    return firmwareDriver.ping(pingId);
 }
 
 // Set MIDI Channels of peripheral controllers, pitch & mod wheels, expression & sustain pedals
 void LumatoneController::setPeripheralChannels(int pitchWheelChannel, int modWheelChannel, int expressionChannel, int sustainChannel)
 {
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), SET_PERIPHERAL_CHANNELS))
-        midiDriver.setPeripheralChannels(pitchWheelChannel, modWheelChannel, expressionChannel, sustainChannel);
+        firmwareDriver.setPeripheralChannels(pitchWheelChannel, modWheelChannel, expressionChannel, sustainChannel);
 }
 
 void LumatoneController::setPeripheralChannels(PeripheralChannelSettings channelSettings)
@@ -548,7 +547,7 @@ void LumatoneController::setPeripheralChannels(PeripheralChannelSettings channel
 void LumatoneController::getPeripheralChannels()
 {
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), GET_PERIPHERAL_CHANNELS))
-        midiDriver.getPeripheralChannels();
+        firmwareDriver.getPeripheralChannels();
 }
 
 void LumatoneController::invertSustainPedal(bool setInverted)
@@ -556,7 +555,7 @@ void LumatoneController::invertSustainPedal(bool setInverted)
     setInvertSustain(setInverted);
 
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), INVERT_SUSTAIN_PEDAL))
-        midiDriver.sendInvertSustainPedal(setInverted);
+        firmwareDriver.sendInvertSustainPedal(setInverted);
 }
 
 void LumatoneController::resetPresetsToFactoryDefault()
@@ -564,27 +563,27 @@ void LumatoneController::resetPresetsToFactoryDefault()
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), RESET_DEFAULT_PRESETS))
     {
         for (int i = 0; i < 10; i++)
-            midiDriver.sendResetDefaultPresetsRequest(i);
+            firmwareDriver.sendResetDefaultPresetsRequest(i);
     }
 }
 
 void LumatoneController::resetPresetToFactoryDefault(int presetIndex)
 {
-    midiDriver.sendResetDefaultPresetsRequest(presetIndex);
+    firmwareDriver.sendResetDefaultPresetsRequest(presetIndex);
 }
 
 // Get interaction flags of current preset
 void LumatoneController::requestPresetFlags()
 {
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), GET_PRESET_FLAGS))
-        midiDriver.sendGetPresetFlagsReset();
+        firmwareDriver.sendGetPresetFlagsReset();
 }
 
 // Get sensitivity setting of expression pedal
 void LumatoneController::requestExpressionPedalSensitivity()
 {
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), GET_EXPRESSION_PEDAL_SENSITIVIY))
-        midiDriver.sendGetExpressionPedalSensitivity();
+        firmwareDriver.sendGetExpressionPedalSensitivity();
 }
 
 void LumatoneController::onConnectionConfirmed()
@@ -595,9 +594,7 @@ void LumatoneController::onConnectionConfirmed()
     if (getLumatoneVersion() != LumatoneFirmwareVersion::VERSION_55_KEYS)
         sendGetFirmwareRevisionRequest();
 
-    statusListeners.call(&LumatoneEditor::StatusListener::connectionEstablished, 
-                        midiDriver.getLastMidiInputInfo().identifier,
-                        midiDriver.getLastMidiOutputInfo().identifier);
+    statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::ONLINE);
     sendGetCompleteMappingRequest();
 }
 
@@ -717,14 +714,14 @@ void LumatoneController::keyTypeConfigReceived(int boardId, const int* keyTypeDa
 //FirmwareSupport::Error LumatoneController::handlePingResponse(const juce::MidiMessage& midiMessage)
 //{
 //    unsigned int value = 0;
-//    auto errorCode = midiDriver.unpackPingResponse(midiMessage, value);
+//    auto errorCode = firmwareDriver.unpackPingResponse(midiMessage, value);
 //    
 //    if (errorCode != FirmwareSupport::Error::noError)
 //        return errorCode;
 //
 //    firmwareListeners.call(&LumatoneEditor::FirmwareListener::pingResponseReceived, lastTestDeviceResponded, value);
 //
-//    if (midiDriver.hasDevicesDefined() && !currentDevicePairConfirmed)
+//    if (firmwareDriver.hasDevicesDefined() && !currentDevicePairConfirmed)
 //    {
 //        onConnectionConfirm(true);
 //    }
@@ -743,8 +740,8 @@ void LumatoneController::keyTypeConfigReceived(int boardId, const int* keyTypeDa
 //        if (newInput >= 0 && newOutput >= 0)
 //        {
 //            currentDevicePairConfirmed = false;
-//            midiDriver.setMidiInput(newInput);
-//            midiDriver.setMidiOutput(newOutput);
+//            firmwareDriver.setMidiInput(newInput);
+//            firmwareDriver.setMidiOutput(newOutput);
 //
 //            // if (editingMode == sysExSendingMode::firmwareUpdate)
 //            // {
@@ -762,7 +759,7 @@ void LumatoneController::keyTypeConfigReceived(int boardId, const int* keyTypeDa
 // 
 //        {
 //            // This should not get triggered if we are already disconnected
-//            jassert(midiDriver.hasDevicesDefined());
+//            jassert(firmwareDriver.hasDevicesDefined());
 //            onDisconnection();
 //        }
 //        else

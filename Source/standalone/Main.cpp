@@ -7,18 +7,20 @@
 */
 
 #include <JuceHeader.h>
-#include "MainComponent.h"
-#include "SandboxMenu.h"
 
-#include "lumatone_editor_library/DeviceActivityMonitor.h"
-#include "lumatone_editor_library/palettes/palette_library.h"
+#include "../shared/SandboxMenu.h"
 
-#include "./gui/adjust_colour_panel.h"
+#include "../shared/MainComponent.h"
 
-#include "game/game_engine.h"
-#include "game/random_colors/random_colors_launcher.h"
-#include "game/hex_rings/hex_rings_launcher.h"
-#include "game/hexagon_automata/hexagon_automata_launcher.h"
+#include "../shared/lumatone_editor_library/DeviceActivityMonitor.h"
+#include "../shared/lumatone_editor_library/palettes/palette_library.h"
+
+#include "../shared/gui/adjust_colour_panel.h"
+
+#include "../shared/game/game_engine.h"
+#include "../shared/game/random_colors/random_colors_launcher.h"
+#include "../shared/game/hex_rings/hex_rings_launcher.h"
+#include "../shared/game/hexagon_automata/hexagon_automata_launcher.h"
 
 //==============================================================================
 class LumatoneSandboxApp  : public juce::JUCEApplication
@@ -41,10 +43,10 @@ public:
 
         paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
 
-        midiDriver = std::make_unique<TerpstraMidiDriver>();
+        midiDriver = std::make_unique<LumatoneFirmwareDriver>();
         controller = std::make_unique<LumatoneController>(treeState, *midiDriver, undoManager.get());
 
-        monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), controller.get());
+        monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), *(LumatoneState*)controller.get());
 
         mainWindow.reset (new MainWindow (getApplicationName(), controller.get()));
         mainComponent = dynamic_cast<MainComponent*>(mainWindow->getContentComponent());
@@ -117,13 +119,13 @@ public:
         commands.add(LumatoneSandbox::Menu::commandIDs::saveSysExMappingAs);
         commands.add(LumatoneSandbox::Menu::commandIDs::resetSysExMapping);
 
-        commands.add(LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard);
-        commands.add(LumatoneSandbox::Menu::commandIDs::copyOctaveBoard);
-        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard);
-        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardChannels);
-        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes);
-        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours);
-        commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes);
+        // commands.add(LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard);
+        // commands.add(LumatoneSandbox::Menu::commandIDs::copyOctaveBoard);
+        // commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard);
+        // commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardChannels);
+        // commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes);
+        // commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours);
+        // commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes);
 
         commands.add(LumatoneSandbox::Menu::commandIDs::adjustColour);
 
@@ -364,7 +366,7 @@ private:
 
     std::unique_ptr<LumatoneSandbox::Menu::Model> menuModel;
 
-    std::unique_ptr<TerpstraMidiDriver> midiDriver;
+    std::unique_ptr<LumatoneFirmwareDriver> midiDriver;
     std::unique_ptr<LumatoneController> controller;
     std::unique_ptr<DeviceActivityMonitor> monitor;
 
@@ -376,4 +378,4 @@ private:
 
 //==============================================================================
 // This macro generates the main() routine that launches the app.
-START_JUCE_APPLICATION (LumatoneSandboxApp)
+// START_JUCE_APPLICATION (LumatoneSandboxApp)

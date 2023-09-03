@@ -11,7 +11,7 @@
 #include "LumatoneEventManager.h"
 
 
-LumatoneEventManager::LumatoneEventManager(TerpstraMidiDriver& midiDriverIn, LumatoneState stateIn)
+LumatoneEventManager::LumatoneEventManager(LumatoneFirmwareDriver& midiDriverIn, LumatoneState stateIn)
     : LumatoneMidiState(stateIn)
     , midiDriver(midiDriverIn)
 {
@@ -59,9 +59,9 @@ void LumatoneEventManager::midiSendQueueSize(int queueSize)
     sendQueueSize = queueSize;
 }
 
-//void LumatoneEventManager::generalLogMessage(juce::String textMessage, TerpstraMidiDriver::ErrorLevel errorLevel) { }
+//void LumatoneEventManager::generalLogMessage(juce::String textMessage, LumatoneFirmwareDriver::ErrorLevel errorLevel) { }
 
-void LumatoneEventManager::noAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage)
+void LumatoneEventManager::noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage)
 {
     if (midiMessage.isSysEx())
     {
@@ -384,27 +384,27 @@ FirmwareSupport::Error LumatoneEventManager::getBufferErrorCode(const juce::uint
     {
     case TerpstraMIDIAnswerReturnCode::NACK:  // Not recognized
         //errorVisualizer.setErrorLevel(
-        //    TerpstraMidiDriver::ErrorLevel::error,
+        //    LumatoneFirmwareDriver::ErrorLevel::error,
         //    "Not Recognized");
         return FirmwareSupport::Error::unknownCommand;
         break;
 
     case TerpstraMIDIAnswerReturnCode::ACK:  // Acknowledged, OK
         //errorVisualizer.setErrorLevel(
-        //    TerpstraMidiDriver::ErrorLevel::noError,
+        //    LumatoneFirmwareDriver::ErrorLevel::noError,
         //    "Ack");
         break;
 
     case TerpstraMIDIAnswerReturnCode::BUSY: // Controller busy
         //errorVisualizer.setErrorLevel(
-        //    TerpstraMidiDriver::ErrorLevel::warning,
+        //    LumatoneFirmwareDriver::ErrorLevel::warning,
         //    "Busy");
         return FirmwareSupport::Error::deviceIsBusy;
         break;
 
     case TerpstraMIDIAnswerReturnCode::ERROR:    // Error
         //errorVisualizer.setErrorLevel(
-        //    TerpstraMidiDriver::ErrorLevel::error,
+        //    LumatoneFirmwareDriver::ErrorLevel::error,
         //    "Error from device");
         return FirmwareSupport::Error::externalError;
         break;
@@ -415,7 +415,7 @@ FirmwareSupport::Error LumatoneEventManager::getBufferErrorCode(const juce::uint
 
     default:
         //errorVisualizer.setErrorLevel(
-        //    TerpstraMidiDriver::ErrorLevel::noError,
+        //    LumatoneFirmwareDriver::ErrorLevel::noError,
         //    "");
         break;
     }

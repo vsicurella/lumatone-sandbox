@@ -14,14 +14,14 @@
 #include "ApplicationListeners.h"
 #include "./data/lumatone_midi_state.h"
 
-class LumatoneEventManager : private TerpstraMidiDriver::Collector,
+class LumatoneEventManager : private LumatoneFirmwareDriver::Collector,
                              public LumatoneMidiState,
                              private juce::Timer
 {
 
 public:
 
-    LumatoneEventManager(TerpstraMidiDriver& midiDriver, LumatoneState stateIn);
+    LumatoneEventManager(LumatoneFirmwareDriver& midiDriver, LumatoneState stateIn);
     ~LumatoneEventManager() override;
 
 private:
@@ -30,13 +30,13 @@ private:
 
 protected:
     //============================================================================
-    // Implementation of TerpstraMidiDriver::Listener
+    // Implementation of LumatoneFirmwareDriver::Listener
 
     virtual void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage) override;
     virtual void midiMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage) override;
     virtual void midiSendQueueSize(int queueSize) override;
     //virtual void generalLogMessage(juce::String textMessage, HajuErrorVisualizer::ErrorLevel errorLevel) override;
-    virtual void noAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage) override;
+    virtual void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage) override;
 
 private:
     juce::ListenerList<LumatoneEditor::FirmwareListener> firmwareListeners;
@@ -116,7 +116,7 @@ private:
 
 private:
 
-    TerpstraMidiDriver&         midiDriver;
+    LumatoneFirmwareDriver&         midiDriver;
 
     FirmwareSupport             firmwareSupport;
 

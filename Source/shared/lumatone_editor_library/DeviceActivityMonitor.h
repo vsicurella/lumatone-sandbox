@@ -10,7 +10,7 @@
     a change signal will be broadcasted (for LumatoneController).
  
     When looking for devices, a response timeout is required, but once a device
-    has been confirmed, the timing and callbacks are dependent on TerpstraMidiDriver.
+    has been confirmed, the timing and callbacks are dependent on LumatoneFirmwareDriver.
 
   ==============================================================================
 */
@@ -24,7 +24,7 @@ class DeviceActivityMonitor : protected LumatoneState,
                               public juce::Timer, 
                               public juce::ChangeBroadcaster, 
                               public LumatoneEditor::StatusEmitter,
-                              protected TerpstraMidiDriver::Collector
+                              protected LumatoneFirmwareDriver::Collector
 {
     
 public:
@@ -39,7 +39,7 @@ public:
     
 public:
 
-    DeviceActivityMonitor(TerpstraMidiDriver* midiDriverIn, LumatoneController* controller);
+    DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneState stateIn);
     ~DeviceActivityMonitor() override;
 
     DetectConnectionMode getMode() const { return deviceConnectionMode; }
@@ -141,13 +141,13 @@ private:
 protected:
 
     //=========================================================================
-    // TerpstraMidiDriver::Listener Implementation
+    // LumatoneFirmwareDriver::Listener Implementation
 
     void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage) override;
     void midiMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage) override {}
     void midiSendQueueSize(int queueSizeIn) override { sentQueueSize = queueSizeIn; }
     //void generalLogMessage(juce::String textMessage, HajuErrorVisualizerPlaceholder errorLevel) override {}
-    void noAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage) override;
+    void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage) override;
 
 
     //==============================================================================
@@ -159,8 +159,7 @@ protected:
 
 private:
 
-    TerpstraMidiDriver*     midiDriver;
-    LumatoneController*     controller;
+    LumatoneFirmwareDriver*     midiDriver;
 
     DetectConnectionMode    deviceConnectionMode   = DetectConnectionMode::noDeviceActivity;
     bool                    deviceDetectInProgress = false;

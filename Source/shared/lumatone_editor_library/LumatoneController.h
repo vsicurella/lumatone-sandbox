@@ -10,7 +10,8 @@
 
 #pragma once
 
-#include "./EditorEmitter.h"
+#include "./ApplicationListeners.h"
+
 #include "./data/lumatone_layout.h"
 #include "./data/lumatone_state.h"
 #include "./actions/lumatone_action.h"
@@ -23,7 +24,7 @@
 
 
 class LumatoneController :  public LumatoneState,
-                            private TerpstraMidiDriver::Collector,
+                            private LumatoneFirmwareDriver::Collector,
                             public LumatoneEditor::StatusListener,
                             public LumatoneEditor::StatusEmitter,
                             public LumatoneEditor::EditorEmitter,
@@ -31,7 +32,7 @@ class LumatoneController :  public LumatoneState,
 {
 public:
 
-    LumatoneController(juce::ValueTree state, TerpstraMidiDriver& midiDriver, juce::UndoManager* undoManager);
+    LumatoneController(juce::ValueTree state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager);
     ~LumatoneController();
     
     //============================================================================
@@ -39,13 +40,11 @@ public:
 
     const FirmwareSupport& getFirmwareSupport() const { return firmwareSupport; }
 
-    void refreshAvailableMidiDevices();
+    juce::Array<juce::MidiDeviceInfo> getMidiInputList() { return firmwareDriver.getMidiInputList(); }
+    juce::Array<juce::MidiDeviceInfo> getMidiOutputList() { return firmwareDriver.getMidiOutputList(); }
 
-    juce::Array<juce::MidiDeviceInfo> getMidiInputList() { return midiDriver.getMidiInputList(); }
-    juce::Array<juce::MidiDeviceInfo> getMidiOutputList() { return midiDriver.getMidiOutputList(); }
-
-    int getMidiInputIndex() const { return midiDriver.getMidiInputIndex(); }
-    int getMidiOutputIndex() const { return midiDriver.getMidiOutputIndex(); }
+    int getMidiInputIndex() const { return firmwareDriver.getMidiInputIndex(); }
+    int getMidiOutputIndex() const { return firmwareDriver.getMidiOutputIndex(); }
 
     void setMidiInput(int deviceIndex, bool test = true);
     void setMidiOutput(int deviceIndex, bool test = true);
@@ -55,18 +54,20 @@ public:
     bool performAction(LumatoneAction* action, bool undoable = true, bool newTransaction = true);
 
 private:
-    bool connectionConfirmed() const { return midiDriver.hasDevicesDefined() && currentDevicePairConfirmed; }
+    bool connectionConfirmed() const { return firmwareDriver.hasDevicesDefined() && currentDevicePairConfirmed; }
     void onConnectionConfirmed();
 
 public:
     //============================================================================
     // Status Listener implementation
 
-    void connectionFailed() override;
+    void connectionStateChanged(ConnectionState newState) override;
 
-    void connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId) override;
+    // void connectionFailed() override;
 
-    void connectionLost() override;
+    // void connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId) override;
+
+    // void connectionLost() override;
 
 public:
     //============================================================================
@@ -245,31 +246,31 @@ protected:
 
 protected:
     //============================================================================
-    // Implementation of TerpstraMidiDriver::Listener
+    // Implementation of LumatoneFirmwareDriver::Listener
 
     virtual void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage) override;
 
     virtual void midiMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage) override {};
     virtual void midiSendQueueSize(int queueSize) override {};
     //virtual void generalLogMessage(juce::String textMessage, HajuErrorVisualizer::ErrorLevel errorLevel) override;
-    virtual void noAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage) override;
+    virtual void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage) override;
     
 private:
 
-    TerpstraMidiDriver& midiDriver;
+    LumatoneFirmwareDriver& firmwareDriver;
     LumatoneKeyUpdateBuffer updateBuffer;
 
     std::unique_ptr<LumatoneEventManager>   eventManager;
 
-    const int bufferReadTimeoutMs = 30;
-    const int bufferReadSize = 16;
-    bool      bufferReadRequested = false;
+    const int bufferReadTimeoutMs   = 30;
+    const int bufferReadSize        = 16;
+    bool      bufferReadRequested   = false;
 
     std::atomic<int>    readQueueSize;
     int                 sendQueueSize = 0;
 
-    int     lastTestDeviceSent = -1;
-    int     lastTestDeviceResponded = -1;
-    bool    waitingForTestResponse = false;
-    bool    currentDevicePairConfirmed = false;
+    int     lastTestDeviceSent          = -1;
+    int     lastTestDeviceResponded     = -1;
+    bool    waitingForTestResponse      = false;
+    bool    currentDevicePairConfirmed  = false;
 };

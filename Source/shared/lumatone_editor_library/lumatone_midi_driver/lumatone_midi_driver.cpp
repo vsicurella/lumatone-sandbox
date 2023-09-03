@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    TerpstraMidiDriver.cpp
+    LumatoneFirmwareDriver.cpp
     Created: 20 Feb 2015 8:04:02pm
     Author:  hsstraub
 
@@ -16,14 +16,16 @@
 
 #define MIDI_DRIVER_USE_LOCK JUCE_WINDOWS //|| JUCE_LINUX
 
-TerpstraMidiDriver::TerpstraMidiDriver(int numBoardsIn)
-    : HajuMidiDriver(),
-      numBoards(numBoardsIn)
+LumatoneFirmwareDriver::LumatoneFirmwareDriver(int numBoardsIn)
+    : numBoards(numBoardsIn)
 {
+    if (JUCE_STANDALONE_APPLICATION)
+        hostMode = HostMode::Driver;
+    else
+        hostMode = HostMode::Plugin;
+}     
 
-}
-
-TerpstraMidiDriver::~TerpstraMidiDriver()
+LumatoneFirmwareDriver::~LumatoneFirmwareDriver()
 {
     collectors.clear();
 }
@@ -31,17 +33,30 @@ TerpstraMidiDriver::~TerpstraMidiDriver()
 //============================================================================
 // TerpstaMidiDriver::Collector helpers
 
-void TerpstraMidiDriver::addMessageCollector(Collector* collectorToAdd)
+void LumatoneFirmwareDriver::addMessageCollector(Collector* collectorToAdd)
 {
     collectors.addIfNotAlreadyThere(collectorToAdd);
 }
 
-void TerpstraMidiDriver::removeMessageCollector(Collector* collectorToRemove)
+void LumatoneFirmwareDriver::removeMessageCollector(Collector* collectorToRemove)
 {
     collectors.removeFirstMatchingValue(collectorToRemove);
 }
 
-void TerpstraMidiDriver::notifyMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage)
+void LumatoneFirmwareDriver::readNextBuffer(juce::MidiBuffer &nextBuffer)
+{
+    juce::ScopedLock l(nextBufferQueue.getLock());
+
+    for (int i = 0; i < nextBufferQueue.size(); i++)
+    {
+        auto msg = nextBufferQueue[i];
+        nextBuffer.addEvent(msg, i);
+    }
+
+    nextBufferQueue.clear();
+}
+
+void LumatoneFirmwareDriver::notifyMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage)
 {
 #if MIDI_DRIVER_USE_LOCK
     const juce::MessageManagerLock lock;
@@ -51,7 +66,7 @@ void TerpstraMidiDriver::notifyMessageReceived(juce::MidiInput* source, const ju
     });
 }
 
-void TerpstraMidiDriver::notifyMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage)
+void LumatoneFirmwareDriver::notifyMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage)
 {
     // Currently unused
 // #if MIDI_DRIVER_USE_LOCK
@@ -63,18 +78,18 @@ void TerpstraMidiDriver::notifyMessageSent(juce::MidiOutput* target, const juce:
 //     });
 }
 
-void TerpstraMidiDriver::notifySendQueueSize()
+void LumatoneFirmwareDriver::notifySendQueueSize()
 {
-    auto size = messageBuffer.size();
+    auto size = sysexQueue.size();
     for (auto collector : collectors) collector->midiSendQueueSize(size);
 }
 
-void TerpstraMidiDriver::notifyLogMessage(juce::String textMessage, ErrorLevel errorLevel)
-{
-    for (auto collector : collectors) collector->generalLogMessage(textMessage, errorLevel);
-}
+// void LumatoneFirmwareDriver::notifyLogMessage(juce::String textMessage, ErrorLevel errorLevel)
+// {
+//     for (auto collector : collectors) collector->generalLogMessage(textMessage, errorLevel);
+// }
 
-void TerpstraMidiDriver::notifyNoAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage)
+void LumatoneFirmwareDriver::notifyNoAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage)
 {
     juce::MessageManager::callAsync([this, expectedDevice, midiMessage]{
         for (auto collector : collectors) collector->noAnswerToMessage(expectedDevice, midiMessage);
@@ -87,7 +102,7 @@ Single (mid-level) commands, firmware specific
 */
 
 // CMD 00h: Send a single key's functionctional configuration
-void TerpstraMidiDriver::sendKeyFunctionParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 noteOrCCNum, juce::uint8 midiChannel, juce::uint8 keyType, bool faderUpIsNull)
+void LumatoneFirmwareDriver::sendKeyFunctionParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 noteOrCCNum, juce::uint8 midiChannel, juce::uint8 keyType, bool faderUpIsNull)
 {
     DBG("SEND KEY FUNCTION REQUESTED " + juce::String(boardIndex) + "," + juce::String(keyIndex));
     // boardIndex is expected 1-based
@@ -102,7 +117,7 @@ void TerpstraMidiDriver::sendKeyFunctionParameters(juce::uint8 boardIndex, juce:
 }
 
 // CMD 01h: Send a single key's LED channel intensities
-void TerpstraMidiDriver::sendKeyLightParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 red, juce::uint8 green, juce::uint8 blue)
+void LumatoneFirmwareDriver::sendKeyLightParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 red, juce::uint8 green, juce::uint8 blue)
 {
     DBG("SEND KEY COLOUR REQUESTED " + juce::String(boardIndex) + "," + juce::String(keyIndex));
 
@@ -112,7 +127,7 @@ void TerpstraMidiDriver::sendKeyLightParameters(juce::uint8 boardIndex, juce::ui
 }
 
 // CMD 01h: Send a single key's LED channel intensities, three pairs of 4-bit values for each channel
-void TerpstraMidiDriver::sendKeyLightParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower)
+void LumatoneFirmwareDriver::sendKeyLightParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower)
 {
     // boardIndex is expected 1-based
     jassert(boardIndex > 0 && boardIndex <= numBoards);
@@ -128,7 +143,7 @@ void TerpstraMidiDriver::sendKeyLightParameters(juce::uint8 boardIndex, juce::ui
 }
 
 // CMD 01h: Send a single key's LED channel intensities (pre-version 1.0.11)
-void TerpstraMidiDriver::sendKeyLightParameters_Version_1_0_0(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 red, juce::uint8 green, juce::uint8 blue)
+void LumatoneFirmwareDriver::sendKeyLightParameters_Version_1_0_0(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 red, juce::uint8 green, juce::uint8 blue)
 {
     // boardIndex is expected 1-based
     jassert(boardIndex > 0 && boardIndex <= numBoards);
@@ -142,14 +157,14 @@ void TerpstraMidiDriver::sendKeyLightParameters_Version_1_0_0(juce::uint8 boardI
 }
 
 // CMD 02h: Save current configuration to specified preset index
-void TerpstraMidiDriver::saveProgram(juce::uint8 presetNumber)
+void LumatoneFirmwareDriver::saveProgram(juce::uint8 presetNumber)
 {
     jassert(presetNumber >= 0 && presetNumber < 10);
     sendSysEx(0, SAVE_PROGRAM, presetNumber, '\0', '\0', '\0');
 }
 
 // CMD 03h: Send expression pedal sensivity
-void TerpstraMidiDriver::sendExpressionPedalSensivity(juce::uint8 value)
+void LumatoneFirmwareDriver::sendExpressionPedalSensivity(juce::uint8 value)
 {
 	jassert(value <= 0x7f);
 
@@ -157,27 +172,27 @@ void TerpstraMidiDriver::sendExpressionPedalSensivity(juce::uint8 value)
 }
 
 // CMD 04h: Send parametrization of foot controller
-void TerpstraMidiDriver::sendInvertFootController(bool value)
+void LumatoneFirmwareDriver::sendInvertFootController(bool value)
 {
     sendSysExToggle(0, INVERT_FOOT_CONTROLLER, value);
 }
 
 // CMD 05h: Colour for macro button in active state, each value should be in range of 0x0-0xF and represents the upper and lower four bytes of each channel intensity
-void TerpstraMidiDriver::sendMacroButtonActiveColour(juce::uint8 red, juce::uint8 green, juce::uint8 blue)
+void LumatoneFirmwareDriver::sendMacroButtonActiveColour(juce::uint8 red, juce::uint8 green, juce::uint8 blue)
 {
     juce::MidiMessage msg = createExtendedMacroColourSysEx(MACROBUTTON_COLOUR_ON, red, green, blue);
     sendMessageWithAcknowledge(msg);
 }
 
 // CMD 05h: Colour for macro button in active state, 3 pairs for 4-bit values for each LED channel
-void TerpstraMidiDriver::sendMacroButtonActiveColour(juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower)
+void LumatoneFirmwareDriver::sendMacroButtonActiveColour(juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower)
 {
     juce::MidiMessage msg = createExtendedMacroColourSysEx(MACROBUTTON_COLOUR_ON, redUpper, redLower, greenUpper, greenLower, blueUpper, blueLower);
     sendMessageWithAcknowledge(msg);
 }
 
 // CMD 05h: Colour for macro button in active state, each value should be in range of 0x00-0x7F (pre-version 1.0.11)
-void TerpstraMidiDriver::sendMacroButtonActiveColour_Version_1_0_0(juce::uint8 red, juce::uint8 green, juce::uint8 blue)
+void LumatoneFirmwareDriver::sendMacroButtonActiveColour_Version_1_0_0(juce::uint8 red, juce::uint8 green, juce::uint8 blue)
 {
     if (red   > 0x7f) red   &= 0x7f;
     if (green > 0x7f) green &= 0x7f;
@@ -187,21 +202,21 @@ void TerpstraMidiDriver::sendMacroButtonActiveColour_Version_1_0_0(juce::uint8 r
 }
 
 // CMD 06h: Colour for macro button in inactive state, each value should be in range of 0x0-0xF and represents the upper and lower four bytes of each channel intensity
-void TerpstraMidiDriver::sendMacroButtonInactiveColour(int red, int green, int blue)
+void LumatoneFirmwareDriver::sendMacroButtonInactiveColour(int red, int green, int blue)
 {
     juce::MidiMessage msg = createExtendedMacroColourSysEx(MACROBUTTON_COLOUR_OFF, red, green, blue);
     sendMessageWithAcknowledge(msg);
 }
 
 // CMD 05h: Colour for macro button in active state, 3 pairs for 4-bit values for each LED channel
-void TerpstraMidiDriver::sendMacroButtonInactiveColour(juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower)
+void LumatoneFirmwareDriver::sendMacroButtonInactiveColour(juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower)
 {
     juce::MidiMessage msg = createExtendedMacroColourSysEx(MACROBUTTON_COLOUR_OFF, redUpper, redLower, greenUpper, greenLower, blueUpper, blueLower);
     sendMessageWithAcknowledge(msg);
 }
 
 // CMD 06h: Colour for macro button in inactive state, each value should be in range of 0x00-0x7F (pre-version 1.0.11)
-void TerpstraMidiDriver::sendMacroButtonInactiveColour_Version_1_0_0(juce::uint8 red, juce::uint8 green, juce::uint8 blue)
+void LumatoneFirmwareDriver::sendMacroButtonInactiveColour_Version_1_0_0(juce::uint8 red, juce::uint8 green, juce::uint8 blue)
 {
     if (red   > 0x7f) red   &= 0x7f;
     if (green > 0x7f) green &= 0x7f;
@@ -211,13 +226,13 @@ void TerpstraMidiDriver::sendMacroButtonInactiveColour_Version_1_0_0(juce::uint8
 }
 
 // CMD 07h: Send parametrization of light on keystrokes
-void TerpstraMidiDriver::sendLightOnKeyStrokes(bool value)
+void LumatoneFirmwareDriver::sendLightOnKeyStrokes(bool value)
 {
     sendSysExToggle(0, SET_LIGHT_ON_KEYSTROKES, value);
 }
 
 // CMD 08h: Send a value for a velocity lookup table
-void TerpstraMidiDriver::sendVelocityConfig(const juce::uint8 velocityTable[])
+void LumatoneFirmwareDriver::sendVelocityConfig(const juce::uint8 velocityTable[])
 {
     // Values are in reverse order (shortest ticks count is the highest velocity)
     juce::uint8 reversedTable[128];
@@ -231,147 +246,147 @@ void TerpstraMidiDriver::sendVelocityConfig(const juce::uint8 velocityTable[])
 }
 
 // CMD 09h: Save velocity config to EEPROM
-void TerpstraMidiDriver::saveVelocityConfig()
+void LumatoneFirmwareDriver::saveVelocityConfig()
 {            
     sendSysExRequest(0, SAVE_VELOCITY_CONFIG);
 }
 
 // CMD 0Ah: Reset velocity config to value from EEPROM
-void TerpstraMidiDriver::resetVelocityConfig()
+void LumatoneFirmwareDriver::resetVelocityConfig()
 {
     sendSysExRequest(0, RESET_VELOCITY_CONFIG);
 }
 
 // CMD 0Bh: Adjust the internal fader look-up table (128 7-bit values)
-void TerpstraMidiDriver::sendFaderConfig(const juce::uint8 faderTable[])
+void LumatoneFirmwareDriver::sendFaderConfig(const juce::uint8 faderTable[])
 {
     juce::MidiMessage msg = createTableSysEx(0, SET_FADER_CONFIG, 128, faderTable);
     sendMessageWithAcknowledge(msg);
 }
 
 // CMD 0Ch: **DEPRECATED** Save the changes made to the fader look-up table
-void TerpstraMidiDriver::saveFaderConfiguration()
+void LumatoneFirmwareDriver::saveFaderConfiguration()
 {
     sendSysExRequest(0, SAVE_FADER_CONFIG);
 }
 
 // CMD 0Dh: Reset the fader lookup table back to its factory fader settings.
-void TerpstraMidiDriver::resetFaderConfig()
+void LumatoneFirmwareDriver::resetFaderConfig()
 {
     sendSysExRequest(0, RESET_FADER_CONFIG);
 }
 
 // CMD 0Eh: Enable or disable aftertouch functionality
-void TerpstraMidiDriver::sendAfterTouchActivation(bool value)
+void LumatoneFirmwareDriver::sendAfterTouchActivation(bool value)
 {
     sendSysExToggle(0, SET_AFTERTOUCH_FLAG, value);
 }
 
 // CMD 0Fh: Initiate aftertouch calibration routine
-void TerpstraMidiDriver::sendCalibrateAfterTouch()
+void LumatoneFirmwareDriver::sendCalibrateAfterTouch()
 {
     sendSysExRequest(0, CALIBRATE_AFTERTOUCH);
 }
 
 // CMD 10h: Adjust the internal aftertouch look-up table (size of 128)
-void TerpstraMidiDriver::sendAftertouchConfig(const juce::uint8 aftertouchTable[])
+void LumatoneFirmwareDriver::sendAftertouchConfig(const juce::uint8 aftertouchTable[])
 {
     juce::MidiMessage msg = createTableSysEx(0, SET_AFTERTOUCH_CONFIG, 128, aftertouchTable);
     sendMessageWithAcknowledge(msg);
 }
 
 // CMD 11h: **DEPRECATED** Save the changes made to the aftertouch look-up table
-void TerpstraMidiDriver::saveAftertouchConfig()
+void LumatoneFirmwareDriver::saveAftertouchConfig()
 {
     sendSysExRequest(0, SAVE_AFTERTOUCH_CONFIG);
 }
 
 // CMD 12h: Reset the aftertouch lookup table back to its factory aftertouch settings.
-void TerpstraMidiDriver::resetAftertouchConfig()
+void LumatoneFirmwareDriver::resetAftertouchConfig()
 {
     sendSysExRequest(0, RESET_AFTERTOUCH_CONFIG);
 }
 
 // CMD 13h: Read back the current red intensity of all the keys of the target board.
-void TerpstraMidiDriver::sendRedLEDConfigRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendRedLEDConfigRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_RED_LED_CONFIG);
 }
 
 // CMD 14h: Read back the current green intensity of all the keys of the target board.
-void TerpstraMidiDriver::sendGreenLEDConfigRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendGreenLEDConfigRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_GREEN_LED_CONFIG);
 }
 
 // CMD 15h: Read back the current blue intensity of all the keys of the target board.
-void TerpstraMidiDriver::sendBlueLEDConfigRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendBlueLEDConfigRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_BLUE_LED_CONFIG);
 }
 
 // CMD 16h: Read back the current channel configuration of all the keys of the target board.
-void TerpstraMidiDriver::sendChannelConfigRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendChannelConfigRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_CHANNEL_CONFIG);
 }
 
 // CMD 17h: Read back the current note configuration of all the keys of the target board.
-void TerpstraMidiDriver::sendNoteConfigRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendNoteConfigRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_NOTE_CONFIG);
 }
 
 // CMD 18h: Read back the current key type configuration of all the keys of the target board.
-void TerpstraMidiDriver::sendKeyTypeConfigRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendKeyTypeConfigRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_KEYTYPE_CONFIG);
 }
 
 // CMD 19h: Read back the maximum threshold of all the keys of the target board.
-void TerpstraMidiDriver::sendMaxFaderThresholdRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendMaxFaderThresholdRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(0, GET_MAX_THRESHOLD);
 }
 
 // CMD 1Ah: Read back the maximum threshold of all the keys of the target board
-void TerpstraMidiDriver::sendMinFaderThresholdRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendMinFaderThresholdRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(0, GET_MIN_THRESHOLD);
 }
 
 // CMD 1Bh: Read back the aftertouch maximum threshold of all the keys of the target board
-void TerpstraMidiDriver::sendMaxAftertouchThresholdRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendMaxAftertouchThresholdRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(0, GET_AFTERTOUCH_MAX);
 }
 
 // CMD 1Ch: Get back flag whether or not each key of target board meets minimum threshold
-void TerpstraMidiDriver::sendKeyValidityParametersRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendKeyValidityParametersRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_KEY_VALIDITY);
 }
 
 // CMD 1Dh: Read back the current velocity look up table of the keyboard.
-void TerpstraMidiDriver::sendVelocityConfigRequest()
+void LumatoneFirmwareDriver::sendVelocityConfigRequest()
 {
     sendSysExRequest(0, GET_VELOCITY_CONFIG);
 }
 
 // CMD 1Eh: Read back the current fader look up table of the keyboard.
-void TerpstraMidiDriver::sendFaderConfigRequest()
+void LumatoneFirmwareDriver::sendFaderConfigRequest()
 {
     sendSysExRequest(0, GET_FADER_CONFIG);
 }
 
 // CMD 1Fh: Read back the current aftertouch look up table of the keyboard.
-void TerpstraMidiDriver::sendAftertouchConfigRequest()
+void LumatoneFirmwareDriver::sendAftertouchConfigRequest()
 {
     sendSysExRequest(0, GET_AFTERTOUCH_CONFIG);
 }
 
 // CMD 20h: Set the velocity interval table, 127 12-bit values
-void TerpstraMidiDriver::sendVelocityIntervalConfig(const int velocityIntervalTable[])
+void LumatoneFirmwareDriver::sendVelocityIntervalConfig(const int velocityIntervalTable[])
 {
     const int payloadSize = 254;
     juce::uint8 formattedTable[payloadSize];
@@ -388,41 +403,41 @@ void TerpstraMidiDriver::sendVelocityIntervalConfig(const int velocityIntervalTa
 }
 
 // CMD 21h: Sead back the velocity interval table
-void TerpstraMidiDriver::sendVelocityIntervalConfigRequest()
+void LumatoneFirmwareDriver::sendVelocityIntervalConfigRequest()
 {
     sendSysExRequest(0, GET_VELOCITY_INTERVALS);
 }
 
 // CMD 22h: Read back the fader type of all keys on the targeted board.
-void TerpstraMidiDriver::sendFaderTypeConfigRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendFaderTypeConfigRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_FADER_TYPE_CONFIGURATION);
 }
 
 // CMD 23h: This command is used to read back the serial identification number of the keyboard.
-void TerpstraMidiDriver::sendGetSerialIdentityRequest(int sendToTestDevice)
+void LumatoneFirmwareDriver::sendGetSerialIdentityRequest(int sendToTestDevice)
 {
     if (sendToTestDevice < 0)
         sendSysEx(0, GET_SERIAL_IDENTITY, TEST_ECHO, '\0', '\0', '\0');
-    else if (sendToTestDevice < midiOutputs.size())
+    else
         sendTestMessageNow(sendToTestDevice, createTerpstraSysEx(0, GET_SERIAL_IDENTITY, TEST_ECHO, '\0', '\0', '\0'));
 }
 
 // CMD 24h: Initiate the key calibration routine; each pair of macro buttons  
 // on each octave must be pressed to return to normal state
-void TerpstraMidiDriver::sendCalibrateKeys()
+void LumatoneFirmwareDriver::sendCalibrateKeys()
 {
     sendSysExRequest(0, CALIBRATE_KEYS);
 }
 
 // CMD 25h: Pass in true to enter Demo Mode, or false to exit
-void TerpstraMidiDriver::startDemoMode(bool turnOn)
+void LumatoneFirmwareDriver::startDemoMode(bool turnOn)
 {
     sendSysExToggle(0, DEMO_MODE, turnOn);
 }
 
 // CMD 26h: Initiate the pitch and mod wheel calibration routine, pass in false to stop
-void TerpstraMidiDriver::sendCalibratePitchModWheel(bool startCalibration, int testOutputIndex)
+void LumatoneFirmwareDriver::sendCalibratePitchModWheel(bool startCalibration, int testOutputIndex)
 {
     if (testOutputIndex < 0)
         sendSysExToggle(0, CALIBRATE_PITCH_MOD_WHEEL, startCalibration);
@@ -431,7 +446,7 @@ void TerpstraMidiDriver::sendCalibratePitchModWheel(bool startCalibration, int t
 }
 
 // CMD 27h: Set the sensitivity value of the mod wheel, 0x01 to 0x07f
-void TerpstraMidiDriver::setModWheelSensitivity(juce::uint8 sensitivity)
+void LumatoneFirmwareDriver::setModWheelSensitivity(juce::uint8 sensitivity)
 {
     if (sensitivity > 0x7f) sensitivity &= 0x7f;  // Restrict to upper bound
     if (sensitivity < 0x01) sensitivity  = 0x01;  // Restrict to lower bound
@@ -440,7 +455,7 @@ void TerpstraMidiDriver::setModWheelSensitivity(juce::uint8 sensitivity)
 }
 
 // CMD 28h: Set the sensitivity value of the pitch bend wheel between 0x01 and 0x3FFF
-void TerpstraMidiDriver::setPitchBendSensitivity(int sensitivity)
+void LumatoneFirmwareDriver::setPitchBendSensitivity(int sensitivity)
 {
     if (sensitivity > 0x3fff) sensitivity &= 0x3fff; // Restrict to upper bound
     if (sensitivity < 0x0001) sensitivity  = 0x0001;  // Restrict to lower bound
@@ -449,7 +464,7 @@ void TerpstraMidiDriver::setPitchBendSensitivity(int sensitivity)
 }
 
 // CMD 29h: Set abs. distance from max value to trigger CA-004 submodule key events, ranging from 0x00 to 0xFE
-void TerpstraMidiDriver::setKeyMaximumThreshold(juce::uint8 boardIndex, juce::uint8 maxThreshold, juce::uint8 aftertouchMax)
+void LumatoneFirmwareDriver::setKeyMaximumThreshold(juce::uint8 boardIndex, juce::uint8 maxThreshold, juce::uint8 aftertouchMax)
 {
     if (maxThreshold  > 0xfe) maxThreshold  &= 0xfe;
     if (aftertouchMax > 0xfe) aftertouchMax &= 0xfe;
@@ -457,7 +472,7 @@ void TerpstraMidiDriver::setKeyMaximumThreshold(juce::uint8 boardIndex, juce::ui
 }
 
 // CMD 2Ah: Set abs. distance from min value to trigger CA-004 submodule key events, ranging from 0x00 to 0xFE
-void TerpstraMidiDriver::setKeyMinimumThreshold(juce::uint8 boardIndex, juce::uint8 minThresholdHigh, juce::uint8 minThresholdLow)
+void LumatoneFirmwareDriver::setKeyMinimumThreshold(juce::uint8 boardIndex, juce::uint8 minThresholdHigh, juce::uint8 minThresholdLow)
 {
     if (minThresholdHigh > 0xfe) minThresholdHigh &= 0xfe;
     if (minThresholdLow  > 0xfe) minThresholdLow  &= 0xfe;
@@ -465,55 +480,55 @@ void TerpstraMidiDriver::setKeyMinimumThreshold(juce::uint8 boardIndex, juce::ui
 }
 
 // CMD 2Bh: Set the sensitivity for CC events, ranging from 0x00 to 0xFE
-void TerpstraMidiDriver::setFaderKeySensitivity(juce::uint8 boardIndex, juce::uint8 sensitivity)
+void LumatoneFirmwareDriver::setFaderKeySensitivity(juce::uint8 boardIndex, juce::uint8 sensitivity)
 {
     if (sensitivity > 0xfe) sensitivity &= 0xfe;
     sendSysEx(boardIndex, SET_KEY_FADER_SENSITIVITY, sensitivity >> 4, sensitivity & 0xf, '\0', '\0');
 }
 
 // CMD 2Ch: Set the target board sensitivity for aftertouch events, ranging from 0x00 to 0xFE
-void TerpstraMidiDriver::setAftertouchKeySensitivity(juce::uint8 boardIndex, juce::uint8 sensitivity)
+void LumatoneFirmwareDriver::setAftertouchKeySensitivity(juce::uint8 boardIndex, juce::uint8 sensitivity)
 {
     if (sensitivity > 0xfe) sensitivity &= 0xfe;
     sendSysEx(boardIndex, SET_KEY_AFTERTOUCH_SENSITIVITY, sensitivity >> 4, sensitivity & 0xf, '\0', '\0');
 }
 
 // CMD 2Dh: Adjust the Lumatouch table, a 128 byte array with value of 127 being a key fully pressed
-void TerpstraMidiDriver::setLumatouchConfig(const juce::uint8 lumatouchTable[])
+void LumatoneFirmwareDriver::setLumatouchConfig(const juce::uint8 lumatouchTable[])
 {
     juce::MidiMessage msg = createTableSysEx(0, SET_LUMATOUCH_CONFIG, 128, lumatouchTable);
     sendMessageWithAcknowledge(msg);
 }
 
 // CMD 2Eh: **DEPRECATED** Save Lumatouch table changes
-void TerpstraMidiDriver::saveLumatoneConfig()
+void LumatoneFirmwareDriver::saveLumatoneConfig()
 {
     sendSysExRequest(0, SAVE_LUMATOUCH_CONFIG);
 }
 
 // CMD 2Fh: Reset the Lumatouch table back to factory settings
-void TerpstraMidiDriver::resetLumatouchConfig()
+void LumatoneFirmwareDriver::resetLumatouchConfig()
 {
     sendSysExRequest(0, RESET_LUMATOUCH_CONFIG);
 }
 
 // CMD 30h: Read back the Lumatouch table
-void TerpstraMidiDriver::sendLumatouchConfigRequest()
+void LumatoneFirmwareDriver::sendLumatouchConfigRequest()
 {
     sendSysExRequest(0, GET_LUMATOUCH_CONFIG);
 }
 
 // CMD 31h: This command is used to read back the current Lumatone firmware revision.
-void TerpstraMidiDriver::sendGetFirmwareRevisionRequest(int sendToTestDevice)
+void LumatoneFirmwareDriver::sendGetFirmwareRevisionRequest(int sendToTestDevice)
 {
     if (sendToTestDevice < 0)
         sendSysExRequest(0, GET_FIRMWARE_REVISION);
-    else if (sendToTestDevice < midiInputs.size())
+    else
         sendTestMessageNow(sendToTestDevice, createTerpstraSysEx(0, GET_FIRMWARE_REVISION, TEST_ECHO, '\0', '\0', '\0'));
 }
 
 // CMD 32h: Set the thresold from key's min value to trigger CA - 004 submodule CC events, ranging from 0x00 to 0xFE
-void TerpstraMidiDriver::setCCActiveThreshold(juce::uint8 boardIndex, juce::uint8 sensitivity)
+void LumatoneFirmwareDriver::setCCActiveThreshold(juce::uint8 boardIndex, juce::uint8 sensitivity)
 {
     if (sensitivity > 0xfe) sensitivity &= 0xfe;
     sendSysEx(boardIndex, SET_CC_ACTIVE_THRESHOLD, sensitivity >> 4, sensitivity & 0xf, '\0', '\0');
@@ -521,7 +536,7 @@ void TerpstraMidiDriver::setCCActiveThreshold(juce::uint8 boardIndex, juce::uint
 
 // CMD 33h: Echo the payload, 0x00-0x7f, for use in connection monitoring
 // the first 7-bit value is reserved for echo differentiation
-void TerpstraMidiDriver::ping(juce::uint8 value1, juce::uint8 value2, juce::uint8 value3, int sendToTestDevice)
+void LumatoneFirmwareDriver::ping(juce::uint8 value1, juce::uint8 value2, juce::uint8 value3, int sendToTestDevice)
 {
     if (value1 > 0x7f) value1 &= 0x7f;
     if (value2 > 0x7f) value2 &= 0x7f;
@@ -529,14 +544,14 @@ void TerpstraMidiDriver::ping(juce::uint8 value1, juce::uint8 value2, juce::uint
 
     if (sendToTestDevice < 0)
         sendSysEx(0, LUMA_PING, TEST_ECHO, value1, value2, value3);
-    else if (sendToTestDevice < midiOutputs.size())
+    else
     {
         sendTestMessageNow(sendToTestDevice, createTerpstraSysEx(0, LUMA_PING, TEST_ECHO, value1, value2, value3));
     }
 }
 
 // CMD 33h: Echo the payload, 0x00-0x7f, for use in connection monitoring
-unsigned int TerpstraMidiDriver::ping(unsigned int value, int sendToTestDevice)
+unsigned int LumatoneFirmwareDriver::ping(unsigned int value, int sendToTestDevice)
 {
     value &= 0xFFFFFFF; // Limit 28-bits
     ping((value >> 14) & 0x7f, (value >> 7) & 0x7f, value & 0x7f, sendToTestDevice);
@@ -544,56 +559,56 @@ unsigned int TerpstraMidiDriver::ping(unsigned int value, int sendToTestDevice)
 }
 
 // CMD 34h: Reset the thresholds for events and sensitivity for CC & aftertouch on the target board
-void TerpstraMidiDriver::resetBoardThresholds(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::resetBoardThresholds(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, RESET_BOARD_THRESHOLDS);
 }
 
 // CMD 35h: Enable/disable key sampling over SSH for the target key and board
-void TerpstraMidiDriver::setKeySampling(juce::uint8 boardIndex, juce::uint8 keyIndex, bool turnSamplingOn)
+void LumatoneFirmwareDriver::setKeySampling(juce::uint8 boardIndex, juce::uint8 keyIndex, bool turnSamplingOn)
 {
     sendSysExToggle(boardIndex, SET_KEY_SAMPLING, turnSamplingOn);
 }
 
 // CMD 36h: Set thresholds for the pitch and modulation wheel to factory settings
-void TerpstraMidiDriver::resetWheelsThresholds()
+void LumatoneFirmwareDriver::resetWheelsThresholds()
 {
     sendSysExRequest(0, RESET_WHEELS_THRESHOLD);
 }
 
 // CMD 37h: Set the bounds from the calibrated zero adc value of the pitch wheel, 0x00 to 0x7f
-void TerpstraMidiDriver::setPitchWheelZeroThreshold(juce::uint8 threshold)
+void LumatoneFirmwareDriver::setPitchWheelZeroThreshold(juce::uint8 threshold)
 {
     if (threshold > 0x7f) threshold &= 0x7f;
     sendSysEx(0, SET_PITCH_WHEEL_CENTER_THRESHOLD, threshold, '\0', '\0', '\0');
 }
 
 // CMD 38h: Pass in true to initiate the expression pedal calibration routine, or false to stop
-void TerpstraMidiDriver::calibrateExpressionPedal(bool startCalibration)
+void LumatoneFirmwareDriver::calibrateExpressionPedal(bool startCalibration)
 {
     sendSysExToggle(0, CALLIBRATE_EXPRESSION_PEDAL, startCalibration);
 }
 
 // CMD 39h: Reset expression pedal minimum and maximum bounds to factory settings
-void TerpstraMidiDriver::resetExpressionPedalBounds()
+void LumatoneFirmwareDriver::resetExpressionPedalBounds()
 {
     sendSysExRequest(0, RESET_EXPRESSION_PEDAL_BOUNDS);
 }
 
 // CMD 3Ah: Retrieve the threshold values of target board
-void TerpstraMidiDriver::getBoardThresholdValues(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::getBoardThresholdValues(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_BOARD_THRESHOLD_VALUES);
 }
 
 // CMD 3Bh: Retrieve the sensitivity values of target board
-void TerpstraMidiDriver::getBoardSensitivityValues(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::getBoardSensitivityValues(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_BOARD_SENSITIVITY_VALUES);
 }
 
 // CMD 3Ch: Set the MIDI channels for peripheral controllers
-void TerpstraMidiDriver::setPeripheralChannels(juce::uint8 pitchWheelChannel, juce::uint8 modWheelChannel, juce::uint8 expressionChannel, juce::uint8 sustainChannel)
+void LumatoneFirmwareDriver::setPeripheralChannels(juce::uint8 pitchWheelChannel, juce::uint8 modWheelChannel, juce::uint8 expressionChannel, juce::uint8 sustainChannel)
 {
     pitchWheelChannel -= 1;
     modWheelChannel -= 1;
@@ -610,32 +625,32 @@ void TerpstraMidiDriver::setPeripheralChannels(juce::uint8 pitchWheelChannel, ju
 }
 
 // CMD 3Dh: Retrieve the MIDI channels for peripheral controllers
-void TerpstraMidiDriver::getPeripheralChannels()
+void LumatoneFirmwareDriver::getPeripheralChannels()
 {
     sendSysExRequest(0, GET_PERIPHERAL_CHANNELS);
 }
 
 // CMD 3Fh: Set the 8-bit aftertouch trigger delay value, the time between a note on event and the initialization of aftertouch events
-void TerpstraMidiDriver::setAfterTouchTriggerDelay(juce::uint8 boardIndex, juce::uint8 aftertouchTriggerValue)
+void LumatoneFirmwareDriver::setAfterTouchTriggerDelay(juce::uint8 boardIndex, juce::uint8 aftertouchTriggerValue)
 {
     setAfterTouchTriggerDelay(boardIndex, aftertouchTriggerValue >> 4, aftertouchTriggerValue & 0xf);
 }
 
 // CMD 3Fh: Set the 8-bit aftertouch trigger delay value, the time between a note on event and the initialization of aftertouch events
-void TerpstraMidiDriver::setAfterTouchTriggerDelay(juce::uint8 boardIndex, juce::uint8 triggerValueUpperNibble, juce::uint8 triggerValueLowerNibble)
+void LumatoneFirmwareDriver::setAfterTouchTriggerDelay(juce::uint8 boardIndex, juce::uint8 triggerValueUpperNibble, juce::uint8 triggerValueLowerNibble)
 {
     sendSysEx(boardIndex, SET_AFTERTOUCH_TRIGGER_DELAY, triggerValueUpperNibble, triggerValueLowerNibble, '\0', '\0');
 }
 
 // CMD 40h: Retrieve the aftertouch trigger delay of the given board
-void TerpstraMidiDriver::sendGetAftertouchTriggerDelayRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendGetAftertouchTriggerDelayRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_AFTERTOUCH_TRIGGER_DELAY);
 }
 
 // CMD 41h: Set the Lumatouch note-off delay value, an 11-bit integer representing the amount of 1.1ms ticks before
 // sending a note-off event after a Lumatone-configured key is released. 
-void TerpstraMidiDriver::setLumatouchNoteOffDelay(juce::uint8 boardIndex, int delayValue)
+void LumatoneFirmwareDriver::setLumatouchNoteOffDelay(juce::uint8 boardIndex, int delayValue)
 {
     setLumatouchNoteOffDelay(boardIndex,
         (delayValue >> 8) & 0xf,
@@ -644,19 +659,19 @@ void TerpstraMidiDriver::setLumatouchNoteOffDelay(juce::uint8 boardIndex, int de
     );
 }
 
-void TerpstraMidiDriver::setLumatouchNoteOffDelay(juce::uint8 boardIndex, juce::uint8 valueBits8_11, juce::uint8 valueBits4_7, juce::uint8 valueBits0_3)
+void LumatoneFirmwareDriver::setLumatouchNoteOffDelay(juce::uint8 boardIndex, juce::uint8 valueBits8_11, juce::uint8 valueBits4_7, juce::uint8 valueBits0_3)
 {
     sendSysEx(boardIndex, SET_LUMATOUCH_NOTE_OFF_DELAY, valueBits8_11, valueBits4_7, valueBits0_3, '\0');
 }
 
 // CMD 42h: Retrieve the note-off delay value of the given board
-void TerpstraMidiDriver::sendGetLumatouchNoteOffDelayRequest(juce::uint8 boardIndex)
+void LumatoneFirmwareDriver::sendGetLumatouchNoteOffDelayRequest(juce::uint8 boardIndex)
 {
     sendSysExRequest(boardIndex, GET_LUMATOUCH_NOTE_OFF_DELAY);
 }
 
 // CMD 43h: Set expression pedal ADC threshold value, a 12-bit integer
-void TerpstraMidiDriver::setExpressionPedalADCThreshold(int thresholdValue)
+void LumatoneFirmwareDriver::setExpressionPedalADCThreshold(int thresholdValue)
 {
     setExpressionPedalADCThreshold(
         (thresholdValue >> 8) & 0xf,
@@ -666,25 +681,25 @@ void TerpstraMidiDriver::setExpressionPedalADCThreshold(int thresholdValue)
 }
 
 // CMD 43h: Set expression pedal ADC threshold value with 3 4-bit integers representing a 12-bit integer
-void TerpstraMidiDriver::setExpressionPedalADCThreshold(juce::uint8 valueBits8_12, juce::uint8 valueBits4_7, juce::uint8 valueBits0_3)
+void LumatoneFirmwareDriver::setExpressionPedalADCThreshold(juce::uint8 valueBits8_12, juce::uint8 valueBits4_7, juce::uint8 valueBits0_3)
 {
     sendSysEx(0, SET_EXPRESSION_PEDAL_THRESHOLD, valueBits8_12, valueBits4_7, valueBits0_3, '\0');
 }
 
 // CMD 44h: Get the current expression pedal ADC threshold value
-void TerpstraMidiDriver::sendGetExpressionPedalADCThresholdRequest()
+void LumatoneFirmwareDriver::sendGetExpressionPedalADCThresholdRequest()
 {
     sendSysExRequest(0, GET_EXPRESSION_PEDAL_THRESHOLD);
 }
 
 // CMD 45h: Configure the on/off settings of the sustain pedal
-void TerpstraMidiDriver::sendInvertSustainPedal(bool setInverted)
+void LumatoneFirmwareDriver::sendInvertSustainPedal(bool setInverted)
 {
     sendSysExToggle(0, INVERT_SUSTAIN_PEDAL, setInverted);
 }
 
 // CMD 46h: Replace current presets with factory presets
-void TerpstraMidiDriver::sendResetDefaultPresetsRequest(int presetIndex)
+void LumatoneFirmwareDriver::sendResetDefaultPresetsRequest(int presetIndex)
 {
     presetIndex %= 10;
     sendSysEx(0, RESET_DEFAULT_PRESETS, presetIndex, '\0', '\0', '\0');
@@ -692,13 +707,13 @@ void TerpstraMidiDriver::sendResetDefaultPresetsRequest(int presetIndex)
 
 // CMD 47h: Read back the currently configured preset flags of expression & sustain inversion,
 // plus light-on-keystroke and polyphonic aftertouch
-void TerpstraMidiDriver::sendGetPresetFlagsReset()
+void LumatoneFirmwareDriver::sendGetPresetFlagsReset()
 {
     sendSysExRequest(0, GET_PRESET_FLAGS);
 }
 
 // For CMD 48h response: get expression pedal sensitivity
-void TerpstraMidiDriver::sendGetExpressionPedalSensitivity()
+void LumatoneFirmwareDriver::sendGetExpressionPedalSensitivity()
 {
     sendSysExRequest(0, GET_EXPRESSION_PEDAL_SENSITIVIY);
 }
@@ -708,14 +723,14 @@ void TerpstraMidiDriver::sendGetExpressionPedalSensitivity()
 Low-level SysEx calls
 */
 
-void TerpstraMidiDriver::fillManufacturerId(unsigned char* data) const
+void LumatoneFirmwareDriver::fillManufacturerId(unsigned char* data) const
 {
     data[0] = MANUFACTURER_ID_0;
     data[1] = MANUFACTURER_ID_1;
     data[2] = MANUFACTURER_ID_2;
 }
 
-juce::MidiMessage TerpstraMidiDriver::createTerpstraSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 data1, juce::uint8 data2, juce::uint8 data3, juce::uint8 data4) const
+juce::MidiMessage LumatoneFirmwareDriver::createTerpstraSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 data1, juce::uint8 data2, juce::uint8 data3, juce::uint8 data4) const
 {
     unsigned char sysExData[9];
     fillManufacturerId(sysExData);
@@ -731,7 +746,7 @@ juce::MidiMessage TerpstraMidiDriver::createTerpstraSysEx(juce::uint8 boardIndex
 }
 
 // Create a SysEx message to send 8-bit color precision
-juce::MidiMessage TerpstraMidiDriver::createExtendedKeyColourSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 keyIndex, juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower) const
+juce::MidiMessage LumatoneFirmwareDriver::createExtendedKeyColourSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 keyIndex, juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower) const
 {
     unsigned char sysExData[12];
     fillManufacturerId(sysExData);
@@ -748,12 +763,12 @@ juce::MidiMessage TerpstraMidiDriver::createExtendedKeyColourSysEx(juce::uint8 b
     juce::MidiMessage msg = juce::MidiMessage::createSysExMessage(sysExData, 12);
     return msg;
 }
-juce::MidiMessage TerpstraMidiDriver::createExtendedKeyColourSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 keyIndex, int red, int green, int blue) const
+juce::MidiMessage LumatoneFirmwareDriver::createExtendedKeyColourSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 keyIndex, int red, int green, int blue) const
 {
     return createExtendedKeyColourSysEx(boardIndex, cmd, keyIndex, red >> 4, red & 0xf, green >> 4, green & 0xf, blue >> 4, blue & 0xf);
 }
 
-juce::MidiMessage TerpstraMidiDriver::createExtendedMacroColourSysEx(juce::uint8 cmd, juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower) const
+juce::MidiMessage LumatoneFirmwareDriver::createExtendedMacroColourSysEx(juce::uint8 cmd, juce::uint8 redUpper, juce::uint8 redLower, juce::uint8 greenUpper, juce::uint8 greenLower, juce::uint8 blueUpper, juce::uint8 blueLower) const
 {
     unsigned char sysExData[11];
     fillManufacturerId(sysExData);
@@ -770,12 +785,12 @@ juce::MidiMessage TerpstraMidiDriver::createExtendedMacroColourSysEx(juce::uint8
     return msg;
 }
 
-juce::MidiMessage TerpstraMidiDriver::createExtendedMacroColourSysEx(juce::uint8 cmd, int red, int green, int blue) const
+juce::MidiMessage LumatoneFirmwareDriver::createExtendedMacroColourSysEx(juce::uint8 cmd, int red, int green, int blue) const
 {
     return createExtendedMacroColourSysEx(cmd, red >> 4, red & 0xf, green >> 4, green & 0xf, blue >> 4, blue & 0xf);
 }
 
-juce::MidiMessage TerpstraMidiDriver::createTableSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 tableSize, const juce::uint8 table[])
+juce::MidiMessage LumatoneFirmwareDriver::createTableSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 tableSize, const juce::uint8 table[])
 {
     size_t msgSize = tableSize + 5;
     juce::Array<unsigned char> dataArray;
@@ -798,18 +813,27 @@ juce::MidiMessage TerpstraMidiDriver::createTableSysEx(juce::uint8 boardIndex, j
     return msg;
 }
 
-void TerpstraMidiDriver::sendSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 data1, juce::uint8 data2, juce::uint8 data3, juce::uint8 data4, bool overrideEditMode)
+void LumatoneFirmwareDriver::sendSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 data1, juce::uint8 data2, juce::uint8 data3, juce::uint8 data4, bool overrideEditMode)
 {
-    if (midiInput != nullptr)
+    switch (hostMode)
     {
-        jassert(boardIndex < 0x6 && data1 <= 0x7f && data2 <= 0x7f && data3 <= 0x7f && data4 <= 0x7f);
-        juce::MidiMessage msg = createTerpstraSysEx(boardIndex, cmd, data1, data2, data3, data4);
-        sendMessageWithAcknowledge(msg);
+    case HostMode::Driver:
+        if (getMidiInputIndex() < 0)
+        {
+            return;
+        }
+        break;
+    default:
+        break;
     }
+
+    jassert(boardIndex < 0x6 && data1 <= 0x7f && data2 <= 0x7f && data3 <= 0x7f && data4 <= 0x7f);
+    juce::MidiMessage msg = createTerpstraSysEx(boardIndex, cmd, data1, data2, data3, data4);
+    sendMessageWithAcknowledge(msg);
 }
 
 // Send a SysEx message without parameters
-void TerpstraMidiDriver::sendSysExRequest(juce::uint8 boardIndex, juce::uint8 cmd)
+void LumatoneFirmwareDriver::sendSysExRequest(juce::uint8 boardIndex, juce::uint8 cmd)
 {
     unsigned char sysExData[9];
     fillManufacturerId(sysExData);
@@ -823,7 +847,7 @@ void TerpstraMidiDriver::sendSysExRequest(juce::uint8 boardIndex, juce::uint8 cm
     sendMessageWithAcknowledge(msg);
 }
 
-void TerpstraMidiDriver::sendSysExToggle(juce::uint8 boardIndex, juce::uint8 cmd, bool turnStateOn)
+void LumatoneFirmwareDriver::sendSysExToggle(juce::uint8 boardIndex, juce::uint8 cmd, bool turnStateOn)
 {
     unsigned char sysExData[9];
     fillManufacturerId(sysExData);
@@ -838,7 +862,7 @@ void TerpstraMidiDriver::sendSysExToggle(juce::uint8 boardIndex, juce::uint8 cmd
 }
 
 // Checks if message is a valid Lumatone firmware response and is expected length, then runs supplied unpacking function or returns an error code 
-FirmwareSupport::Error TerpstraMidiDriver::unpackIfValid(const juce::MidiMessage& response, size_t numBytes, std::function<FirmwareSupport::Error(const juce::uint8*)> unpackFunction)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackIfValid(const juce::MidiMessage& response, size_t numBytes, std::function<FirmwareSupport::Error(const juce::uint8*)> unpackFunction)
 {
     auto status = messageIsValidLumatoneResponse(response);
     if (status != FirmwareSupport::Error::noError)
@@ -852,7 +876,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackIfValid(const juce::MidiMessage
 }
 
 // Generic unpacking of octave data from a SysEx message
-FirmwareSupport::Error TerpstraMidiDriver::unpackOctaveConfig(const juce::MidiMessage& msg, int& boardId, size_t numBytes, int* keyData, std::function<FirmwareSupport::Error(const juce::MidiMessage&, size_t, int*)> nBitUnpackFunction)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackOctaveConfig(const juce::MidiMessage& msg, int& boardId, size_t numBytes, int* keyData, std::function<FirmwareSupport::Error(const juce::MidiMessage&, size_t, int*)> nBitUnpackFunction)
 {
     auto status = nBitUnpackFunction(msg, numBytes, keyData);
     if (status != FirmwareSupport::Error::noError)
@@ -863,7 +887,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackOctaveConfig(const juce::MidiMe
 }
 
 // Generic unpacking of 7-bit data from a SysEx message
-FirmwareSupport::Error TerpstraMidiDriver::unpack7BitData(const juce::MidiMessage& msg, size_t numBytes, int* unpackedData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpack7BitData(const juce::MidiMessage& msg, size_t numBytes, int* unpackedData)
 {
     auto unpack = [&](const juce::uint8* payload) {
         for (int i = 0; i < numBytes; i++)
@@ -875,7 +899,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpack7BitData(const juce::MidiMessag
 }
 
 // Unpacking of octave-based 7-bit key configuration data
-FirmwareSupport::Error TerpstraMidiDriver::unpack7BitOctaveData(const juce::MidiMessage& msg, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpack7BitOctaveData(const juce::MidiMessage& msg, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     return unpackOctaveConfig(msg, boardId, numKeys, keyData, [&](const juce::MidiMessage&, juce::uint8, int*) {
         return unpack7BitData(msg, numKeys, keyData);
@@ -883,7 +907,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpack7BitOctaveData(const juce::Midi
 }
 
 // Generic unpacking of 8-bit data from a SysEx message
-FirmwareSupport::Error TerpstraMidiDriver::unpack8BitData(const juce::MidiMessage& msg, size_t numBytes, int* unpackedData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpack8BitData(const juce::MidiMessage& msg, size_t numBytes, int* unpackedData)
 {
     auto unpack = [&](const juce::uint8* payload) {
         auto numValues = numBytes / 2;
@@ -896,7 +920,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpack8BitData(const juce::MidiMessag
 }
 
 // Unpacking of octave-based 8-bit data
-FirmwareSupport::Error TerpstraMidiDriver::unpack8BitOctaveData(const juce::MidiMessage& msg, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpack8BitOctaveData(const juce::MidiMessage& msg, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     return unpackOctaveConfig(msg, boardId, numKeys, keyData, [&](const juce::MidiMessage&, size_t, int*) {
         return unpack8BitData(msg, numKeys * 2, keyData);
@@ -904,7 +928,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpack8BitOctaveData(const juce::Midi
 }
 
 // Generic unpacking of 12-bit data from a SysEx message, when packed with two 7-bit values
-FirmwareSupport::Error TerpstraMidiDriver::unpack12BitDataFrom7Bit(const juce::MidiMessage& msg, size_t numBytes, int* unpackedData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpack12BitDataFrom7Bit(const juce::MidiMessage& msg, size_t numBytes, int* unpackedData)
 {
     auto unpack = [&](const juce::uint8* payload) {
         auto numValues = numBytes / 2;
@@ -917,7 +941,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpack12BitDataFrom7Bit(const juce::M
 }
 
 // Generic unpacking of 12-bit data from a SysEx message, when packed with three 4-bit values
-FirmwareSupport::Error TerpstraMidiDriver::unpack12BitDataFrom4Bit(const juce::MidiMessage& msg, size_t numBytes, int* unpackedData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpack12BitDataFrom4Bit(const juce::MidiMessage& msg, size_t numBytes, int* unpackedData)
 {
     auto unpack = [&](const juce::uint8* payload) {
         auto numValues = numBytes / 3;
@@ -931,7 +955,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpack12BitDataFrom4Bit(const juce::M
 
     return unpackIfValid(msg, numBytes, unpack);
 }
-bool TerpstraMidiDriver::messageIsResponseToMessage(const juce::MidiMessage& answer, const juce::MidiMessage& originalMessage)
+bool LumatoneFirmwareDriver::messageIsResponseToMessage(const juce::MidiMessage& answer, const juce::MidiMessage& originalMessage)
 {
     // Only for SysEx messages
     if (answer.isSysEx() != originalMessage.isSysEx())
@@ -955,7 +979,7 @@ bool TerpstraMidiDriver::messageIsResponseToMessage(const juce::MidiMessage& ans
     }
 }
 
-FirmwareSupport::Error TerpstraMidiDriver::messageIsValidLumatoneResponse(const juce::MidiMessage& midiMessage)
+FirmwareSupport::Error LumatoneFirmwareDriver::messageIsValidLumatoneResponse(const juce::MidiMessage& midiMessage)
 {
     if (!midiMessage.isSysEx())
         return FirmwareSupport::Error::messageIsNotSysEx;
@@ -979,7 +1003,7 @@ FirmwareSupport::Error TerpstraMidiDriver::messageIsValidLumatoneResponse(const 
     return FirmwareSupport::Error::noError;
 }
 
-FirmwareSupport::Error TerpstraMidiDriver::responseIsExpectedLength(const juce::MidiMessage& midiMessage, size_t numPayloadBytes)
+FirmwareSupport::Error LumatoneFirmwareDriver::responseIsExpectedLength(const juce::MidiMessage& midiMessage, size_t numPayloadBytes)
 {
     auto size = midiMessage.getSysExDataSize();
     auto expected = numPayloadBytes + PAYLOAD_INIT;
@@ -995,14 +1019,14 @@ FirmwareSupport::Error TerpstraMidiDriver::responseIsExpectedLength(const juce::
 }
 
 // For CMD 13h response: unpacks 8-bit key data for red LED intensity. 112 bytes, lower and upper nibbles for 56 values
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetLEDConfigResponse(const juce::MidiMessage& response, int& boardId, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetLEDConfigResponse(const juce::MidiMessage& response, int& boardId, int* keyData)
 {
     // TODO: Maybe should define keys per octave somewhere
     return unpack8BitOctaveData(response, boardId, 56, keyData);
 }
 
 // For CMD 13h response: unpacks key data for red LED intensity. 55 or 56 bytes, each value must be multiplied by 5
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetLEDConfigResponse_Version_1_0_0(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetLEDConfigResponse_Version_1_0_0(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     // Custom unpacking function for intensity multiplication
     auto unpackFunction = [&](const juce::uint8* payload) {
@@ -1017,43 +1041,43 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetLEDConfigResponse_Version_1_
 }
 
 // For CMD 16h response: unpacks channel data for note configuration. 55 or 56 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetChannelConfigResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetChannelConfigResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     return unpack7BitOctaveData(response, boardId, numKeys, keyData);
 }
 
 // For CMD 17h response: unpacks 7-bit key data for note configuration. 55 or 56 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetNoteConfigResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetNoteConfigResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     return unpack7BitOctaveData(response, boardId, numKeys, keyData);
 }
 
 // For CMD 18h response: unpacks 7-bit key type data for key configuration. 55 or 56 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetTypeConfigResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetTypeConfigResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     return unpack7BitOctaveData(response, boardId, numKeys, keyData);
 }
 
 // For CMD 19h response: unpacks 8-bit key data for maximums of adc threshold. 55 or 56 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetKeyMaxThresholdsResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetKeyMaxThresholdsResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     return unpack8BitData(response, numKeys, keyData);
 }
 
 // For CMD 1Ah response: unpacks 8-bit key data for minimums of adc threshold. 55 or 56 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetKeyMinThresholdsResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetKeyMinThresholdsResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     return unpack8BitOctaveData(response, boardId, numKeys, keyData);
 }
 
 // For CMD 1Bh response: unpacks 8-bit key data for maximums of adc threshold for aftertouch triggering. 55 or 56 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetAftertouchMaxThresholdsResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetAftertouchMaxThresholdsResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* keyData)
 {
     return unpack8BitOctaveData(response, boardId, numKeys, keyData);
 }
 
 // For CMD 1Ch response: unpacks boolean key validity data for board, whether or not each key meets threshold specs
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetKeyValidityResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, bool* keyValidityData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetKeyValidityResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, bool* keyValidityData)
 {
     // TODO: perhaps define boolean unpacking, or combine with 7-bit somehow
 
@@ -1073,31 +1097,31 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetKeyValidityResponse(const ju
 }
 
 // For CMD 1Dh response: unpacks 7-bit velocity configuration of keyboard, 128 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetVelocityConfigResponse(const juce::MidiMessage& response, int* velocityData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetVelocityConfigResponse(const juce::MidiMessage& response, int* velocityData)
 {
     return unpack7BitData(response, 128, velocityData);
 }
 
 // For CMD 1Eh response: unpacks 7-bit fader configuration of keyboard, 128 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetFaderConfigResponse(const juce::MidiMessage& response, int* faderData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetFaderConfigResponse(const juce::MidiMessage& response, int* faderData)
 {
     return unpack7BitData(response, 128, faderData);
 }
 
 // For CMD 1Fh response: unpacks 7-bit aftertouch configuration of keyboard, 128 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetAftertouchConfigResponse(const juce::MidiMessage& response, int* aftertouchData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetAftertouchConfigResponse(const juce::MidiMessage& response, int* aftertouchData)
 {
     return unpack7BitData(response, 128, aftertouchData);
 }
 
 // For CMD 21h response: unpacks 12-bit velocity interval configuration of keyboard, 254 bytes encoding 127 values
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetVelocityIntervalConfigResponse(const juce::MidiMessage& response, int* intervalData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetVelocityIntervalConfigResponse(const juce::MidiMessage& response, int* intervalData)
 {
     return unpack12BitDataFrom7Bit(response, 254, intervalData);
 }
 
 // For CMD 22h response: unpacks 7-bit fader type configuration of board, 56 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetFaderConfigResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* faderData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetFaderConfigResponse(const juce::MidiMessage& response, int& boardId, juce::uint8 numKeys, int* faderData)
 {
     return unpackOctaveConfig(response, boardId, numKeys, faderData, [&](const juce::MidiMessage&, size_t, int*) {
         return unpack7BitData(response, numKeys, faderData);
@@ -1105,7 +1129,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetFaderConfigResponse(const ju
 }
 
 // For CMD 23h response: unpacks serial ID number of keyboard, 12 7-bit values encoding 6 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetSerialIdentityResponse(const juce::MidiMessage& response, int* serialBytes)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetSerialIdentityResponse(const juce::MidiMessage& response, int* serialBytes)
 {
     // Check for echo first
     auto sysExData = response.getSysExData();
@@ -1133,13 +1157,13 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetSerialIdentityResponse(const
 }
 
 // For CMD 30h response: unpacks 7-bit Lumatouch configuration of keyboard, 128 bytes
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetLumatouchConfigResponse(const juce::MidiMessage& response, int* lumatouchData)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetLumatouchConfigResponse(const juce::MidiMessage& response, int* lumatouchData)
 {
     return unpack7BitData(response, 128, lumatouchData);
 }
 
 // For CMD 31h response: unpacks firmware revision running on the keyboard
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetFirmwareRevisionResponse(const juce::MidiMessage& response, int& majorVersion, int& minorVersion, int& revision)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetFirmwareRevisionResponse(const juce::MidiMessage& response, int& majorVersion, int& minorVersion, int& revision)
 {
     auto status = messageIsValidLumatoneResponse(response);
     if (status != FirmwareSupport::Error::noError)
@@ -1158,7 +1182,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetFirmwareRevisionResponse(con
 }
 
 // For CMD 33h response: echo payload
-FirmwareSupport::Error TerpstraMidiDriver::unpackPingResponse(const juce::MidiMessage& response, int& value1, int& value2, int& value3, int& value4)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackPingResponse(const juce::MidiMessage& response, int& value1, int& value2, int& value3, int& value4)
 {
     auto status = messageIsValidLumatoneResponse(response);
     if (status != FirmwareSupport::Error::noError)
@@ -1178,7 +1202,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackPingResponse(const juce::MidiMe
 }
 
 // For CMD 33h response: echo payload
-FirmwareSupport::Error TerpstraMidiDriver::unpackPingResponse(const juce::MidiMessage& response, unsigned int& value)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackPingResponse(const juce::MidiMessage& response, unsigned int& value)
 {
     // Check for echo first
     auto sysExData = response.getSysExData();
@@ -1200,7 +1224,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackPingResponse(const juce::MidiMe
 }
 
 // For CMD 3Ah response: retrieve all 8-bit threshold values of a certain board
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetBoardThresholdValuesResponse(const juce::MidiMessage& response, int& boardId, int& minHighThreshold, int& minLowThreshold, int& maxThreshold, int& aftertouchThreshold, int& ccThreshold)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetBoardThresholdValuesResponse(const juce::MidiMessage& response, int& boardId, int& minHighThreshold, int& minLowThreshold, int& maxThreshold, int& aftertouchThreshold, int& ccThreshold)
 {
     const short NUM_UNPACKED = 5;
     int unpackedData[NUM_UNPACKED];
@@ -1218,7 +1242,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetBoardThresholdValuesResponse
 }
 
 // For CMD 3Bh response: retrieve all threshold values of a certain board
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetBoardSensitivityValuesResponse(const juce::MidiMessage& response, int& boardId, int& ccSensitivity, int& aftertouchSensitivity)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetBoardSensitivityValuesResponse(const juce::MidiMessage& response, int& boardId, int& ccSensitivity, int& aftertouchSensitivity)
 {
     const short NUM_UNPACKED = 2;
     int unpackedData[NUM_UNPACKED];
@@ -1233,7 +1257,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetBoardSensitivityValuesRespon
 }
 
 // For CMD 3Dh response: retrieve all threshold values of a certain board
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetPeripheralChannelsResponse(const juce::MidiMessage& response, int& pitchWheelChannel, int& modWheelChannel, int& expressionChannel, int& sustainPedalChannel)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetPeripheralChannelsResponse(const juce::MidiMessage& response, int& pitchWheelChannel, int& modWheelChannel, int& expressionChannel, int& sustainPedalChannel)
 {
     const short NUM_UNPACKED = 4;
     int unpackedData[NUM_UNPACKED];
@@ -1250,7 +1274,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetPeripheralChannelsResponse(c
 }
 
 // For CMD 3Eh response: read back the calibration mode of the message
-FirmwareSupport::Error TerpstraMidiDriver::unpackPeripheralCalibrationMode(const juce::MidiMessage& response, int& calibrationMode)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackPeripheralCalibrationMode(const juce::MidiMessage& response, int& calibrationMode)
 {
     // Other errors will be caught in corresponding mode unpacking
     int msgSize = response.getSysExDataSize();
@@ -1269,7 +1293,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackPeripheralCalibrationMode(const
 }
 
 // For CMD 3Eh response: retrieve 12-bit expression pedal calibration status values in respective mode, automatically sent every 100ms
-FirmwareSupport::Error TerpstraMidiDriver::unpackExpressionPedalCalibrationPayload(const juce::MidiMessage& response, int& minBound, int& maxBound, bool& valid)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackExpressionPedalCalibrationPayload(const juce::MidiMessage& response, int& minBound, int& maxBound, bool& valid)
 {
     const short NUM_UNPACKED = 15; // Actually two + boolean, but this message always returns 15-byte payload
     int unpackedData[NUM_UNPACKED];
@@ -1285,7 +1309,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackExpressionPedalCalibrationPaylo
 }
 
 // For CMD 3Eh response: retrieve 12-bit pitch & mod wheel calibration status values in respective mode, automatically sent every 100ms
-FirmwareSupport::Error TerpstraMidiDriver::unpackWheelsCalibrationPayload(const juce::MidiMessage& response, int& centerPitch, int& minPitch, int& maxPitch, int& minMod, int& maxMod)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackWheelsCalibrationPayload(const juce::MidiMessage& response, int& centerPitch, int& minPitch, int& maxPitch, int& minMod, int& maxMod)
 {
     const short NUM_UNPACKED = 15;
     int unpackedData[NUM_UNPACKED];
@@ -1303,7 +1327,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackWheelsCalibrationPayload(const 
 }
 
 // For CMD 40h response: retrieve aftertouch trigger delay of a certain board
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetAftertouchTriggerDelayResponse(const juce::MidiMessage& response, int& boardId, int& triggerDelay)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetAftertouchTriggerDelayResponse(const juce::MidiMessage& response, int& boardId, int& triggerDelay)
 {
     const short NUM_UNPACKED = 1;
     int unpackedData[NUM_UNPACKED];
@@ -1316,7 +1340,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetAftertouchTriggerDelayRespon
 }
 
 // For CMD 42h response: retrieve 12-bit Lumatouch note off delay of a certain board
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetLumatouchNoteOffDelayResponse(const juce::MidiMessage& response, int& boardId, int& delay)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetLumatouchNoteOffDelayResponse(const juce::MidiMessage& response, int& boardId, int& delay)
 {
     auto status = messageIsValidLumatoneResponse(response);
     if (status != FirmwareSupport::Error::noError)
@@ -1334,7 +1358,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetLumatouchNoteOffDelayRespons
 }
 
 // For CMD 44h response: retrieve 12-bit expression pedal adc threshold, a 12-bit value
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetExpressionPedalThresholdResponse(const juce::MidiMessage& response, int& thresholdValue)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetExpressionPedalThresholdResponse(const juce::MidiMessage& response, int& thresholdValue)
 {
     auto status = messageIsValidLumatoneResponse(response);
     if (status != FirmwareSupport::Error::noError)
@@ -1352,7 +1376,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetExpressionPedalThresholdResp
 }
 
 // For CMD 47h response: retrieve preset flags
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetPresetFlagsResponse(const juce::MidiMessage& response, bool& expressionInverted, bool& lightsOnKeystroke, bool& aftertouchOn, bool& sustainInverted)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetPresetFlagsResponse(const juce::MidiMessage& response, bool& expressionInverted, bool& lightsOnKeystroke, bool& aftertouchOn, bool& sustainInverted)
 {
     const short NUM_UNPACKED = 4;
     int unpackedData[NUM_UNPACKED];
@@ -1369,7 +1393,7 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetPresetFlagsResponse(const ju
 }
 
 // For CMD 48h response: get expression pedal sensitivity
-FirmwareSupport::Error TerpstraMidiDriver::unpackGetExpressionPedalSensitivityResponse(const juce::MidiMessage& response, int& sensitivity)
+FirmwareSupport::Error LumatoneFirmwareDriver::unpackGetExpressionPedalSensitivityResponse(const juce::MidiMessage& response, int& sensitivity)
 {
     const short NUM_UNPACKED = 1;
     int unpackedData[NUM_UNPACKED];
@@ -1382,9 +1406,36 @@ FirmwareSupport::Error TerpstraMidiDriver::unpackGetExpressionPedalSensitivityRe
     return status;
 }
 
+void LumatoneFirmwareDriver::sendTestMessageNow(int outputDeviceIndex, const juce::MidiMessage &message)
+{
+    switch (hostMode)
+    {
+    case HostMode::Driver:
+        HajuMidiDriver::sendTestMessageNow(outputDeviceIndex, message);
+        break;
+    case HostMode::Plugin:
+        sendMessageNow(message);
+        break;
+    }
+}
 
+void LumatoneFirmwareDriver::sendMessageNow(const juce::MidiMessage &msg)
+{
+    switch (hostMode)
+    {
+    case HostMode::Driver:
+        HajuMidiDriver::sendMessageNow(msg);
+        break;
+    case HostMode::Plugin:
+    {
+        juce::ScopedLock l(nextBufferQueue.getLock());
+        nextBufferQueue.add(msg); 
+    }
+    break;
+    }
+}
 
-void TerpstraMidiDriver::sendMessageWithAcknowledge(const juce::MidiMessage& message)
+void LumatoneFirmwareDriver::sendMessageWithAcknowledge(const juce::MidiMessage &message)
 {
     // Prevent certain messages from being sent
     if (onlySendRequestMessages && message.isSysEx())
@@ -1403,7 +1454,7 @@ void TerpstraMidiDriver::sendMessageWithAcknowledge(const juce::MidiMessage& mes
     }
 
 //    jassert(midiInput != nullptr);
-    if (midiInput == nullptr)
+    if (hostMode == HostMode::Driver && getMidiInputIndex() < 0)
     {
         DBG("No juce::MidiInput open to send message to.");
 //        sendMessageNow(message);
@@ -1417,9 +1468,10 @@ void TerpstraMidiDriver::sendMessageWithAcknowledge(const juce::MidiMessage& mes
     {
         // Add message to queue first. The oldest message in queue will be sent.
 		{
-			messageBuffer.add(message);
+            juce::ScopedLock l(sysexQueue.getLock());
+			sysexQueue.add(message);
 			// const juce::MessageManagerLock mmLock;
-			// this->listeners.call(&Listener::midiSendQueueSize, messageBuffer.size());
+			// this->listeners.call(&Listener::midiSendQueueSize, sysexQueue.size());
             notifySendQueueSize();
 		}
 
@@ -1431,26 +1483,26 @@ void TerpstraMidiDriver::sendMessageWithAcknowledge(const juce::MidiMessage& mes
     }
 }
 
-void TerpstraMidiDriver::sendOldestMessageInQueue()
+void LumatoneFirmwareDriver::sendOldestMessageInQueue()
 {
-    if (!messageBuffer.isEmpty())
+    if (!sysexQueue.isEmpty())
     {
         jassert(!isTimerRunning());
         jassert(!hasMsgWaitingForAck);
 
-        currentMsgWaitingForAck = messageBuffer[0];     // oldest element in buffer
+        currentMsgWaitingForAck = sysexQueue[0];     // oldest element in buffer
         hasMsgWaitingForAck = true;
-		messageBuffer.remove(0);                        // remove from buffer
+		sysexQueue.remove(0);                        // remove from buffer
         
         // const juce::MessageManagerLock mmLock;
-        // this->listeners.call(&Listener::midiSendQueueSize, messageBuffer.size());
+        // this->listeners.call(&Listener::midiSendQueueSize, sysexQueue.size());
         notifySendQueueSize();
 
         sendCurrentMessage();
     }
 }
 
-void TerpstraMidiDriver::sendCurrentMessage()
+void LumatoneFirmwareDriver::sendCurrentMessage()
 {
     jassert(!isTimerRunning());
     jassert(hasMsgWaitingForAck);
@@ -1470,13 +1522,13 @@ void TerpstraMidiDriver::sendCurrentMessage()
     DBG("SENT: " + currentMsgWaitingForAck.getDescription());
     // const juce::MessageManagerLock mmLock;
     // this->listeners.call(&Listener::midiMessageSent, currentMsgWaitingForAck);
-    notifyMessageSent(midiOutput, currentMsgWaitingForAck);
+    // notifyMessageSent(midiOutput, currentMsgWaitingForAck);
 
     timerType = TimerType::waitForAnswer;
     startTimer(receiveTimeoutInMilliseconds);       // Start waiting for answer
 }
 
-void TerpstraMidiDriver::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
+void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
 {
 #if JUCE_DEBUG
     if (message.isSysEx())
@@ -1526,7 +1578,7 @@ void TerpstraMidiDriver::handleIncomingMidiMessage(juce::MidiInput* source, cons
     // Other incoming messages are ignored
 }
 
-void TerpstraMidiDriver::timerCallback()
+void LumatoneFirmwareDriver::timerCallback()
 {
     stopTimer();
 
@@ -1541,8 +1593,8 @@ void TerpstraMidiDriver::timerCallback()
         //const juce::MessageManagerLock mmLock;
         // listeners.call(&Listener::generalLogMessage, "No answer from device", HajuErrorVisualizer::ErrorLevel::error);
         // listeners.call(&Listener::noAnswerToMessage, currentMsgWaitingForAck);
-        notifyLogMessage("No answer from device", ErrorLevel::error);
-        notifyNoAnswerToMessage(midiInput, currentMsgWaitingForAck);
+        // notifyLogMessage("No answer from device", ErrorLevel::error);
+        notifyNoAnswerToMessage(getMidiInputInfo(), currentMsgWaitingForAck);
     
 
         sendOldestMessageInQueue();
@@ -1556,9 +1608,9 @@ void TerpstraMidiDriver::timerCallback()
         jassertfalse;
 }
 
-void TerpstraMidiDriver::clearMIDIMessageBuffer()
+void LumatoneFirmwareDriver::clearMIDIMessageBuffer()
 { 
-    messageBuffer.clear();
+    sysexQueue.clear();
     hasMsgWaitingForAck = false;
     stopTimer();
     // this->listeners.call(&Listener::midiSendQueueSize, 0); 

@@ -1,7 +1,7 @@
 #include "key_update_buffer.h"
 
-LumatoneKeyUpdateBuffer::LumatoneKeyUpdateBuffer(TerpstraMidiDriver& driverIn, juce::ValueTree stateIn)
-    : midiDriver(driverIn)
+LumatoneKeyUpdateBuffer::LumatoneKeyUpdateBuffer(LumatoneFirmwareDriver& driverIn, juce::ValueTree stateIn)
+    : firmwareDriver(driverIn)
     , LumatoneState(stateIn)
 {
     keysToUpdate.remapTable(280);
@@ -106,15 +106,15 @@ void LumatoneKeyUpdateBuffer::timerCallback()
                 // auto currentKey = getKey(board, keyIndex);
                 auto currentKey = preUpdateLayout.getBoard(board)->theKeys[keyIndex];
                 if (!currentKey.configIsEqual(keyUpdate))
-                    midiDriver.sendKeyFunctionParameters(boardId, keyIndex, keyUpdate.noteNumber, keyUpdate.channelNumber, keyUpdate.keyType, keyUpdate.ccFaderDefault);
+                    firmwareDriver.sendKeyFunctionParameters(boardId, keyIndex, keyUpdate.noteNumber, keyUpdate.channelNumber, keyUpdate.keyType, keyUpdate.ccFaderDefault);
                 
                 if (!currentKey.colourIsEqual(keyUpdate))
                 {
                     auto colour = keyUpdate.colour;
                     if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
-                        midiDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
+                        firmwareDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
                     else
-                        midiDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() * 0.5f, colour.getGreen() * 0.5f, colour.getBlue() * 0.5f);
+                        firmwareDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() * 0.5f, colour.getGreen() * 0.5f, colour.getBlue() * 0.5f);
                 }
             }
 

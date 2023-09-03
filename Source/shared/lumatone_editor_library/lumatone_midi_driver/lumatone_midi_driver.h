@@ -38,13 +38,19 @@
 Connection to midi, sending SysEx parameters to keyboard
 ==============================================================================
 */
-class TerpstraMidiDriver : public HajuMidiDriver, public juce::Timer
+class LumatoneFirmwareDriver : public HajuMidiDriver, public juce::Timer
 {
 private:
 	enum class TimerType
 	{
 		waitForAnswer,
 		delayWhileDeviceBusy
+	};
+
+	enum class HostMode
+	{
+		Driver = 0, // For applications, open and manage devices with HajuMidiDriver
+		Plugin // Hosted in a DAW as a plugin - MIDI messages are received through DAW's buffer	
 	};
 
 public:
@@ -67,10 +73,10 @@ public:
 		virtual void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& message) = 0;
 		virtual void midiMessageSent(juce::MidiOutput* target, const juce::MidiMessage& message) = 0;
 		virtual void midiSendQueueSize(int size) = 0;
-		virtual void generalLogMessage(juce::String textMessage, ErrorLevel errorLevel) {}
+		// virtual void generalLogMessage(juce::String textMessage, ErrorLevel errorLevel) {}
 
 		// Realtime messages before a device is connected - not for heavy processing!
-		virtual void noAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& message) = 0;
+		virtual void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& message) = 0;
 //		virtual void testMessageReceived(int testInputIndex, const juce::MidiMessage& midiMessage) {};
     };
 
@@ -80,19 +86,21 @@ private:
 	void notifyMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage);
 	void notifyMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage);
 	void notifySendQueueSize();
-	void notifyLogMessage(juce::String textMessage, ErrorLevel errorLevel);
-    void notifyNoAnswerToMessage(juce::MidiInput* expectedDevice, const juce::MidiMessage& midiMessage);
+	// void notifyLogMessage(juce::String textMessage, ErrorLevel errorLevel);
+    void notifyNoAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage);
 //	void notifyTestMessageReceived(int testInputIndex, const juce::MidiMessage& midiMessage);
 
 
 public:
-	TerpstraMidiDriver(int numBoards=DEFAULT_NUM_BOARDS);
-	~TerpstraMidiDriver();
+	LumatoneFirmwareDriver(int numBoards=DEFAULT_NUM_BOARDS);
+	~LumatoneFirmwareDriver();
 
 //	void addListener(Listener* listenerToAdd);
 //	void removeListener(Listener* listenerToRemove);
     void addMessageCollector(Collector* collectorToAdd);
     void removeMessageCollector(Collector* collectorToRemove);
+
+	void readNextBuffer(juce::MidiBuffer& nextBuffer);
 
 	void restrictToRequestMessages(bool testMessagesOnly) { onlySendRequestMessages = testMessagesOnly; }
 
@@ -456,6 +464,13 @@ public:
 	FirmwareSupport::Error unpackGetExpressionPedalSensitivityResponse(const juce::MidiMessage& response, int& sensitivity);
 
 private:
+
+	// Send a message now without confirming it's a Lumatone
+	void sendTestMessageNow(int outputDeviceIndex, const  juce::MidiMessage& message);
+
+	// Low-level send MIDI message in a host dependent way
+	void sendMessageNow(const juce::MidiMessage& msg);
+
 	// Low-level SysEx message sending
 	void sendMessageWithAcknowledge(const juce::MidiMessage& message);
 
@@ -522,10 +537,14 @@ protected:
 
 private:
 
+	HostMode hostMode;
+
+	juce::Array<juce::MidiMessage, juce::CriticalSection> nextBufferQueue;
+
     juce::MidiMessage currentMsgWaitingForAck;    // std::optional would be the object of choice,once that is available...
 	bool hasMsgWaitingForAck = false;       // will be obsolete when std::optional is available
 
-	juce::Array<juce::MidiMessage, juce::CriticalSection> messageBuffer;
+	juce::Array<juce::MidiMessage, juce::CriticalSection> sysexQueue;
 
 	// Used for device detection and "Offline" mode (no messages that mutate board data)
 	bool      onlySendRequestMessages = false;
@@ -535,34 +554,6 @@ private:
 	const int receiveTimeoutInMilliseconds = 2000;
 	const int busyTimeDelayInMilliseconds = 500;
 	TimerType timerType;
-};
-
-struct HajuErrorVisualizerPlaceholder
-{
-	HajuErrorVisualizerPlaceholder() {}
-
-    void setErrorLevel(TerpstraMidiDriver::ErrorLevel errorLevel, juce::String toolTipText) {}
-
-    void setErrorLevel(
-        juce::SettableTooltipClient& tooltipClient,
-        juce::Component& component,
-		TerpstraMidiDriver::ErrorLevel errorLevel,
-        juce::String toolTipText,
-        int bgColourId) {}
-
-    void setErrorLevel(
-		juce::TextEditor& textEdit, 
-		TerpstraMidiDriver::ErrorLevel errorLevel,
-		juce::String toolTipText) {
-        return setErrorLevel(textEdit, textEdit, errorLevel, toolTipText, juce::TextEditor::backgroundColourId);
-    }
-
-    void setErrorLevel(
-		juce::Label& label, 
-		TerpstraMidiDriver::ErrorLevel errorLevel,
-		juce::String toolTipText) {
-        return setErrorLevel(label, label, errorLevel, toolTipText, juce::Label::textColourId);
-    }
 };
 
 #endif

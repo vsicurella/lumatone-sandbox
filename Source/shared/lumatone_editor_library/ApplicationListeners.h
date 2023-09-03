@@ -28,8 +28,9 @@ namespace LumatoneEditor
         virtual ~StatusListener() {}
 
         virtual void connectionFailed() {}
-        virtual void connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId) {}
-        virtual void connectionLost() {}
+        virtual void connectionStateChanged(ConnectionState state) {}
+        // virtual void connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId) {}
+        // virtual void connectionLost() {}
     };
 
     //============================================================================
@@ -105,11 +106,6 @@ namespace LumatoneEditor
     public:
 
         virtual ~EditorListener() {}
-
-        // TODO - change this to "status" and use "disconnected", "offline", "live", "firmware"
-        // Editor Actions
-        //virtual void editorModeChanged(sysExSendingMode newEditorMode) {}
-        virtual void connectionStatusChanged(ConnectionState status) {}
         
         // App Actions
         virtual void completeMappingLoaded(LumatoneLayout mappingData) {};
@@ -151,6 +147,27 @@ namespace LumatoneEditor
         virtual void invertSustainToggled(bool inverted) {};
 
      };
+     
+
+    class EditorEmitter
+    {
+    protected:
+
+        juce::ListenerList<LumatoneEditor::EditorListener> editorListeners;
+
+    public:
+        EditorEmitter() { }
+
+        virtual ~EditorEmitter() { editorListeners.clear(); }
+
+        virtual void addEditorListener(LumatoneEditor::EditorListener* listenerIn) { editorListeners.add(listenerIn); }
+
+        virtual void removeEditorListener(LumatoneEditor::EditorListener* listenerIn) { editorListeners.remove(listenerIn); }
+
+    private:
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EditorEmitter)
+    };
+
 
 
     class MidiListener

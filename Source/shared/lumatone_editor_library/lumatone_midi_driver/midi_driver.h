@@ -37,8 +37,8 @@ public:
 	// List of MIDI output device names
 	const juce::Array<juce::MidiDeviceInfo>& getMidiOutputList() const;
     
-	juce::MidiDeviceInfo getLastMidiOutputInfo() const { return lastOutputDevice; }
-	juce::MidiDeviceInfo getLastMidiInputInfo() const { return lastInputDevice; }
+	juce::MidiDeviceInfo getMidiOutputInfo() const { return lastOutputDevice; }
+	juce::MidiDeviceInfo getMidiInputInfo() const { return lastInputDevice; }
     
 	// Return the current input device index
     int getMidiInputIndex() const { return lastInputIndex; }
@@ -50,11 +50,11 @@ public:
 	bool hasDevicesDefined() const { return lastInputIndex >= 0 && lastOutputIndex >= 0; }
 
 	// Returns the index of the given MidiDevice if found, or -1 if not present
-	int getIndexOfInputDevice(juce::MidiDeviceInfo inputDeviceInfo) const { return midiInputs.indexOf(inputDeviceInfo); }
-	int getIndexOfInputDevice(juce::String inputDeviceId) const;
+	int findIndexOfInputDevice(juce::MidiDeviceInfo inputDeviceInfo) const { return midiInputs.indexOf(inputDeviceInfo); }
+	int findIndexOfInputDevice(juce::String inputDeviceId) const;
 	// Returns the index of the given MidiDevice if found, or -1 if not present
-	int getIndexOfOutputDevice(juce::MidiDeviceInfo outputDeviceInfo) const { return midiOutputs.indexOf(outputDeviceInfo); }
-	int getIndexOfOutputDevice(juce::String outputDeviceId) const;
+	int findIndexOfOutputDevice(juce::MidiDeviceInfo outputDeviceInfo) const { return midiOutputs.indexOf(outputDeviceInfo); }
+	int findIndexOfOutputDevice(juce::String outputDeviceId) const;
 
 	// Re-initializes device list in case of changes, returns true if a change was detected
 	bool refreshDeviceLists();
@@ -66,11 +66,7 @@ public:
 	void setMidiOutput(int deviceIndex);
 
 	// Send a MIDI message directly
-	void sendMessageNow(const  juce::MidiMessage& message);
-
-	// Higher level commands
-	void sendNoteOnMessage(int noteNumber, int channelNumber, juce::uint8 velocity);
-	void sendNoteOffMessage(int noteNumber, int channelNumber, juce::uint8 velocity);
+	virtual void sendMessageNow(const  juce::MidiMessage& message);
     
     // Close current input device
     void closeMidiInput();
@@ -85,7 +81,7 @@ public:
 	void openAvailableDevicesForTesting();
 
 	// Send a message to a specific device
-	void sendTestMessageNow(int outputDeviceIndex, const  juce::MidiMessage& message);
+	virtual void sendTestMessageNow(int outputDeviceIndex, const  juce::MidiMessage& message);
 
 	// Closes all open testing devices; either setMidiInput and setMidiOutput will call this if it's not empty
 	void closeTestingDevices();

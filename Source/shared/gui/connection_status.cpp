@@ -113,18 +113,7 @@ juce::Colour ConnectionStatus::stateToColour(ConnectionState state)
 //==============================================================================
 // LumatoneEditor::StatusListener
 
-void ConnectionStatus::connectionFailed()
+void ConnectionStatus::connectionStateChanged(ConnectionState newState)
 {
-    handleStatus(ConnectionState::DISCONNECTED);
+    handleStatus(newState);
 }
-
-void ConnectionStatus::connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId)
-{
-    handleStatus(ConnectionState::ONLINE);
-}
-
-void ConnectionStatus::connectionLost()
-{
-    handleStatus(ConnectionState::ERROR);
-}
-

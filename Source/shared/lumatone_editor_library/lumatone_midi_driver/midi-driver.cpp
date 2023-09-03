@@ -35,7 +35,7 @@ const juce::Array<juce::MidiDeviceInfo>& HajuMidiDriver::getMidiOutputList() con
 	return midiOutputs;
 }
 
-int HajuMidiDriver::getIndexOfInputDevice(juce::String inputDeviceId) const
+int HajuMidiDriver::findIndexOfInputDevice(juce::String inputDeviceId) const
 {
     for (int i = 0; i < midiInputs.size(); i++)
         if (midiInputs[i].identifier == inputDeviceId)
@@ -45,7 +45,7 @@ int HajuMidiDriver::getIndexOfInputDevice(juce::String inputDeviceId) const
 }
 
 
-int HajuMidiDriver::getIndexOfOutputDevice(juce::String outputDeviceId) const
+int HajuMidiDriver::findIndexOfOutputDevice(juce::String outputDeviceId) const
 {
     for (int i = 0; i < midiOutputs.size(); i++)
         if (midiOutputs[i].identifier == outputDeviceId)
@@ -179,18 +179,6 @@ void HajuMidiDriver::sendMessageNow(const juce::MidiMessage& message)
     }
     jassertfalse;
     DBG("MidiOutput is null!");
-}
-
-void HajuMidiDriver::sendNoteOnMessage(int noteNumber, int channelNumber, juce::uint8 velocity)
-{
-	if (channelNumber > 0 && noteNumber >= 0)
-		sendMessageNow(juce::MidiMessage::noteOn(channelNumber, noteNumber, velocity));
-}
-
-void HajuMidiDriver::sendNoteOffMessage(int noteNumber, int channelNumber, juce::uint8 velocity)
-{
-	if (channelNumber > 0 && noteNumber >= 0)
-		sendMessageNow(juce::MidiMessage::noteOff(channelNumber, noteNumber, velocity));
 }
 
 void HajuMidiDriver::closeMidiInput()

@@ -24,8 +24,6 @@ public:
     MainComponent(LumatoneController* controllerIn);
     ~MainComponent() override;
 
-
-
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;

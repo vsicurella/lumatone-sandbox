@@ -1,0 +1,205 @@
+#include "sandbox_processor.h"
+#include "sandbox_editor.h"
+
+//==============================================================================
+LumatoneSandboxProcessor::LumatoneSandboxProcessor()
+     : AudioProcessor (BusesProperties()
+                     #if ! JucePlugin_IsMidiEffect
+                      #if ! JucePlugin_IsSynth
+                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                      #endif
+                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
+                     #endif
+                       )
+{
+    undoManager = std::make_unique<juce::UndoManager>();
+
+    paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
+
+    midiDriver = std::make_unique<LumatoneFirmwareDriver>();
+    controller = std::make_unique<LumatoneController>(treeState, *midiDriver, undoManager.get());
+
+    monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), *(LumatoneState*)controller.get());
+    monitor->initializeDeviceDetection();
+
+    commandManager = std::make_unique<juce::ApplicationCommandManager>();
+    // commandManager->registerAllCommandsForTarget(this);
+  
+    gameEngine = std::make_unique<LumatoneSandboxGameEngine>(controller.get(), 30);
+}
+
+LumatoneSandboxProcessor::~LumatoneSandboxProcessor()
+{
+    commandManager = nullptr;
+
+    gameEngine = nullptr;
+    monitor = nullptr;
+    
+    controller = nullptr;
+    midiDriver = nullptr;
+
+    undoManager = nullptr;
+}
+
+//==============================================================================
+const juce::String LumatoneSandboxProcessor::getName() const
+{
+    return JucePlugin_Name;
+}
+
+bool LumatoneSandboxProcessor::acceptsMidi() const
+{
+   #if JucePlugin_WantsMidiInput
+    return true;
+   #else
+    return false;
+   #endif
+}
+
+bool LumatoneSandboxProcessor::producesMidi() const
+{
+   #if JucePlugin_ProducesMidiOutput
+    return true;
+   #else
+    return false;
+   #endif
+}
+
+bool LumatoneSandboxProcessor::isMidiEffect() const
+{
+   #if JucePlugin_IsMidiEffect
+    return true;
+   #else
+    return false;
+   #endif
+}
+
+double LumatoneSandboxProcessor::getTailLengthSeconds() const
+{
+    return 0.0;
+}
+
+int LumatoneSandboxProcessor::getNumPrograms()
+{
+    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
+                // so this should be at least 1, even if you're not really implementing programs.
+}
+
+int LumatoneSandboxProcessor::getCurrentProgram()
+{
+    return 0;
+}
+
+void LumatoneSandboxProcessor::setCurrentProgram (int index)
+{
+    juce::ignoreUnused (index);
+}
+
+const juce::String LumatoneSandboxProcessor::getProgramName (int index)
+{
+    juce::ignoreUnused (index);
+    return {};
+}
+
+void LumatoneSandboxProcessor::changeProgramName (int index, const juce::String& newName)
+{
+    juce::ignoreUnused (index, newName);
+}
+
+//==============================================================================
+void LumatoneSandboxProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    // Use this method as the place to do any pre-playback
+    // initialisation that you need..
+    juce::ignoreUnused (sampleRate, samplesPerBlock);
+}
+
+void LumatoneSandboxProcessor::releaseResources()
+{
+    // When playback stops, you can use this as an opportunity to free up any
+    // spare memory, etc.
+}
+
+bool LumatoneSandboxProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+{
+  #if JucePlugin_IsMidiEffect
+    juce::ignoreUnused (layouts);
+    return true;
+  #else
+    // This is the place where you check if the layout is supported.
+    // In this template code we only support mono or stereo.
+    // Some plugin hosts, such as certain GarageBand versions, will only
+    // load plugins that support stereo bus layouts.
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
+     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        return false;
+
+    // This checks if the input layout matches the output layout
+   #if ! JucePlugin_IsSynth
+    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+        return false;
+   #endif
+
+    return true;
+  #endif
+}
+
+void LumatoneSandboxProcessor::processBlock (juce::AudioBuffer<float>& buffer,
+                                              juce::MidiBuffer& midiMessages)
+{
+    juce::ignoreUnused (midiMessages);
+
+    juce::ScopedNoDenormals noDenormals;
+    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());
+
+    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    {
+        auto* channelData = buffer.getWritePointer (channel);
+        juce::ignoreUnused (channelData);
+    }
+
+    for (auto msg : midiMessages)
+    {
+        midiDriver->handleIncomingMidiMessage(nullptr, msg.getMessage());
+    }
+
+    midiDriver->readNextBuffer(midiMessages);
+}
+
+//==============================================================================
+bool LumatoneSandboxProcessor::hasEditor() const
+{
+    return true; // (change this to false if you choose to not supply an editor)
+}
+
+juce::AudioProcessorEditor* LumatoneSandboxProcessor::createEditor()
+{
+    return new LumatoneSandboxProcessorEditor (*this);
+}
+
+//==============================================================================
+void LumatoneSandboxProcessor::getStateInformation (juce::MemoryBlock& destData)
+{
+    // You should use this method to store your parameters in the memory block.
+    // You could do that either as raw data, or use the XML or ValueTree classes
+    // as intermediaries to make it easy to save and load complex data.
+    juce::ignoreUnused (destData);
+}
+
+void LumatoneSandboxProcessor::setStateInformation (const void* data, int sizeInBytes)
+{
+    // You should use this method to restore your parameters from this memory block,
+    // whose contents will have been created by the getStateInformation() call.
+    juce::ignoreUnused (data, sizeInBytes);
+}
+
+//==============================================================================
+// This creates new instances of the plugin..
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new LumatoneSandboxProcessor();
+}

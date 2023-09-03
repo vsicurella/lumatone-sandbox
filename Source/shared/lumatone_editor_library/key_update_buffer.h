@@ -10,7 +10,7 @@ class LumatoneKeyUpdateBuffer : public LumatoneState,
 {
 public:
 
-    LumatoneKeyUpdateBuffer(TerpstraMidiDriver& midiDriver, juce::ValueTree lumatoneState);
+    LumatoneKeyUpdateBuffer(LumatoneFirmwareDriver& firmwareDriver, juce::ValueTree lumatoneState);
     ~LumatoneKeyUpdateBuffer() override;
 
     void sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& noteDataConfig, bool signalEditorListeners = true);
@@ -30,7 +30,7 @@ private:
 
     juce::CriticalSection lock;
 
-    TerpstraMidiDriver& midiDriver;
+    LumatoneFirmwareDriver& firmwareDriver;
 
     juce::HashMap<int, MappedLumatoneKey> keysToUpdate;
 

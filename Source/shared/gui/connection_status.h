@@ -32,9 +32,10 @@ public:
     //==============================================================================
     // LumatoneEditor::StatusListener
 
-    virtual void connectionFailed() override;
-    virtual void connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId) override;
-    virtual void connectionLost() override;
+    // virtual void connectionFailed() override;
+    void connectionStateChanged(ConnectionState newState) override;
+    // virtual void connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId) override;
+    // virtual void connectionLost() override;
 
 private:
 
