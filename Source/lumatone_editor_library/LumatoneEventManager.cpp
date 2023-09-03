@@ -363,7 +363,11 @@ void LumatoneEventManager::handleMidiDriverError(FirmwareSupport::Error errorToH
     case FirmwareSupport::Error::commandNotImplemented:
         return;
 
-    case FirmwareSupport::Error::messageHasInvalidStatusByte:
+    // case FirmwareSupport::Error::messageHasInvalidStatusByte:
+    //     return;
+
+    case FirmwareSupport::Error::deviceIsBusy:
+        DBG("DEVICE IS BUSY from command " + juce::String::toHexString(commandReceived));
         return;
 
     default:
