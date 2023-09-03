@@ -42,6 +42,7 @@ public:
         reset(true);
     }
 
+    void queueLayout(const LumatoneLayout& layout);
     LumatoneLayout queueIdentityLayout(bool resetColors);
 
     virtual void reset(bool clearActionQueue);
@@ -56,6 +57,14 @@ public:
     juce::String getName() const { return name; }
 
     const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
+
+protected:
+
+    void noteOn(int midiChannel, int midiNote, juce::uint8 velocity);
+    void noteOff(int midiChannel, int midiNote);
+
+    void allNotesOff(int midiChannel);
+    void allNotesOff();
 
 private:
 

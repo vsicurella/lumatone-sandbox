@@ -13,7 +13,7 @@
 LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String actionName)
     : controller(controllerIn)
     , name(actionName)
-    , layoutBeforeStart(controllerIn->getNumBoards(), controllerIn->getOctaveBoardSize())
+    , layoutBeforeStart(*controllerIn->getMappingData())
 {
     reset(true);
 }
@@ -59,6 +59,30 @@ void LumatoneSandboxGameBase::readQueue(LumatoneAction** buffer, int& numActions
     queueSize = 0;
 }
 
+void LumatoneSandboxGameBase::noteOff(int midiChannel, int midiNote)
+{
+    auto msg = juce::MidiMessage::noteOff(midiChannel, midiNote);
+    controller->sendMidiMessage(msg);
+}
+
+void LumatoneSandboxGameBase::allNotesOff(int midiChannel)
+{
+    auto msg = juce::MidiMessage::allNotesOff(midiChannel);
+    controller->sendMidiMessage(msg);
+}
+
+void LumatoneSandboxGameBase::allNotesOff()
+{
+    for (int ch = 1; ch <=16; ch++)
+        allNotesOff(ch);
+}
+
+void LumatoneSandboxGameBase::noteOn(int midiChannel, int midiNote, juce::uint8 velocity)
+{
+    auto msg = juce::MidiMessage::noteOn(midiChannel, midiNote, velocity);
+    controller->sendMidiMessage(msg);
+}
+
 void LumatoneSandboxGameBase::addToQueue(LumatoneAction* action)
 {
     // jassert(action != nullptr);
@@ -75,15 +99,18 @@ void LumatoneSandboxGameBase::addToQueue(LumatoneAction* action)
     queuedActions[getQueuePtr()] = action;
 }
 
+void LumatoneSandboxGameBase::queueLayout(const LumatoneLayout& layout)
+{
+    for (int i = 0; i < controller->getNumBoards(); i++)
+    {
+        const LumatoneBoard* newBoard = layout.readBoard(i);
+        addToQueue(new LumatoneEditAction::SectionEditAction(controller, i, *newBoard));
+    }
+}
+
 LumatoneLayout LumatoneSandboxGameBase::queueIdentityLayout(bool resetColors)
 {
     LumatoneLayout layout = LumatoneLayout::IdentityMapping(controller->getNumBoards(), controller->getOctaveBoardSize());
-
-    for (int i = 0; i < controller->getNumBoards(); i++)
-    {
-        LumatoneBoard* newBoard = layout.getBoard(i);
-        addToQueue(new LumatoneEditAction::SectionEditAction(controller, i, *newBoard));
-    }
-
+    queueLayout(layout);
     return layout;
 }
