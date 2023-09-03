@@ -12,14 +12,13 @@
 
 #include <JuceHeader.h>
 
-#include "./data/lumatone_state.h"
+#include "./data/application_state.h"
 #include "./data/lumatone_midi_state.h"
 
 #include "LumatoneKeyComponent.h"
 #include "ApplicationListeners.h"
 
 #include "lumatone_assets.h"
-#include "lumatone_output_map.h"
 #include "lumatone_render.h"
 
 
@@ -33,7 +32,7 @@ class LumatoneKeyboardComponent : public juce::Component,
                                   public LumatoneMidiState::Listener
 {
 public:
-    LumatoneKeyboardComponent(LumatoneState stateIn);
+    LumatoneKeyboardComponent(LumatoneApplicationState stateIn);
     ~LumatoneKeyboardComponent() override;
 
     void paint (juce::Graphics&) override;
@@ -107,6 +106,8 @@ private:
     void rerender();
 
 private:
+
+    LumatoneApplicationState state;
 
     struct OctaveBoard
     {

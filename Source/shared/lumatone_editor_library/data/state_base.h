@@ -11,7 +11,7 @@
 #pragma once
 #include <JuceHeader.h>
 
-class LumatoneStateBase
+class LumatoneStateBase : protected juce::ValueTree::Listener
 {
 public:
 

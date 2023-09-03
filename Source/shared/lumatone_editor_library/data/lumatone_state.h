@@ -16,31 +16,11 @@
 #include "../lumatone_midi_driver/firmware_definitions.h"
 #include "../lumatone_output_map.h"
 
-class LumatoneColourModel;
 
-enum class ConnectionState
-{
-    DISCONNECTED = 0,
-    SEARCHING,
-    OFFLINE,
-    ONLINE,
-    BUSY,
-    ERROR
-};
 
-namespace LumatoneEditorProperty
+namespace LumatoneStateProperty
 {
     static const juce::Identifier StateTree = juce::Identifier("LumatoneEditorStateTree");
-
-    // Device Management
-    static const juce::Identifier DetectDeviceIfDisconnected = juce::Identifier("DetectDeviceIfDisconnected");
-    static const juce::Identifier CheckConnectionIfInactive = juce::Identifier("CheckConnectionIfInactive");
-    static const juce::Identifier DetectDevicesTimeout = juce::Identifier("DetectDevicesTimeout");
-    static const juce::Identifier LastInputDeviceId = juce::Identifier("LastInputDeviceId");
-    static const juce::Identifier LastOutputDeviceId = juce::Identifier("LastOutputDeviceId");
-
-    // UI States
-    static const juce::Identifier ConnectionStateId = juce::Identifier("ConnectionState");
 
     // Lumatone Data
     static const juce::Identifier LastConnectedSerialNumber = juce::Identifier("LastConnectedSerialNumber");
@@ -52,14 +32,9 @@ namespace LumatoneEditorProperty
     static const juce::Identifier InvertExpression = juce::Identifier("InvertExpression");
     static const juce::Identifier InvertSustain = juce::Identifier("InvertSustain");
     static const juce::Identifier ExpressionSensitivity = juce::Identifier("ExpressionSensitivity");
-
-    // Settings
-    static const juce::Identifier DefaultMappingsDirectory = juce::Identifier("DefaultMappingsDirectory");
-    static const juce::Identifier LastMappingsDirectory = juce::Identifier("LastMappingsDirectory");
-
 };
 
-class LumatoneState : public LumatoneStateBase, private juce::ValueTree::Listener
+class LumatoneState : public LumatoneStateBase
 {
 public:
 
@@ -67,8 +42,6 @@ public:
     LumatoneState(const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn=nullptr);
 
     virtual ~LumatoneState();
-
-    ConnectionState getConnectionState() const;
 
     LumatoneFirmwareVersion getLumatoneVersion() const;
     FirmwareVersion getFirmwareVersion() const;
@@ -88,20 +61,13 @@ public:
 
     const LumatoneOutputMap* getMidiKeyMap() const;
 
-    LumatoneColourModel* getColourModel() const;
-
     const FirmwareSupport& getFirmwareSupport() const;
 
     bool getInvertExpression() const { return invertExpression; }
     bool getInvertSustain() const { return invertSustain; }
     juce::uint8 getExpressionSensitivity() const { return expressionSensitivity; }
 
-    juce::File getDefaultMappingsDirectory();
-    juce::File getLastMappingsDirectory();
     virtual bool loadLayoutFromFile(const juce::File& layoutFile);
-
-public:
-    static juce::Array<juce::Identifier> getAllProperties();
 
 protected:
 
@@ -114,16 +80,16 @@ protected:
     void setInvertSustain(bool invert);
     void setExpressionSensitivity(juce::uint8 sensitivity);
 
-private:
+protected:
 
-    juce::ValueTree loadStateProperties(juce::ValueTree stateIn);
-
-    void convertStateMemberValue(juce::ValueTree stateIn, const juce::Identifier& property);
-
-private:
+    virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn);
 
     virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property);
+    
+    virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property);
 
+public:
+    static juce::Array<juce::Identifier> getLumatoneStateProperties();
 
 protected:
 
@@ -132,7 +98,6 @@ protected:
     FirmwareSupport firmwareSupport;
 
     std::shared_ptr<LumatoneLayout> mappingData;
-    std::shared_ptr<LumatoneColourModel> colourModel;
     std::shared_ptr<LumatoneOutputMap> midiKeyMap;
 
     LumatoneBoard* getEditBoard(int boardIndex);
@@ -143,11 +108,6 @@ private:
     bool    invertExpression = false;
     bool    invertSustain = false;
     juce::uint8     expressionSensitivity = 0;
-
-    ConnectionState connectionState = ConnectionState::DISCONNECTED;
-
-    bool detectDeviceIfDisconnected     = true;
-    bool monitorConnectionStatus        = true;
 
     juce::String                connectedSerialNumber = juce::String();
     LumatoneFirmwareVersion     determinedVersion = LumatoneFirmwareVersion::NO_VERSION;

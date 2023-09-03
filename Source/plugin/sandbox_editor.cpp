@@ -27,9 +27,18 @@ LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxP
     commandManager->setFirstCommandTarget(this);
 
     menuModel = std::make_unique<LumatoneSandbox::Menu::Model>(commandManager);
-    menuBar = std::make_unique<juce::MenuBarComponent>(menuModel.get());
-    addAndMakeVisible(menuBar.get());
 
+    if (showMenu())
+    {
+        menuBar = std::make_unique<juce::MenuBarComponent>(menuModel.get());
+        addAndMakeVisible(menuBar.get());
+    }
+    else if (JucePlugin_Build_Standalone)
+    {
+    #if JUCE_MAC
+        LumatoneSandbox::Menu::Model::setMacMainMenu((juce::MenuBarModel*)(nullptr));
+    #endif
+    }
 
     setSize (1024, 768);
 
@@ -38,6 +47,12 @@ LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxP
 
 LumatoneSandboxProcessorEditor::~LumatoneSandboxProcessorEditor()
 {
+    fileChooser = nullptr;
+    constrainer = nullptr;
+
+    menuBar = nullptr;
+    menuModel = nullptr;
+    mainComponent = nullptr;
 }
 
 //==============================================================================
@@ -53,11 +68,22 @@ void LumatoneSandboxProcessorEditor::paint (juce::Graphics& g)
 
 void LumatoneSandboxProcessorEditor::resized()
 {
-    const int menuHeight = 24;
-    menuBar->setBounds(0, 0, getWidth(), menuHeight);
-    mainComponent->setBounds(getLocalBounds().withTrimmedTop(menuBar->getBottom()));
+    int menuHeight = 24;
+    if (showMenu())
+        menuBar->setBounds(0, 0, getWidth(), menuHeight);
+    else
+        menuHeight = 0;
+
+    mainComponent->setBounds(getLocalBounds().withTrimmedTop(menuHeight));
 }
 
+bool LumatoneSandboxProcessorEditor::showMenu() const
+{
+    return JucePlugin_Build_Standalone 
+        && ((juce::SystemStats::getOperatingSystemType() & juce::SystemStats::OperatingSystemType::MacOSX) 
+            != juce::SystemStats::OperatingSystemType::MacOSX
+            );
+}
 
 juce::ApplicationCommandTarget* LumatoneSandboxProcessorEditor::getNextCommandTarget()
 { 

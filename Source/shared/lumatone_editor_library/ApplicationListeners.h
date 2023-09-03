@@ -11,10 +11,8 @@
 */
 
 #pragma once
-#include  <JuceHeader.h>
 
-#include "./data/lumatone_layout.h"
-#include "./data/lumatone_state.h"
+#include "./data/application_state.h"
 
 namespace LumatoneEditor
 {

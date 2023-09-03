@@ -1,7 +1,7 @@
 #include "lumatone_render.h"
 #include "./color/colour_model.h"
 
-LumatoneRender::LumatoneRender(LumatoneState& stateIn)
+LumatoneRender::LumatoneRender(LumatoneApplicationState& stateIn)
     : state(stateIn) 
 {
     imageProcessor.reset(new ImageProcessor());

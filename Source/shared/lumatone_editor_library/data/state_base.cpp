@@ -36,16 +36,15 @@ juce::String LumatoneStateBase::getStringProperty(const juce::Identifier key, ju
 
 void LumatoneStateBase::writeBoolProperty(const juce::Identifier key, bool value, juce::UndoManager* undo)
 {
-    state.setProperty(key, value, undo);
+    state.setPropertyExcludingListener(this, key, value, undo);
 }
 
 void LumatoneStateBase::writeIntProperty(const juce::Identifier key, int value, juce::UndoManager* undo )
 {
-    state.setProperty(key, value, undo);
+    state.setPropertyExcludingListener(this, key, value, undo);
 }
 
 void LumatoneStateBase::writeStringProperty(const juce::Identifier key, juce::String value, juce::UndoManager* undo)
 {
-    state.setProperty(key, value, undo);
+    state.setPropertyExcludingListener(this, key, value, undo);
 }
-

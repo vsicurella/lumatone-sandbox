@@ -12,7 +12,7 @@
 
 
 LumatoneController::LumatoneController(juce::ValueTree state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager)
-    : LumatoneState(state, undoManager)
+    : LumatoneApplicationState(state, undoManager)
     , firmwareDriver(firmwareDriverIn)
     , updateBuffer(firmwareDriverIn, state)
     , readQueueSize(0)
@@ -27,6 +27,14 @@ LumatoneController::LumatoneController(juce::ValueTree state, LumatoneFirmwareDr
 LumatoneController::~LumatoneController()
 {
     firmwareDriver.removeMessageCollector(this);
+}
+
+juce::ValueTree LumatoneController::loadStateProperties(juce::ValueTree stateIn)
+{
+    LumatoneApplicationState::loadStateProperties(stateIn);
+    editorListeners.call(&LumatoneEditor::EditorListener::completeMappingLoaded, *getMappingData());
+
+    return state;
 }
 
 void LumatoneController::connectionStateChanged(ConnectionState newState)

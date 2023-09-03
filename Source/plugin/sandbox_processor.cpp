@@ -12,6 +12,8 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
                      #endif
                        )
 {
+    treeState = juce::ValueTree(LumatoneStateProperty::StateTree);
+
     undoManager = std::make_unique<juce::UndoManager>();
 
     paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
@@ -30,14 +32,15 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
 
 LumatoneSandboxProcessor::~LumatoneSandboxProcessor()
 {
-    commandManager = nullptr;
-
     gameEngine = nullptr;
     monitor = nullptr;
     
     controller = nullptr;
     midiDriver = nullptr;
 
+    paletteLibrary = nullptr;
+
+    commandManager = nullptr;
     undoManager = nullptr;
 }
 
@@ -184,17 +187,17 @@ juce::AudioProcessorEditor* LumatoneSandboxProcessor::createEditor()
 //==============================================================================
 void LumatoneSandboxProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    juce::ignoreUnused (destData);
+    juce::MemoryOutputStream stream(destData, false);
+    treeState.writeToStream(stream);
+    DBG("Wrote to memory:\n" + treeState.toXmlString());
 }
 
 void LumatoneSandboxProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    juce::ignoreUnused (data, sizeInBytes);
+    auto state = juce::ValueTree::readFromData(data, sizeInBytes);
+    DBG("Read from memory:\n" + treeState.toXmlString());
+
+    controller->loadStateProperties(state);
 }
 
 //==============================================================================

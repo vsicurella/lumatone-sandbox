@@ -9,20 +9,15 @@
 */
 
 #include "lumatone_state.h"
-#include "../color/colour_model.h"
 
-juce::Array<juce::Identifier> LumatoneState::getAllProperties()
+juce::Array<juce::Identifier> LumatoneState::getLumatoneStateProperties()
 {
     juce::Array<juce::Identifier> properties;
-    properties.add(LumatoneEditorProperty::ConnectionStateId);
-    properties.add(LumatoneEditorProperty::LastConnectedSerialNumber);
-    properties.add(LumatoneEditorProperty::LastConnectedFirmwareVersion);
-    properties.add(LumatoneEditorProperty::LastConnectedNumBoards);
+    properties.add(LumatoneStateProperty::LastConnectedSerialNumber);
+    properties.add(LumatoneStateProperty::LastConnectedFirmwareVersion);
+    properties.add(LumatoneStateProperty::LastConnectedNumBoards);
 
-    properties.add(LumatoneEditorProperty::DetectDeviceIfDisconnected);
-    properties.add(LumatoneEditorProperty::CheckConnectionIfInactive);
-
-    properties.add(LumatoneEditorProperty::MappingData);
+    properties.add(LumatoneStateProperty::MappingData);
 
     return properties;
 }
@@ -34,7 +29,6 @@ LumatoneState::LumatoneState(juce::ValueTree stateIn, juce::UndoManager* undoMan
     state.addListener(this);
 
     mappingData = std::make_shared<LumatoneLayout>();
-    colourModel = std::make_shared<LumatoneColourModel>();
     midiKeyMap = std::make_shared<LumatoneOutputMap>(mappingData.get());
 }
 
@@ -42,7 +36,6 @@ LumatoneState::LumatoneState(const LumatoneState& stateToCopy, juce::UndoManager
     : LumatoneState(stateToCopy.state, undoManagerIn)
 {
     mappingData = stateToCopy.mappingData;
-    colourModel = stateToCopy.colourModel;
     midiKeyMap = stateToCopy.midiKeyMap;
 }
 
@@ -51,52 +44,39 @@ LumatoneState::~LumatoneState()
     state.removeListener(this);
 
     midiKeyMap = nullptr;
-    colourModel = nullptr;
     mappingData = nullptr;
 }
 
 juce::ValueTree LumatoneState::loadStateProperties(juce::ValueTree stateIn)
 {
-    juce::ValueTree newState = (stateIn.hasType(LumatoneEditorProperty::StateTree))
+    juce::ValueTree newState = (stateIn.hasType(LumatoneStateProperty::StateTree))
                              ? stateIn
-                             : juce::ValueTree(LumatoneEditorProperty::StateTree);
+                             : juce::ValueTree(LumatoneStateProperty::StateTree);
 
     DBG("LumatoneState::loadStateProperties:\n" + newState.toXmlString());
-    for (auto property : getAllProperties())
+    for (auto property : getLumatoneStateProperties())
     {
         if (newState.hasProperty(property))
-            convertStateMemberValue(newState, property);
+            handleStatePropertyChange(newState, property);
     }
 
     return newState;
 }
 
-void LumatoneState::convertStateMemberValue(juce::ValueTree stateIn, const juce::Identifier& property)
+void LumatoneState::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property)
 {
-    if (property == LumatoneEditorProperty::ConnectionStateId)
-    {
-        connectionState = ConnectionState((int)stateIn.getProperty(property, (int)ConnectionState::DISCONNECTED));
-    }
-    else if (property == LumatoneEditorProperty::LastConnectedSerialNumber)
+    if (property == LumatoneStateProperty::LastConnectedSerialNumber)
     {
         connectedSerialNumber = stateIn.getProperty(property).toString();
     }
-    else if (property == LumatoneEditorProperty::LastConnectedFirmwareVersion)
+    else if (property == LumatoneStateProperty::LastConnectedFirmwareVersion)
     {
         setLumatoneVersion(
             LumatoneFirmwareVersion((int)stateIn.getProperty(property, (int)LumatoneFirmwareVersion::FUTURE_VERSION))
             );
         firmwareVersion = FirmwareVersion::fromDeterminedVersion(determinedVersion);
     }
-    else if (property == LumatoneEditorProperty::DetectDeviceIfDisconnected)
-    {
-        detectDeviceIfDisconnected = (bool)stateIn.getProperty(property, true);
-    }
-    else if (property == LumatoneEditorProperty::CheckConnectionIfInactive)
-    {
-        monitorConnectionStatus = (bool)stateIn.getProperty(property, true);
-    }
-    else if (property == LumatoneEditorProperty::MappingData)
+    else if (property == LumatoneStateProperty::MappingData)
     {
         juce::String mappingString = stateIn.getProperty(property).toString();
         if (mappingString.isEmpty())
@@ -111,15 +91,15 @@ void LumatoneState::convertStateMemberValue(juce::ValueTree stateIn, const juce:
             mappingData.reset(new LumatoneLayout(loadedLayout));
         }
     }
-    else if (property == LumatoneEditorProperty::InvertExpression)
+    else if (property == LumatoneStateProperty::InvertExpression)
     {
         invertExpression = (bool)stateIn.getProperty(property, false);
     }    
-    else if (property == LumatoneEditorProperty::InvertSustain)
+    else if (property == LumatoneStateProperty::InvertSustain)
     {
         invertSustain = (bool)stateIn.getProperty(property, false);
     }
-    else if (property == LumatoneEditorProperty::ExpressionSensitivity)
+    else if (property == LumatoneStateProperty::ExpressionSensitivity)
     {
         expressionSensitivity = juce::uint8((int)stateIn.getProperty(property, 127));
     }
@@ -130,7 +110,7 @@ void LumatoneState::setConnectedSerialNumber(juce::String serialNumberIn)
     connectedSerialNumber = serialNumberIn;
     state.setPropertyExcludingListener(
         this, 
-        LumatoneEditorProperty::LastConnectedSerialNumber, 
+        LumatoneStateProperty::LastConnectedSerialNumber, 
         connectedSerialNumber, 
         undoManager);
 
@@ -168,7 +148,7 @@ void LumatoneState::setLumatoneVersion(LumatoneFirmwareVersion versionIn, bool w
     {
         state.setPropertyExcludingListener(
             this,
-            LumatoneEditorProperty::LastConnectedFirmwareVersion,
+            LumatoneStateProperty::LastConnectedFirmwareVersion,
             (int)determinedVersion,
             undoManager);
     }
@@ -182,13 +162,8 @@ void LumatoneState::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyH
             + treeWhosePropertyHasChanged.getType().toString() + ", " 
             + property.toString() + ")");
 
-        convertStateMemberValue(state, property);
+        handleStatePropertyChange(state, property);
     }
-}
-
-ConnectionState LumatoneState::getConnectionState() const
-{
-    return connectionState;
 }
 
 LumatoneFirmwareVersion LumatoneState::getLumatoneVersion() const
@@ -239,10 +214,6 @@ const LumatoneOutputMap* LumatoneState::getMidiKeyMap() const
     return midiKeyMap.get();
 }
 
-LumatoneColourModel* LumatoneState::getColourModel() const
-{
-    return colourModel.get();
-}
 
 LumatoneBoard* LumatoneState::getEditBoard(int boardIndex)
 {
@@ -261,54 +232,20 @@ const FirmwareSupport& LumatoneState::getFirmwareSupport() const
 
 void LumatoneState::setInvertExpression(bool invert)
 {
-    state.setPropertyExcludingListener(this, LumatoneEditorProperty::InvertExpression, invert, undoManager);
+    state.setPropertyExcludingListener(this, LumatoneStateProperty::InvertExpression, invert, undoManager);
     invertExpression = invert;
 }
 
 void LumatoneState::setInvertSustain(bool invert)
 {
-    state.setPropertyExcludingListener(this, LumatoneEditorProperty::InvertSustain, invert, undoManager);
+    state.setPropertyExcludingListener(this, LumatoneStateProperty::InvertSustain, invert, undoManager);
     invertSustain = invert;
 }
 
 void LumatoneState::setExpressionSensitivity(juce::uint8 sensitivity)
 {
-    state.setPropertyExcludingListener(this, LumatoneEditorProperty::ExpressionSensitivity, (int)sensitivity, undoManager);
+    state.setPropertyExcludingListener(this, LumatoneStateProperty::ExpressionSensitivity, (int)sensitivity, undoManager);
     expressionSensitivity = sensitivity;
-}
-
-juce::File LumatoneState::getDefaultMappingsDirectory()
-{
-    juce::File directory;
-    juce::String path = getStringProperty(LumatoneEditorProperty::DefaultMappingsDirectory);
-
-    if (path.isNotEmpty())
-    {
-        directory = juce::File(path);
-        if (directory.exists() && directory.isDirectory())
-            return directory;
-    }
-
-    directory = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory);
-    auto mappingDirectory = directory.getChildFile("Lumatone Editor").getChildFile("Mappings");
-    if (mappingDirectory.exists() && mappingDirectory.isDirectory())
-        return mappingDirectory;
-
-    return directory;
-}
-
-juce::File LumatoneState::getLastMappingsDirectory()
-{
-    juce::File directory;
-    juce::String path = getStringProperty(LumatoneEditorProperty::LastMappingsDirectory);
-    if (path.isNotEmpty())
-    {
-        directory = juce::File(path);
-        if (directory.exists() && directory.isDirectory())
-            return directory;
-    }
-
-    return getDefaultMappingsDirectory();
 }
 
 bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
@@ -333,6 +270,20 @@ bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
         if (fileParsed)
         {
             *mappingData = LumatoneLayout(newLayout);
+
+            auto layoutString = mappingData->toStringArray().joinIntoString(juce::newLine);
+            DBG("Loaded: " + layoutString);
+
+            writeStringProperty(LumatoneStateProperty::MappingData, layoutString, undoManager);
+
+            invertSustain = mappingData->invertSustain;
+            writeBoolProperty(LumatoneStateProperty::InvertSustain, invertSustain, undoManager);
+
+            invertExpression = mappingData->invertExpression;
+            writeBoolProperty(LumatoneStateProperty::InvertExpression, invertExpression, undoManager);
+            
+            expressionSensitivity = mappingData->expressionControllerSensivity;
+            writeIntProperty(LumatoneStateProperty::ExpressionSensitivity, expressionSensitivity, undoManager);
 
             // Mark file as unchanged
             //setHasChangesToSave(false);

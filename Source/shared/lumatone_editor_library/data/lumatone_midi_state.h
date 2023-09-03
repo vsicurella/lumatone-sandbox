@@ -66,7 +66,7 @@ protected:
     virtual void controllerInternal(int midiChannel, int midiNote, juce::uint8 value);
 
 protected:
-    LumatoneState state;
+    LumatoneState lumatoneState;
 
 private:
 

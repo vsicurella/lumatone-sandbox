@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./data/lumatone_state.h"
+#include "./data/application_state.h"
 #include "lumatone_tiling.h"
 #include "lumatone_assets.h"
 #include "ImageResampling/ImageResampler.h"
@@ -8,7 +8,7 @@
 class LumatoneRender
 {
 public:
-    LumatoneRender(LumatoneState& stateIn);
+    LumatoneRender(LumatoneApplicationState& stateIn);
     ~LumatoneRender();
 
     LumatoneGeometry& getLumatoneGeometry() { return lumatoneGeometry; }
@@ -25,7 +25,7 @@ public:
 
 private:
 
-    LumatoneState state;
+    LumatoneApplicationState state;
 
     LumatoneGeometry    lumatoneGeometry;
     LumatoneTiling      tilingGeometry;

@@ -12,14 +12,14 @@
 //#include "Main.h"
 
 
-DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneState stateIn)
-    :   LumatoneState(stateIn),
-        midiDriver(midiDriverIn), 
-        readQueueSize(0)
+DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneApplicationState stateIn)
+    :   LumatoneApplicationState(stateIn)
+    ,   midiDriver(midiDriverIn) 
+    ,   readQueueSize(0)
 {
-    detectDevicesIfDisconnected = getBoolProperty(LumatoneEditorProperty::DetectDeviceIfDisconnected, true);
-    checkConnectionOnInactivity = getBoolProperty(LumatoneEditorProperty::CheckConnectionIfInactive, true);
-    responseTimeoutMs = getIntProperty(LumatoneEditorProperty::DetectDevicesTimeout, detectRoutineTimeoutMs);
+    detectDevicesIfDisconnected = getBoolProperty(LumatoneApplicationProperty::DetectDeviceIfDisconnected, true);
+    checkConnectionOnInactivity = getBoolProperty(LumatoneApplicationProperty::CheckConnectionIfInactive, true);
+    responseTimeoutMs = getIntProperty(LumatoneApplicationProperty::DetectDevicesTimeout, detectRoutineTimeoutMs);
 
 //    midiDriver->addListener(this);
     reset(readBlockSize);
@@ -39,7 +39,7 @@ DeviceActivityMonitor::~DeviceActivityMonitor()
 void DeviceActivityMonitor::setDetectDeviceIfDisconnected(bool doDetection)
 {
     detectDevicesIfDisconnected = doDetection;
-    writeBoolProperty(LumatoneEditorProperty::DetectDeviceIfDisconnected, detectDevicesIfDisconnected);
+    writeBoolProperty(LumatoneApplicationProperty::DetectDeviceIfDisconnected, detectDevicesIfDisconnected);
 
     if (!detectDevicesIfDisconnected)
     {
@@ -55,7 +55,7 @@ void DeviceActivityMonitor::setDetectDeviceIfDisconnected(bool doDetection)
 void DeviceActivityMonitor::setCheckForInactivity(bool monitorActivity)
 {
     checkConnectionOnInactivity = monitorActivity;
-    writeBoolProperty(LumatoneEditorProperty::CheckConnectionIfInactive, checkConnectionOnInactivity);
+    writeBoolProperty(LumatoneApplicationProperty::CheckConnectionIfInactive, checkConnectionOnInactivity);
     
     if (checkConnectionOnInactivity && isConnectionEstablished())
     {
@@ -86,14 +86,14 @@ void DeviceActivityMonitor::pingAllDevices()
 
 bool DeviceActivityMonitor::testLastConnectedDevice()
 {
-    juce::String inputId = getStringProperty(LumatoneEditorProperty::LastInputDeviceId);
+    juce::String inputId = getStringProperty(LumatoneApplicationProperty::LastInputDeviceId);
     if (inputId.length() <= 0)
         return false;
 
     int inputIndex = midiDriver->findIndexOfInputDevice(inputId);
     if (inputIndex >= 0)
     {
-        juce::String outputId = getStringProperty(LumatoneEditorProperty::LastOutputDeviceId);
+        juce::String outputId = getStringProperty(LumatoneApplicationProperty::LastOutputDeviceId);
         if (outputId.length() <= 0)
             return false;
         

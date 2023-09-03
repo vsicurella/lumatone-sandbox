@@ -12,9 +12,7 @@
 
 #include "./ApplicationListeners.h"
 
-#include "./data/lumatone_layout.h"
-#include "./data/lumatone_state.h"
-#include "./actions/lumatone_action.h"
+#include "./data/application_state.h"
 
 #include "key_update_buffer.h"
 #include "LumatoneEventManager.h"
@@ -23,7 +21,7 @@
 // Helper class for parsing and comparing (todo) firmware versions
 
 
-class LumatoneController :  public LumatoneState,
+class LumatoneController :  public LumatoneApplicationState,
                             private LumatoneFirmwareDriver::Collector,
                             public LumatoneEditor::StatusListener,
                             public LumatoneEditor::StatusEmitter,
@@ -34,6 +32,8 @@ public:
 
     LumatoneController(juce::ValueTree state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager);
     ~LumatoneController();
+
+    juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
     
     //============================================================================
     // Methods to configure firmware communication parameters

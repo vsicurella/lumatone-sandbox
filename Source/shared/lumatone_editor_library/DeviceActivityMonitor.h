@@ -20,7 +20,7 @@
 #include "LumatoneController.h"
 #include "lumatone_midi_driver/lumatone_midi_driver.h"
 
-class DeviceActivityMonitor : protected LumatoneState,
+class DeviceActivityMonitor : protected LumatoneApplicationState,
                               public juce::Timer, 
                               public juce::ChangeBroadcaster, 
                               public LumatoneEditor::StatusEmitter,
@@ -39,7 +39,7 @@ public:
     
 public:
 
-    DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneState stateIn);
+    DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneApplicationState stateIn);
     ~DeviceActivityMonitor() override;
 
     DetectConnectionMode getMode() const { return deviceConnectionMode; }

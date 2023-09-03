@@ -15,6 +15,8 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    bool showMenu() const;
+
     //==============================================================================
 
     juce::ApplicationCommandTarget* getNextCommandTarget() override;

@@ -82,7 +82,7 @@ FirmwareSupport::Error LumatoneEventManager::handleOctaveConfigResponse(
     int boardId = -1;
     int channelData[56];
 
-    int boardSize = state.getOctaveBoardSize();
+    int boardSize = lumatoneState.getOctaveBoardSize();
     auto errorCode = unpackFunction(midiMessage, boardId, boardSize, channelData);
     if (errorCode == FirmwareSupport::Error::noError)
     {
@@ -113,8 +113,8 @@ FirmwareSupport::Error LumatoneEventManager::handleLEDConfigResponse(const juce:
     int cmd = firmwareSupport.getCommandNumber(midiMessage);
     FirmwareSupport::Error errorCode;
 
-    auto version = state.getLumatoneVersion();
-    auto boardSize = state.getOctaveBoardSize();
+    auto version = lumatoneState.getLumatoneVersion();
+    auto boardSize = lumatoneState.getOctaveBoardSize();
 
     // Use correct unpacking function
     if (version < LumatoneFirmwareVersion::VERSION_1_0_11)

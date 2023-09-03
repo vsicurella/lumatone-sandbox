@@ -18,7 +18,7 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
 
     connectionStatus->handleStatus(ConnectionState::DISCONNECTED);
 
-    setSize (600, 400);
+    // setSize (600, 400);
 }
 
 MainComponent::~MainComponent()
@@ -27,9 +27,10 @@ MainComponent::~MainComponent()
     controller->removeEditorListener(lumatoneComponent.get());
 
     gameEngineComponent = nullptr;
-
     lumatoneComponent = nullptr;
     connectionStatus = nullptr;
+
+
     controller = nullptr;
 }
 
