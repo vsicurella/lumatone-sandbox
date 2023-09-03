@@ -2,6 +2,7 @@
 
 #include "../game_base.h"
 #include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
+#include "../../lumatone_editor_library/color/adjust_layout_colour.h"
 
 namespace HexagonAutomata
 {
@@ -47,6 +48,7 @@ namespace HexagonAutomata
             : HexState(stateIn)
             , MappedLumatoneKey(key)
             , Hex::Point(hexCoord) {}
+
     };
 
     struct NeighborFunction 
@@ -134,7 +136,13 @@ namespace HexagonAutomata
             return false;
         }
     };
-    
+
+    enum class GameMode
+    {
+        Classic = 0,
+        Sequencer
+    };
+
     struct GameState
     {
         std::shared_ptr<LumatoneLayout> layout;
@@ -187,6 +195,10 @@ namespace HexagonAutomata
         juce::ColourGradient ageGradient;
 
     public:
+
+        const float aliveScalar = 1.0f;
+        const float deadScalar = 0.5f;
+        const float emptyScalar = 0.25f;
 
         Renderer(juce::Colour aliveColourIn=juce::Colours::white, juce::Colour deadColourIn=juce::Colours::grey)
         {
@@ -246,6 +258,23 @@ namespace HexagonAutomata
         {
             auto key = (MappedLumatoneKey)state;
             key.colour = renderCellColour(state);
+            return key;
+        }
+
+        virtual MappedLumatoneKey renderSequencerKey(const MappedHexState& cell, const LumatoneLayout& noteLayout)
+        {
+            auto key = (MappedLumatoneKey)cell;
+
+            auto noteKey = noteLayout.readKey(cell.boardIndex, cell.keyIndex);
+            key.colour = noteKey->colour;
+
+            if (cell.isAlive())
+                AdjustLayoutColour::multiplyBrightness(aliveScalar, key);
+            else if (cell.isDead())
+                AdjustLayoutColour::multiplyBrightness(deadScalar, key);
+            else
+                AdjustLayoutColour::multiplyBrightness(emptyScalar, key);
+
             return key;
         }
 
@@ -324,6 +353,8 @@ public:
         // Returns whether or not cell is still populated
         bool applyUpdatedCell(const MappedHexState& cellUpdate);
 
+        void triggerCellMidi(const MappedHexState& cell);
+
     private:
 
         void resetState() override;
@@ -338,6 +369,8 @@ public:
         std::unique_ptr<NeighborFunction> rules;
 
         juce::Array<Hex::Point> neighborsVector;
+
+        GameMode mode;
 
         int ticks = 0;
 
