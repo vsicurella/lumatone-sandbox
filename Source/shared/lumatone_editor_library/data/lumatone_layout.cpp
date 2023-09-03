@@ -496,7 +496,7 @@ juce::StringArray LumatoneLayout::toStringArray()
 {
     juce::StringArray result;
 
-    for (int boardIndex = 0; boardIndex < octaveBoardSize; boardIndex++) {
+    for (int boardIndex = 0; boardIndex < numBoards; boardIndex++) {
         result.add("[Board" + juce::String(boardIndex) + "]");
 
         //for (int keyIndex = 0; keyIndex < TerpstraSysExApplication::getApp().getOctaveBoardSize(); keyIndex++) {
