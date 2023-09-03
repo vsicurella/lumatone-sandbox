@@ -104,6 +104,9 @@ public:
 
 	void restrictToRequestMessages(bool testMessagesOnly) { onlySendRequestMessages = testMessagesOnly; }
 
+	// Low-level send MIDI message in a host dependent way
+	void sendMessageNow(const juce::MidiMessage& msg);
+
 	//============================================================================
 	// Single (mid-level) commands, firmware specific
 
@@ -467,9 +470,6 @@ private:
 
 	// Send a message now without confirming it's a Lumatone
 	void sendTestMessageNow(int outputDeviceIndex, const  juce::MidiMessage& message);
-
-	// Low-level send MIDI message in a host dependent way
-	void sendMessageNow(const juce::MidiMessage& msg);
 
 	// Low-level SysEx message sending
 	void sendMessageWithAcknowledge(const juce::MidiMessage& message);

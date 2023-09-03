@@ -12,10 +12,11 @@
 
 #include "./ApplicationListeners.h"
 
-#include "./data/application_state.h"
-
-#include "key_update_buffer.h"
 #include "LumatoneEventManager.h"
+#include "key_update_buffer.h"
+
+#include "./data/application_state.h"
+#include "./actions/lumatone_action.h"
 
 //==============================================================================
 // Helper class for parsing and comparing (todo) firmware versions
@@ -63,11 +64,9 @@ public:
 
     void connectionStateChanged(ConnectionState newState) override;
 
-    // void connectionFailed() override;
+public:
 
-    // void connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId) override;
-
-    // void connectionLost() override;
+    void sendMidiMessage(const juce::MidiMessage& msg);
 
 public:
     //============================================================================

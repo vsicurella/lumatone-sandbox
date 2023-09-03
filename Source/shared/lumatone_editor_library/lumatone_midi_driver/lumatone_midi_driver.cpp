@@ -56,6 +56,22 @@ void LumatoneFirmwareDriver::readNextBuffer(juce::MidiBuffer &nextBuffer)
     nextBufferQueue.clear();
 }
 
+void LumatoneFirmwareDriver::sendMessageNow(const juce::MidiMessage &msg)
+{
+    switch (hostMode)
+    {
+    case HostMode::Driver:
+        HajuMidiDriver::sendMessageNow(msg);
+        break;
+    case HostMode::Plugin:
+    {
+        juce::ScopedLock l(nextBufferQueue.getLock());
+        nextBufferQueue.add(msg); 
+    }
+    break;
+    }
+}
+
 void LumatoneFirmwareDriver::notifyMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage)
 {
 #if MIDI_DRIVER_USE_LOCK
@@ -1416,22 +1432,6 @@ void LumatoneFirmwareDriver::sendTestMessageNow(int outputDeviceIndex, const juc
     case HostMode::Plugin:
         sendMessageNow(message);
         break;
-    }
-}
-
-void LumatoneFirmwareDriver::sendMessageNow(const juce::MidiMessage &msg)
-{
-    switch (hostMode)
-    {
-    case HostMode::Driver:
-        HajuMidiDriver::sendMessageNow(msg);
-        break;
-    case HostMode::Plugin:
-    {
-        juce::ScopedLock l(nextBufferQueue.getLock());
-        nextBufferQueue.add(msg); 
-    }
-    break;
     }
 }
 

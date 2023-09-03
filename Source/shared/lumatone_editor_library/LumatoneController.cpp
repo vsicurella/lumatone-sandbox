@@ -42,20 +42,10 @@ void LumatoneController::connectionStateChanged(ConnectionState newState)
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, newState);
 }
 
-// void LumatoneController::connectionFailed()
-// {
-//     statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
-// }
-
-// void LumatoneController::connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId)
-// {
-//     statusListeners.call(&LumatoneEditor::StatusListener::connectionEstablished, inputDeviceId, outputDeviceId);
-// }
-
-// void LumatoneController::connectionLost()
-// {
-//     statusListeners.call(&LumatoneEditor::StatusListener::connectionLost);
-// }
+void LumatoneController::sendMidiMessage(const juce::MidiMessage& msg)
+{
+    firmwareDriver.sendMessageNow(msg);
+}
 
 void LumatoneController::setMidiInput(int deviceIndex, bool test)
 {
