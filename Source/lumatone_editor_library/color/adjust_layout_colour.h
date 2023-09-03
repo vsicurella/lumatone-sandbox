@@ -46,22 +46,22 @@ public:
 
     void rotateHue(float change, bool sendUpdate=true);
     void rotateHue(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
-    bool rotateHue(float change, LumatoneKey& key) const;
+    static bool rotateHue(float change, LumatoneKey& key);
 
     void multiplyBrightness(float change, bool sendUpdate=true);
     void multiplyBrightness(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
-    bool multiplyBrightness(float change, LumatoneKey& key) const;
+    static bool multiplyBrightness(float change, LumatoneKey& key);
 
     void multiplySaturation(float change, bool sendUpdate=true);
     void multiplySaturation(float change, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
-    bool multiplySaturation(float change, LumatoneKey& key) const;
+    static bool multiplySaturation(float change, LumatoneKey& key);
 
     void adjustWhiteBalance(int newWhitePoint, bool sendUpdate=true);
     void adjustWhiteBalance(int newWhitePoint, const juce::Array<LumatoneKeyCoord>& selection, bool sendUpdate=true);
-    bool adjustWhiteBalance(int newWhitePoint, LumatoneKey& key) const;
+    static bool adjustWhiteBalance(int newWhitePoint, LumatoneKey& key);
 private:
-    void adjustWhiteBalanceRgb(int newWhitePoint, LumatoneKey& key) const;
-    void adjustWhiteBalanceLab(int newWhitePoint, LumatoneKey& key) const;
+    static void adjustWhiteBalanceRgb(int newWhitePoint, LumatoneKey& key);
+    static void adjustWhiteBalanceLab(int newWhitePoint, LumatoneKey& key);
 
 public:
     void setGradient(SetGradientOptions options);

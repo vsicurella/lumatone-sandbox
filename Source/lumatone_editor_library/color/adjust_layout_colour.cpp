@@ -26,7 +26,7 @@ void AdjustLayoutColour::replaceColour(juce::Colour oldColour, juce::Colour newC
         sendSelectionUpdate(keyUpdates, true);
 }
 
-bool AdjustLayoutColour::rotateHue(float change, LumatoneKey& key) const
+bool AdjustLayoutColour::rotateHue(float change, LumatoneKey& key)
 {
     if  (   key.colour.isTransparent()
         ||  (   (key.colour.getRed() == key.colour.getGreen())
@@ -72,7 +72,7 @@ void AdjustLayoutColour::rotateHue(float change, const juce::Array<LumatoneKeyCo
         sendSelectionUpdate(updateKeys, true);
 }
 
-bool AdjustLayoutColour::multiplyBrightness(float change, LumatoneKey& key) const
+bool AdjustLayoutColour::multiplyBrightness(float change, LumatoneKey& key)
 {
     if (key.colour.isTransparent())
         return false;
@@ -114,7 +114,7 @@ void AdjustLayoutColour::multiplyBrightness(float change, const juce::Array<Luma
         sendSelectionUpdate(updateKeys, true);
 }
 
-bool AdjustLayoutColour::multiplySaturation(float change, LumatoneKey& key) const
+bool AdjustLayoutColour::multiplySaturation(float change, LumatoneKey& key)
 {
     if (key.colour.isTransparent())
         return false;
@@ -191,7 +191,7 @@ void AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, const juce::Array
         sendSelectionUpdate(updateKeys, true);
 }
 
-bool AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, LumatoneKey& key) const
+bool AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, LumatoneKey& key)
 {
     if (key.colour.isTransparent())
         return false;
@@ -202,7 +202,7 @@ bool AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, LumatoneKey& key)
     return true;
 }
 
-void AdjustLayoutColour::adjustWhiteBalanceRgb(int newWhitePoint, LumatoneKey& key) const
+void AdjustLayoutColour::adjustWhiteBalanceRgb(int newWhitePoint, LumatoneKey& key)
 {
     auto newWhiteColour = kelvinToColour(newWhitePoint);
     key.colour = juce::Colour(LumatoneEditor::roundToUint8(key.colour.getRed() * newWhiteColour.getFloatRed()),
@@ -210,7 +210,7 @@ void AdjustLayoutColour::adjustWhiteBalanceRgb(int newWhitePoint, LumatoneKey& k
                             LumatoneEditor::roundToUint8(key.colour.getBlue() * newWhiteColour.getFloatBlue()));
 }
 
-void AdjustLayoutColour::adjustWhiteBalanceLab(int newWhitePoint, LumatoneKey& key) const
+void AdjustLayoutColour::adjustWhiteBalanceLab(int newWhitePoint, LumatoneKey& key)
 {
     auto newWhiteColour = kelvinToColour(newWhitePoint);
 
