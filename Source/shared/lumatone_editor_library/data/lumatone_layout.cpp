@@ -158,7 +158,7 @@ LumatoneConfigTable::LumatoneConfigTable(const juce::String& velocityCurveConfig
     }
 }
 
-juce::String LumatoneConfigTable::toConfigString()
+juce::String LumatoneConfigTable::toConfigString() const
 {
     switch (editStrategy) {
         case DrawMode::freeDrawing:
@@ -492,7 +492,7 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
     //}
 }
 
-juce::StringArray LumatoneLayout::toStringArray()
+juce::StringArray LumatoneLayout::toStringArray() const
 {
     juce::StringArray result;
 

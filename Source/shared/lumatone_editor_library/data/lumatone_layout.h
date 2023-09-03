@@ -39,7 +39,7 @@ public:
 	LumatoneConfigTable(TableType tableType);
 	LumatoneConfigTable(const juce::String& configString);
 
-	juce::String toConfigString();
+	juce::String toConfigString() const;
 
 public:
 	DrawMode editStrategy;
@@ -71,7 +71,7 @@ public:
     bool isEmpty() const;
 
 	void fromStringArray(const juce::StringArray& stringArray);
-	juce::StringArray toStringArray();
+	juce::StringArray toStringArray() const;
 
 	int getNumBoards() const { return numBoards; }
 	int getOctaveBoardSize() const { return octaveBoardSize; }

@@ -14,10 +14,11 @@
 namespace LumatoneSandbox {
 	namespace Menu {
 		enum commandIDs {
-			openSysExMapping = 0x200010,
-			saveSysExMapping = 0x200011,
-			saveSysExMappingAs = 0x200012,
-			resetSysExMapping = 0x200013,
+			openSysExMapping 	= 0x200010,
+			saveSysExMapping 	= 0x200011,
+			saveSysExMappingAs 	= 0x200012,
+			resetSysExMapping 	= 0x200013,
+			importSysExMapping 	= 0x200014,
 
 			deleteOctaveBoard = 0x200100,
 			copyOctaveBoard = 0x200101,

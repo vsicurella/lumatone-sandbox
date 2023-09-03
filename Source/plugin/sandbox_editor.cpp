@@ -96,6 +96,7 @@ void LumatoneSandboxProcessorEditor::getAllCommands(juce::Array <juce::CommandID
     commands.add(LumatoneSandbox::Menu::commandIDs::saveSysExMapping);
     commands.add(LumatoneSandbox::Menu::commandIDs::saveSysExMappingAs);
     commands.add(LumatoneSandbox::Menu::commandIDs::resetSysExMapping);
+    commands.add(LumatoneSandbox::Menu::commandIDs::importSysExMapping);
 
     // commands.add(LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard);
     // commands.add(LumatoneSandbox::Menu::commandIDs::copyOctaveBoard);
@@ -141,6 +142,11 @@ void LumatoneSandboxProcessorEditor::getCommandInfo(juce::CommandID commandID, j
         case LumatoneSandbox::Menu::commandIDs::resetSysExMapping:
             result.setInfo("New", "Start new mapping. Clear all edit fields, do not save current edits.", "File", 0);
             result.addDefaultKeypress('n', juce::ModifierKeys::commandModifier);
+            break;
+             
+        case LumatoneSandbox::Menu::commandIDs::importSysExMapping:
+            result.setInfo("Import", "Get mapping from connected Lumatone", "File", 0);
+            result.addDefaultKeypress('i', juce::ModifierKeys::currentModifiers);
             break;
 
         case LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard:
@@ -226,13 +232,39 @@ bool LumatoneSandboxProcessorEditor::perform(const juce::ApplicationCommandTarge
         auto directory = controller->getLastMappingsDirectory();
         fileChooser.reset(new juce::FileChooser("Open .LTN file", directory, "*.ltn"));
         fileChooser->launchAsync(
-            juce::FileBrowserComponent::FileChooserFlags::canSelectFiles + juce::FileBrowserComponent::FileChooserFlags::openMode,
+            juce::FileBrowserComponent::FileChooserFlags::canSelectFiles | juce::FileBrowserComponent::FileChooserFlags::openMode,
             [&](const juce::FileChooser& chooser)
             {
                 auto file = chooser.getResult();
                 controller->loadLayoutFromFile(file);
                 
             });
+        return true;
+    }
+
+    case LumatoneSandbox::Menu::commandIDs::saveSysExMappingAs:
+    {
+        auto directory = controller->getLastMappingsDirectory();
+        fileChooser.reset(new juce::FileChooser("Save .LTN file", directory, "*.ltn"));
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::FileChooserFlags::canSelectFiles | juce::FileBrowserComponent::FileChooserFlags::saveMode,
+            [&](const juce::FileChooser& chooser)
+            {
+                auto file = chooser.getResult();
+                auto layoutString = controller->getMappingData()
+                                              ->toStringArray()
+                                              .joinIntoString(juce::newLine);
+                
+                auto tempFile = file.createTempFile("ltn.tmp");
+                tempFile.appendText(layoutString);
+                tempFile.moveFileTo(file);
+            });
+        return true;
+    }
+
+    case LumatoneSandbox::Menu::commandIDs::importSysExMapping:
+    {
+        controller->sendGetCompleteMappingRequest();
         return true;
     }
 
