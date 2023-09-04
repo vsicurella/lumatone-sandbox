@@ -148,12 +148,12 @@ void LumatoneMidiState::controller(const int midiChannel, const int number, cons
 }
 
 
-void LumatoneMidiState::addListener(LumatoneMidiState::Listener* listener)
+void LumatoneMidiState::addMidiStateListener(LumatoneMidiState::Listener* listener)
 {
     midiListeners.add(listener);
 }
 
-void LumatoneMidiState::removeListener(LumatoneMidiState::Listener* listener)
+void LumatoneMidiState::removeMidiStateListener(LumatoneMidiState::Listener* listener)
 {
     midiListeners.remove(listener);
 }

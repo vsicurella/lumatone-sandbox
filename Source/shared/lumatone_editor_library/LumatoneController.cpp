@@ -47,6 +47,18 @@ void LumatoneController::sendMidiMessage(const juce::MidiMessage& msg)
     firmwareDriver.sendMessageNow(msg);
 }
 
+void LumatoneController::handleNoteOn(LumatoneMidiState *midiState, int midiChannel, int midiNote, juce::uint8 velocity)
+{
+    auto msg = juce::MidiMessage::noteOn(midiChannel, midiNote, velocity);
+    firmwareDriver.sendMessageNow(msg);
+}
+
+void LumatoneController::handleNoteOff(LumatoneMidiState *midiState, int midiChannel, int midiNote)
+{
+    auto msg = juce::MidiMessage::noteOff(midiChannel, midiNote);
+    firmwareDriver.sendMessageNow(msg);
+}
+
 void LumatoneController::setMidiInput(int deviceIndex, bool test)
 {
     const bool changed = firmwareDriver.getMidiInputIndex() != deviceIndex;
@@ -609,12 +621,12 @@ bool LumatoneController::loadLayoutFromFile(const juce::File& file)
 
 void LumatoneController::addMidiListener(LumatoneMidiState::Listener* listener)
 {
-    eventManager->addListener(listener);
+    eventManager->addMidiStateListener(listener);
 }
 
 void LumatoneController::removeMidiListener(LumatoneMidiState::Listener* listener)
 {
-    eventManager->removeListener(listener);
+    eventManager->removeMidiStateListener(listener);
 }
 
 

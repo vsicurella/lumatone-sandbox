@@ -35,8 +35,8 @@ LumatoneState::LumatoneState(juce::ValueTree stateIn, juce::UndoManager* undoMan
 LumatoneState::LumatoneState(const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn)
     : LumatoneState(stateToCopy.state, undoManagerIn)
 {
-    mappingData = stateToCopy.mappingData;
-    midiKeyMap = stateToCopy.midiKeyMap;
+    // mappingData = stateToCopy.mappingData;
+    // midiKeyMap = stateToCopy.midiKeyMap;
 }
 
 LumatoneState::~LumatoneState()

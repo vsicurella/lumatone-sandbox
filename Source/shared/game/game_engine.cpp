@@ -72,7 +72,7 @@ bool LumatoneSandboxGameEngine::startGame()
     }
     else if (game != nullptr)
     {
-        addListener(game.get());
+        addMidiStateListener(game.get());
         game->reset(true);
         gameIsRunning = true;
 
@@ -124,7 +124,7 @@ bool LumatoneSandboxGameEngine::endGame()
     if (game != nullptr)
     {
         game->reset(true);
-        removeListener(game.get());
+        removeMidiStateListener(game.get());
 
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameEnded);
 
@@ -148,7 +148,7 @@ void LumatoneSandboxGameEngine::resetGame()
     }
     else if (game != nullptr)
     {
-        addListener(game.get());
+        addMidiStateListener(game.get());
         game->reset(true);
 
         DBG("LumatoneSandboxGameEngine: restarted " + game->getName());

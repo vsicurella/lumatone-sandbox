@@ -16,6 +16,8 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
     controller->addEditorListener(lumatoneComponent.get());
     controller->addMidiListener(lumatoneComponent.get());
 
+    lumatoneComponent->addMidiStateListener(controller);
+
     connectionStatus->handleStatus(ConnectionState::DISCONNECTED);
 
     // setSize (600, 400);
@@ -23,6 +25,8 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
 
 MainComponent::~MainComponent()
 {
+    lumatoneComponent->removeMidiStateListener(controller);
+    
     controller->removeStatusListener(connectionStatus.get());
     controller->removeEditorListener(lumatoneComponent.get());
 

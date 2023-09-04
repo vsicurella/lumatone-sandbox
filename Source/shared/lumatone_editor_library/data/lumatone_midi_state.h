@@ -52,8 +52,8 @@ public:
     };
 
 public:
-    void addListener(LumatoneMidiState::Listener* listener);
-    void removeListener(LumatoneMidiState::Listener* listener);
+    void addMidiStateListener(LumatoneMidiState::Listener* listener);
+    void removeMidiStateListener(LumatoneMidiState::Listener* listener);
 private:
     juce::ListenerList<Listener> midiListeners;
 

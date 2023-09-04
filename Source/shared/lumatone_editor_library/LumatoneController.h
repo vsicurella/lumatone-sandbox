@@ -23,6 +23,7 @@
 
 
 class LumatoneController :  public LumatoneApplicationState,
+                            public LumatoneMidiState::Listener,
                             private LumatoneFirmwareDriver::Collector,
                             public LumatoneEditor::StatusListener,
                             public LumatoneEditor::StatusEmitter,
@@ -65,8 +66,12 @@ public:
     void connectionStateChanged(ConnectionState newState) override;
 
 public:
-
+    //============================================================================
     void sendMidiMessage(const juce::MidiMessage& msg);
+
+private:
+    void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) override;
 
 public:
     //============================================================================

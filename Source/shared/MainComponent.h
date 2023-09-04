@@ -28,8 +28,8 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    void addKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->addListener(listener); }
-    void removeKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->removeListener(listener); }
+    void addKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->addMidiStateListener(listener); }
+    void removeKeyboardComponentListener(LumatoneMidiState::Listener* listener) { lumatoneComponent->removeMidiStateListener(listener); }
 
     void setGameEngine(LumatoneSandboxGameEngine* engineIn);
     void setGameComponent(LumatoneSandboxGameComponent* gameIn);
