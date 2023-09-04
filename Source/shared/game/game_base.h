@@ -52,6 +52,8 @@ public:
     virtual void clearQueue();
     void readQueue(LumatoneAction** buffer, int& numActions);
 
+    virtual void end();
+
     virtual double getLockedFps() const { return 0; }
 
     juce::String getName() const { return name; }

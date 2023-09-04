@@ -24,7 +24,7 @@ LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneS
     };
     addAndMakeVisible(*startPauseButton);
 
-    resetButton = std::make_unique<juce::TextButton>("Reset", "Reset to before random colors were sent");
+    resetButton = std::make_unique<juce::TextButton>("Reset", "Reset to beginning of game");
     resetButton->onClick = [&]
     {
         startPauseButton->setToggleState(false, juce::NotificationType::dontSendNotification);
@@ -34,6 +34,17 @@ LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneS
         gameEngine->resetGame();
     };
     addAndMakeVisible(*resetButton);
+
+    endButton = std::make_unique<juce::TextButton>("End", "End game and reset to before game started.");
+    endButton->onClick = [&]
+    {
+        startPauseButton->setToggleState(false, juce::NotificationType::dontSendNotification);
+        startPauseButton->setButtonText("Start");
+        startPauseButton->setTooltip("Begin game");
+
+        gameEngine->endGame();
+    };
+    addAndMakeVisible(*endButton);
 
     fpsSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::IncDecButtons, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
     fpsSlider->setRange(1, 60, 1);
@@ -96,14 +107,15 @@ void LumatoneSandboxGameEngineComponent::resized()
 
     startPauseButton->setBounds(controlMargin, sectionMargin, buttonWidth, controlHeight);
     resetButton->setBounds(startPauseButton->getRight() + controlMargin, sectionMargin, buttonWidth, controlHeight);
+    endButton->setBounds(controlMargin, startPauseButton->getBottom() + controlMargin, buttonWidth, controlHeight);
 
     auto labelFont = getLookAndFeel().getLabelFont(*fpsLabel);
-    int labelWidth = labelFont.getStringWidth(fpsLabel->getText());
-    fpsLabel->setBounds(controlMargin, startPauseButton->getBottom() + controlMargin, labelWidth, controlHeight);
+    int labelWidth = labelFont.getStringWidth(fpsLabel->getText() + "__");
+    fpsLabel->setBounds(controlMargin, endButton->getBottom() + controlMargin, labelWidth, controlHeight);
 
     int fpsSliderX = fpsLabel->getRight() + labelMargin;
     int fpsSliderWidth = controlsArea.getWidth() - fpsSliderX - controlMargin;
-    fpsSlider->setBounds(fpsSliderX, startPauseButton->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
+    fpsSlider->setBounds(fpsSliderX, endButton->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
 
     if (gameComponent != nullptr)
     {
@@ -125,4 +137,11 @@ void LumatoneSandboxGameEngineComponent::setGameComponent(LumatoneSandboxGameCom
 
     gameComponent.reset(gameComponentIn);
     addAndMakeVisible(*gameComponent);
+}
+
+void LumatoneSandboxGameEngineComponent::endGame()
+{
+    gameEngine->endGame();
+    gameComponent = nullptr;
+    resized();
 }

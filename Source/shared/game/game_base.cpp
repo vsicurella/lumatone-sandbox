@@ -59,6 +59,12 @@ void LumatoneSandboxGameBase::readQueue(LumatoneAction** buffer, int& numActions
     queueSize = 0;
 }
 
+void LumatoneSandboxGameBase::end()
+{
+    reset(true);
+    queueLayout(layoutBeforeStart);
+}
+
 void LumatoneSandboxGameBase::noteOff(int midiChannel, int midiNote)
 {
     auto msg = juce::MidiMessage::noteOff(midiChannel, midiNote);

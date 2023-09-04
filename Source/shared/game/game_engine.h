@@ -71,6 +71,10 @@ public:
 
 private:
 
+    void advanceFrame();
+
+    void processGameActionQueue();
+
     void timerCallback() override;
 
 private:

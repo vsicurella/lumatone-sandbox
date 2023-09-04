@@ -18,6 +18,8 @@ public:
     // Set the game component to display, takes ownership
     void setGameComponent(LumatoneSandboxGameComponent* gameComponentIn);
 
+    void endGame();
+
 private:
 
     LumatoneSandboxGameEngine* gameEngine;
@@ -25,6 +27,7 @@ private:
 
     std::unique_ptr<juce::TextButton> startPauseButton;
     std::unique_ptr<juce::TextButton> resetButton;
+    std::unique_ptr<juce::TextButton> endButton;
 
     std::unique_ptr<juce::Slider> fpsSlider;
     std::unique_ptr<juce::Label> fpsLabel;

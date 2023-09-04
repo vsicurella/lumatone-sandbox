@@ -123,8 +123,10 @@ bool LumatoneSandboxGameEngine::endGame()
 
     if (game != nullptr)
     {
-        game->reset(true);
         removeMidiStateListener(game.get());
+        
+        game->end();
+        processGameActionQueue();
 
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameEnded);
 
@@ -157,14 +159,8 @@ void LumatoneSandboxGameEngine::resetGame()
     }
 }
 
-void LumatoneSandboxGameEngine::timerCallback()
+void LumatoneSandboxGameEngine::advanceFrame()
 {
-    if (!gameIsRunning)
-    {
-        stopTimer();
-        return;
-    }
-
     if (gameIsPaused)
     {
         game->pauseTick();
@@ -173,7 +169,10 @@ void LumatoneSandboxGameEngine::timerCallback()
     {
         game->nextTick();
     }
+}
 
+void LumatoneSandboxGameEngine::processGameActionQueue()
+{
     game->readQueue(actionQueue, numActions);
 
     if (numActions == 0)
@@ -188,4 +187,16 @@ void LumatoneSandboxGameEngine::timerCallback()
         actionQueue[i] = nullptr;
         numActions--;
     }
+}
+
+void LumatoneSandboxGameEngine::timerCallback()
+{
+    if (!gameIsRunning)
+    {
+        stopTimer();
+        return;
+    }
+
+    advanceFrame();
+    processGameActionQueue();
 }
