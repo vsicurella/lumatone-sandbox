@@ -40,17 +40,18 @@ Connection to midi, sending SysEx parameters to keyboard
 */
 class LumatoneFirmwareDriver : public HajuMidiDriver, public juce::Timer
 {
+public:
+	enum class HostMode
+	{
+		Driver = 0, // For applications, open and manage devices with HajuMidiDriver
+		Plugin // Hosted in a DAW as a plugin - MIDI messages are received through DAW's buffer	
+	};
+
 private:
 	enum class TimerType
 	{
 		waitForAnswer,
 		delayWhileDeviceBusy
-	};
-
-	enum class HostMode
-	{
-		Driver = 0, // For applications, open and manage devices with HajuMidiDriver
-		Plugin // Hosted in a DAW as a plugin - MIDI messages are received through DAW's buffer	
 	};
 
 public:
@@ -92,7 +93,7 @@ private:
 
 
 public:
-	LumatoneFirmwareDriver(int numBoards=DEFAULT_NUM_BOARDS);
+	LumatoneFirmwareDriver(HostMode hostModeIn, int numBoards=DEFAULT_NUM_BOARDS);
 	~LumatoneFirmwareDriver();
 
 //	void addListener(Listener* listenerToAdd);

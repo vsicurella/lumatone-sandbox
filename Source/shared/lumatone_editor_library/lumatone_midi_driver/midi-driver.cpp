@@ -177,7 +177,7 @@ void HajuMidiDriver::sendMessageNow(const juce::MidiMessage& message)
 		midiOutput->sendMessageNow(message);
         return;
     }
-    jassertfalse;
+    // jassertfalse;
     DBG("MidiOutput is null!");
 }
 

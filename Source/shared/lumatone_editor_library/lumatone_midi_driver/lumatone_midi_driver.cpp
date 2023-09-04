@@ -16,13 +16,10 @@
 
 #define MIDI_DRIVER_USE_LOCK JUCE_WINDOWS //|| JUCE_LINUX
 
-LumatoneFirmwareDriver::LumatoneFirmwareDriver(int numBoardsIn)
-    : numBoards(numBoardsIn)
+LumatoneFirmwareDriver::LumatoneFirmwareDriver(HostMode hostModeIn, int numBoardsIn)
+    : hostMode(hostModeIn)
+    , numBoards(numBoardsIn)
 {
-    if (JUCE_STANDALONE_APPLICATION)
-        hostMode = HostMode::Driver;
-    else
-        hostMode = HostMode::Plugin;
 }     
 
 LumatoneFirmwareDriver::~LumatoneFirmwareDriver()

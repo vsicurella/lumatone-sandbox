@@ -43,7 +43,7 @@ public:
 
         paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
 
-        midiDriver = std::make_unique<LumatoneFirmwareDriver>();
+        midiDriver = std::make_unique<LumatoneFirmwareDriver>(LumatoneFirmwareDriver::HostMode::Driver);
         controller = std::make_unique<LumatoneController>(treeState, *midiDriver, undoManager.get());
 
         monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), *(LumatoneState*)controller.get());
