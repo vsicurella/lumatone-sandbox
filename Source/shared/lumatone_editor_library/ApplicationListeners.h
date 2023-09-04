@@ -114,6 +114,8 @@ namespace LumatoneEditor
 
         virtual void selectionChanged(juce::Array<MappedLumatoneKey> selection) {};
 
+        virtual void contextChanged(LumatoneContext* context) {};
+
         // Firmware Actions
         virtual void keyConfigChanged(int boardIndex, int keyIndex, LumatoneKey keyData) {};
         virtual void keyColourChanged(int boardIndex, int keyIndex, juce::Colour keyColour) {};

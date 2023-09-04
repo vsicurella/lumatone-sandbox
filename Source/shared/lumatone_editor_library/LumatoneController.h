@@ -36,6 +36,9 @@ public:
     ~LumatoneController();
 
     juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
+
+    void setContext(std::shared_ptr<LumatoneContext> contextIn) override;
+    void clearContext() override;
     
     //============================================================================
     // Methods to configure firmware communication parameters

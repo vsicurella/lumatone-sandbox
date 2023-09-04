@@ -37,6 +37,18 @@ juce::ValueTree LumatoneController::loadStateProperties(juce::ValueTree stateIn)
     return state;
 }
 
+void LumatoneController::setContext(std::shared_ptr<LumatoneContext> contextIn)
+{
+    LumatoneApplicationState::setContext(contextIn);
+    editorListeners.call(&LumatoneEditor::EditorListener::contextChanged, layoutContext.get());
+}
+
+void LumatoneController::clearContext()
+{
+    LumatoneApplicationState::clearContext();
+    editorListeners.call(&LumatoneEditor::EditorListener::contextChanged, nullptr);
+}
+
 void LumatoneController::connectionStateChanged(ConnectionState newState)
 {
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, newState);

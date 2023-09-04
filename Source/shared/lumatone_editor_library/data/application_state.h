@@ -1,6 +1,7 @@
 #pragma once
 
 #include "lumatone_state.h"
+#include "lumatone_context.h"
 
 enum class ConnectionState
 {
@@ -48,6 +49,13 @@ public:
 
     LumatoneColourModel* getColourModel() const;
 
+    bool isContextSet() const { return contextIsSet; }
+    const LumatoneContext* getContext() const { return contextIsSet ? layoutContext.get() : nullptr; }
+    std::shared_ptr<LumatoneContext> shareContext() { return layoutContext; }
+
+    virtual void setContext(std::shared_ptr<LumatoneContext> contextIn);
+    virtual void clearContext();
+
 protected:
 
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn);
@@ -62,6 +70,9 @@ protected:
 
     bool detectDeviceIfDisconnected     = true;
     bool monitorConnectionStatus        = true;
+
+    bool                                contextIsSet = false;
+    std::shared_ptr<LumatoneContext>    layoutContext;
 
 private:
 

@@ -116,3 +116,18 @@ void LumatoneApplicationState::handleStatePropertyChange(juce::ValueTree stateIn
         LumatoneState::handleStatePropertyChange(stateIn, property);
     }
 }
+
+void LumatoneApplicationState::setContext(std::shared_ptr<LumatoneContext> contextIn)
+{
+    if (layoutContext.get() != nullptr)
+        clearContext();
+
+    layoutContext = contextIn;
+    contextIsSet = true;
+}
+
+void LumatoneApplicationState::clearContext()
+{
+    layoutContext = nullptr;
+    contextIsSet = false;
+}
