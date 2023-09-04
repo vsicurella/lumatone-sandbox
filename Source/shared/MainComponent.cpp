@@ -25,6 +25,7 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
 
 MainComponent::~MainComponent()
 {
+    lumatoneComponent->removeMidiStateListener(gameEngineComponent->getGameEngine());
     lumatoneComponent->removeMidiStateListener(controller);
     
     controller->removeStatusListener(connectionStatus.get());
@@ -73,6 +74,8 @@ void MainComponent::setGameEngine(LumatoneSandboxGameEngine* engineIn)
 {
     jassert(gameEngineComponent.get() == nullptr);
     gameEngineComponent = std::make_unique<LumatoneSandboxGameEngineComponent>(engineIn);
+    lumatoneComponent->addMidiStateListener(gameEngineComponent->getGameEngine());
+
     if (showGameControl)
         addAndMakeVisible(*gameEngineComponent);
     else

@@ -111,6 +111,11 @@ void LumatoneSandboxGameEngineComponent::resized()
     }
 }
 
+LumatoneSandboxGameEngine* LumatoneSandboxGameEngineComponent::getGameEngine()
+{
+    return gameEngine;
+}
+
 void LumatoneSandboxGameEngineComponent::setGameComponent(LumatoneSandboxGameComponent *gameComponentIn)
 {
     if (gameComponent != nullptr)

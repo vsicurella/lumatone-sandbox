@@ -13,6 +13,8 @@ public:
     void paint(juce::Graphics& g) override;
     void resized() override;
 
+    LumatoneSandboxGameEngine* getGameEngine();
+
     // Set the game component to display, takes ownership
     void setGameComponent(LumatoneSandboxGameComponent* gameComponentIn);
 
