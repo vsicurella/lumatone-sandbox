@@ -18,19 +18,16 @@ RandomColors::RandomColors(LumatoneController* controllerIn, RandomColors::Optio
 
 void RandomColors::reset(bool clearQueue)
 {
-    LumatoneSandboxGameBase::reset(clearQueue);
-
     random.setSeedRandomly();
 
     ticks = 0;
 
     if (clearQueue)
     {
-        if (layoutBeforeStart.isEmpty())
-            layoutBeforeStart = *controller->getMappingData();
-
         queueIdentityLayout(true);
     }
+
+    LumatoneSandboxGameBase::reset(clearQueue);
 }
 
 void RandomColors::nextTick()

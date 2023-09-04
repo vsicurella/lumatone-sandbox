@@ -100,8 +100,6 @@ void HexagonAutomata::Game::redoCensus()
             populatedCells.add(MappedHexState(cells[i], key, hexMap.keyNumToHex(i)));
         }
     }
-
-    
 }
 
 void HexagonAutomata::Game::reset(bool clearQueue)
@@ -144,6 +142,8 @@ void HexagonAutomata::Game::reset(bool clearQueue)
 
 void HexagonAutomata::Game::resetState()
 {
+    allNotesOff();
+    
     auto l = juce::ScopedLock(lock);
 
     populatedCells.clear();
