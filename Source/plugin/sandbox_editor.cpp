@@ -28,17 +28,17 @@ LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxP
 
     menuModel = std::make_unique<LumatoneSandbox::Menu::Model>(commandManager);
 
-    if (showMenu())
-    {
+    // if (showMenu())
+    // {
         menuBar = std::make_unique<juce::MenuBarComponent>(menuModel.get());
         addAndMakeVisible(menuBar.get());
-    }
-    else if (JucePlugin_Build_Standalone)
-    {
-    #if JUCE_MAC
-        LumatoneSandbox::Menu::Model::setMacMainMenu((juce::MenuBarModel*)(nullptr));
-    #endif
-    }
+    // }
+    // else if (JucePlugin_Build_Standalone)
+    // {
+    // #if JUCE_MAC
+    //     LumatoneSandbox::Menu::Model::setMacMainMenu((juce::MenuBarModel*)(nullptr));
+    // #endif
+    // }
 
     setSize (1024, 768);
 
@@ -79,10 +79,11 @@ void LumatoneSandboxProcessorEditor::resized()
 
 bool LumatoneSandboxProcessorEditor::showMenu() const
 {
-    return JucePlugin_Build_Standalone 
-        && ((juce::SystemStats::getOperatingSystemType() & juce::SystemStats::OperatingSystemType::MacOSX) 
-            != juce::SystemStats::OperatingSystemType::MacOSX
-            );
+    return true;
+    // return JucePlugin_Build_Standalone 
+    //     && ((juce::SystemStats::getOperatingSystemType() & juce::SystemStats::OperatingSystemType::MacOSX) 
+    //         != juce::SystemStats::OperatingSystemType::MacOSX
+    //         );
 }
 
 juce::ApplicationCommandTarget* LumatoneSandboxProcessorEditor::getNextCommandTarget()
