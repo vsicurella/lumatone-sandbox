@@ -32,7 +32,6 @@ DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverI
 
 DeviceActivityMonitor::~DeviceActivityMonitor()
 {
-    removeAllChangeListeners();
     midiDriver->removeMessageCollector(this);
 }
 
@@ -157,10 +156,10 @@ void DeviceActivityMonitor::testNextOutput()
     }
 }
 
-void DeviceActivityMonitor::initializeDeviceDetection()
+void DeviceActivityMonitor::startDeviceDetection()
 {
-    if (JUCE_STANDALONE_APPLICATION)
-        return;
+    if (midiDriver->getHostMode() != LumatoneFirmwareDriver::HostMode::Driver)
+        return; // Only allow in Driver mode
         
     // Belongs somewhere else?
     if (!midiDriver->hasDevicesDefined())
@@ -177,14 +176,13 @@ void DeviceActivityMonitor::initializeDeviceDetection()
     }
 }
 
-void DeviceActivityMonitor::intializeConnectionLossDetection()
+void DeviceActivityMonitor::startActivityMonitoring()
 {
-    if (checkConnectionOnInactivity)
-    {
-        deviceConnectionMode = DetectConnectionMode::waitingForInactivity;
-        waitingForResponse = false;
-        startTimer(inactivityTimeoutMs);
-    }
+    if (midiDriver->getHostMode() != LumatoneFirmwareDriver::HostMode::Driver)
+        return; // Only allow in Driver mode
+        
+    deviceConnectionMode = DetectConnectionMode::waitingForInactivity;
+    startTimer(inactivityTimeoutMs);
 }
 
 void DeviceActivityMonitor::stopDeviceDetection()
@@ -232,7 +230,7 @@ void DeviceActivityMonitor::onSerialIdentityResponse(const juce::MidiMessage& ms
         }
         else
         {
-            setConnectedDevices(deviceIndexResponded, testOutputIndex);
+            connectionEstablished(deviceIndexResponded, testOutputIndex);
             //confirmedOutputIndex = testOutputIndex;
             //confirmedInputIndex = deviceIndexResponded;
         }
@@ -278,7 +276,7 @@ void DeviceActivityMonitor::onPingResponse(const juce::MidiMessage& msg, int dev
 
         if (pingId > 0)
         {
-            setConnectedDevices(deviceIndexResponded, pingId - 1);
+            connectionEstablished(deviceIndexResponded, pingId - 1);
             //confirmedOutputIndex = pingId - 1;
             //confirmedInputIndex = deviceIndexResponded;
             // startTimer(10);
@@ -399,7 +397,13 @@ void DeviceActivityMonitor::timerCallback()
 
     case DetectConnectionMode::noDeviceMonitoring:
     case DetectConnectionMode::waitingForInactivity:
-        jassert(isConnectionEstablished() && midiDriver->hasDevicesDefined());
+        if (JUCE_DEBUG) 
+        {
+            bool estab = isConnectionEstablished();
+            bool devdef = midiDriver->hasDevicesDefined();
+            jassert(estab && devdef);
+        }
+
         if (!checkConnectionOnInactivity)
         {
             stopMonitoringDevice();
@@ -516,7 +520,7 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
         // Edge case if we're disconnected but get a response
         else if (!isConnectionEstablished())
         {
-            setConnectedDevices(midiDriver->getMidiInputIndex(), midiDriver->getMidiOutputIndex());
+            connectionEstablished(midiDriver->getMidiInputIndex(), midiDriver->getMidiOutputIndex());
         }
         else
         {
@@ -579,22 +583,6 @@ void DeviceActivityMonitor::noAnswerToMessage(juce::MidiDeviceInfo expectedDevic
     }
 }
 
-void DeviceActivityMonitor::setConnectedDevices(int inputDeviceIndex, int outputDeviceIndex)
-{
-    if (inputDeviceIndex != confirmedInputIndex || outputDeviceIndex != confirmedOutputIndex) // kludge
-    {
-        //jassert(isConnectionEstablished());
-
-        deviceDetectInProgress = false;
-        outputPingIds.clear();
-
-        deviceConnectionMode = DetectConnectionMode::confirmingDevice;
-
-        // controller->setMidiInput(inputDeviceIndex, false);
-        // controller->setMidiOutput(outputDeviceIndex);
-    }
-}
-
 void DeviceActivityMonitor::onDisconnection()
 {
     DBG("DISCONNECTION DETECTED");
@@ -604,10 +592,16 @@ void DeviceActivityMonitor::onDisconnection()
 
     waitingForResponse = false;
 
-    // LumatoneController will start this back up
-    deviceConnectionMode = DetectConnectionMode::noDeviceActivity;
-    
-    sendChangeMessage();
+    if (detectDevicesIfDisconnected)
+    {
+        startDeviceDetection();
+    }
+    else
+    {
+        statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::DISCONNECTED);
+        deviceConnectionMode = DetectConnectionMode::noDeviceActivity;
+        stopTimer();
+    }
 }
 
 //==============================================================================
@@ -625,40 +619,25 @@ void DeviceActivityMonitor::connectionFailed()
 
 void DeviceActivityMonitor::connectionEstablished(int inputIndex, int outputIndex)
 {
+    deviceDetectInProgress = false;
+    outputPingIds.clear();
+    stopTimer();
+
+    midiDriver->setMidiInput(inputIndex);
+    midiDriver->setMidiOutput(outputIndex);
+
     confirmedInputIndex = inputIndex;
     confirmedOutputIndex = outputIndex;
 
+    statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::ONLINE);
+
+
     if (checkConnectionOnInactivity)
     {
-        deviceConnectionMode = DetectConnectionMode::waitingForInactivity;
-        startTimer(inactivityTimeoutMs);
+        startActivityMonitoring();
     }
     else
     {
         deviceConnectionMode = DetectConnectionMode::noDeviceMonitoring;
-        stopTimer();
     }
-
-    // auto inputDevice = midiDriver->getMidiInputList()[confirmedInputIndex];
-    // auto outputDevice = midiDriver->getMidiOutputList()[confirmedOutputIndex];
-
-    statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::ONLINE);
-}
-
-void DeviceActivityMonitor::connectionLost()
-{
-    confirmedInputIndex = -1;
-    confirmedOutputIndex = -1;
-
-    if (detectDevicesIfDisconnected)
-    {
-        initializeDeviceDetection();
-    }
-    else
-    {
-        deviceConnectionMode = DetectConnectionMode::noDeviceActivity;
-        stopTimer();
-    }
-
-    statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::DISCONNECTED);
 }

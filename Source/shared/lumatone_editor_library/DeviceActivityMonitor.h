@@ -22,7 +22,6 @@
 
 class DeviceActivityMonitor : protected LumatoneApplicationState,
                               public juce::Timer, 
-                              public juce::ChangeBroadcaster, 
                               public LumatoneEditor::StatusEmitter,
                               protected LumatoneFirmwareDriver::Collector
 {
@@ -57,14 +56,14 @@ public:
     // Start monitoring available MIDI devices and wait for an expected response
     // First uses the "Ping" command to send to all available devices,
     // then goes through a legacy-supported routine with individual output devices.
-    void initializeDeviceDetection();
+    void startDeviceDetection();
 
     // Set the timeout for message responses
     void setResponseTimeoutMs(int timeoutMs) { responseTimeoutMs = timeoutMs; }
 
     // Begin polling selected device until it stops responding. Other messages
     // will reset the inactivity timer.
-    void intializeConnectionLossDetection();
+    void startActivityMonitoring();
 
     // Turn off device monitoring and idle
     void stopMonitoringDevice();
@@ -133,10 +132,13 @@ private:
 
     void activityResponseReceived();
 
-    void setConnectedDevices(int inputDeviceIndex, int outputDevice);
     void onSuccessfulDetection();
 
     void onDisconnection();
+
+    void connectionFailed();
+    void connectionEstablished(int inputIndex, int outputIndex);
+    void connectionLost();
     
 protected:
 
@@ -149,13 +151,6 @@ protected:
     //void generalLogMessage(juce::String textMessage, HajuErrorVisualizerPlaceholder errorLevel) override {}
     void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage) override;
 
-
-    //==============================================================================
-    // LumatoneEditor::StatusListener
-
-    virtual void connectionFailed();
-    virtual void connectionEstablished(int inputIndex, int outputIndex);
-    virtual void connectionLost();
 
 private:
 

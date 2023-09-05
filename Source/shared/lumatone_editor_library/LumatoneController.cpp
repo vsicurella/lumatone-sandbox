@@ -51,6 +51,20 @@ void LumatoneController::clearContext()
 
 void LumatoneController::connectionStateChanged(ConnectionState newState)
 {
+    switch (newState)
+    {
+    case ConnectionState::DISCONNECTED:
+        currentDevicePairConfirmed = false;
+        break;
+
+    case ConnectionState::ONLINE:
+        onConnectionConfirmed();
+        return;   
+
+    default:
+        break;
+    }
+
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, newState);
 }
 
@@ -154,11 +168,13 @@ void LumatoneController::sendAllParamsOfBoard(int boardId, const LumatoneBoard* 
         editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *boardData);
 }
 
-void LumatoneController::sendCompleteMapping(LumatoneLayout mappingData, bool signalEditorListeners, bool bufferKeyUpdates)
+void LumatoneController::sendCompleteMapping(const LumatoneLayout& mappingData, bool signalEditorListeners, bool bufferKeyUpdates)
 {
     for (int boardId = 1; boardId <= getNumBoards(); boardId++)
-        sendAllParamsOfBoard(boardId, mappingData.getBoard(boardId - 1), false, bufferKeyUpdates);
+        sendAllParamsOfBoard(boardId, mappingData.readBoard(boardId - 1), false, bufferKeyUpdates);
 
+    clearContext();
+    
     if (signalEditorListeners)
         editorListeners.call(&LumatoneEditor::EditorListener::completeMappingLoaded, mappingData);
 }
@@ -242,7 +258,7 @@ void LumatoneController::testCurrentDeviceConnection()
 
         else
         {
-            sendGetSerialIdentityRequest();
+            sendGetSerialIdentityRequest(true);
         }
     }
     else
@@ -510,8 +526,9 @@ void LumatoneController::getFaderTypeConfig(int boardIndex)
 }
 
 // This command is used to read back the serial identification number of the keyboard.
-void LumatoneController::sendGetSerialIdentityRequest()
+void LumatoneController::sendGetSerialIdentityRequest(bool confirmConnectionAfterResponse)
 {
+    waitingForTestResponse = confirmConnectionAfterResponse;
     firmwareDriver.sendGetSerialIdentityRequest();
 }
 
@@ -613,8 +630,15 @@ void LumatoneController::onConnectionConfirmed()
     waitingForTestResponse = false;
     currentDevicePairConfirmed = true;
 
-    if (getLumatoneVersion() != LumatoneFirmwareVersion::VERSION_55_KEYS)
+    if (getSerialNumber().isEmpty())
+    {
+        sendGetSerialIdentityRequest(true);
+        return; // a bit of a kludge
+    }
+    else if (getSerialNumber() != SERIAL_55_KEYS)
+    {
         sendGetFirmwareRevisionRequest();
+    }
 
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::ONLINE);
     sendGetCompleteMappingRequest();
@@ -625,7 +649,7 @@ bool LumatoneController::loadLayoutFromFile(const juce::File& file)
     const bool loaded = LumatoneState::loadLayoutFromFile(file);
     if (loaded)
     {
-        sendCompleteMapping(*mappingData);
+        sendCompleteMapping(*mappingData, true, false);
     }
 
     return loaded;
@@ -651,8 +675,10 @@ void LumatoneController::serialIdentityReceived(const int* serialBytes)
 
     setConnectedSerialNumber(serialNumber);
 
-    if (waitingForTestResponse)
+    if (waitingForTestResponse && serialNumber != SERIAL_55_KEYS)
+    {
         onConnectionConfirmed();
+    }
 }
 
 void LumatoneController::firmwareRevisionReceived(FirmwareVersion version)
@@ -790,7 +816,7 @@ void LumatoneController::keyTypeConfigReceived(int boardId, const int* keyTypeDa
 //            DBG("Connection was tripped");
 //            // Kludge - device monitor should be able to do this on it's own
 //            if (deviceMonitor->willDetectDeviceIfDisconnected())
-//                deviceMonitor->initializeDeviceDetection();
+//                deviceMonitor->startDeviceDetection();
 //        }
 //    }
 //}

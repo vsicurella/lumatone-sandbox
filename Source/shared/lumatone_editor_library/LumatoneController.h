@@ -84,7 +84,7 @@ public:
     void sendAllParamsOfBoard(int boardId, const LumatoneBoard* boardData, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
 
     // Send and save a complete key mapping
-    void sendCompleteMapping(LumatoneLayout mappingData, bool signalEditorListeners=true, bool bufferKeyUpdates=true);
+    void sendCompleteMapping(const LumatoneLayout& mappingData, bool signalEditorListeners=true, bool bufferKeyUpdates=true);
 
     // Send request to receive the current mapping of one sub board on the controller
     void sendGetMappingOfBoardRequest(int boardId);
@@ -186,7 +186,7 @@ public:
 	void getFaderTypeConfig(int boardIndex);
 
     // This command is used to read back the serial identification number of the keyboard.
-    void sendGetSerialIdentityRequest();
+    void sendGetSerialIdentityRequest(bool confirmConnectionAfterResponse);
 
     void startCalibrateKeys();
 

@@ -25,8 +25,9 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
     midiDriver = std::make_unique<LumatoneFirmwareDriver>(hostMode);
     controller = std::make_unique<LumatoneController>(treeState, *midiDriver, undoManager.get());
 
-    monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), *(LumatoneState*)controller.get());
-    monitor->initializeDeviceDetection();
+    monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), *(LumatoneState*)controller.get()); 
+    monitor->addStatusListener(controller.get());
+    monitor->startDeviceDetection();
 
     commandManager = std::make_unique<juce::ApplicationCommandManager>();
     // commandManager->registerAllCommandsForTarget(this);
@@ -154,8 +155,6 @@ bool LumatoneSandboxProcessor::isBusesLayoutSupported (const BusesLayout& layout
 void LumatoneSandboxProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused (midiMessages);
-
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
