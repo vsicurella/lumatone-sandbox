@@ -20,7 +20,7 @@ HexRings::HexRings(LumatoneController* controller)
 void HexRings::reset(bool clearQueue)
 {
     LumatoneSandboxGameBase::reset(clearQueue);
-    auto layout = queueIdentityLayout(true);
+    auto layout = getIdentityLayout(true);
 }
 
 void HexRings::nextTick()

@@ -34,7 +34,7 @@ void LumatoneKeyUpdateBuffer::sendKeyColourConfig(int boardId, int keyIndex, juc
 
 void LumatoneKeyUpdateBuffer::updateKeyConfig(int boardIndex, int keyIndex, const LumatoneKey& config)
 {
-    auto l = juce::ScopedLock(lock);
+    juce::ScopedLock l(lock);
     // while (!lock.tryEnter()) {}
 
     auto keyNum = getKeyNum(boardIndex, keyIndex);
@@ -62,7 +62,7 @@ void LumatoneKeyUpdateBuffer::updateKeyConfig(int boardIndex, int keyIndex, cons
 
 void LumatoneKeyUpdateBuffer::updateKeyColour(int boardIndex, int keyIndex, juce::Colour colour)
 {
-    auto l = juce::ScopedLock(lock);
+    juce::ScopedLock l(lock);
     // while (!lock.tryEnter()) {}
 
     auto keyNum = getKeyNum(boardIndex, keyIndex);

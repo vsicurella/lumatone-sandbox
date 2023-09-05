@@ -114,9 +114,47 @@ void LumatoneSandboxGameBase::queueLayout(const LumatoneLayout& layout)
     }
 }
 
-LumatoneLayout LumatoneSandboxGameBase::queueIdentityLayout(bool resetColors)
+LumatoneLayout LumatoneSandboxGameBase::getIdentityLayout(bool resetColors)
 {
-    LumatoneLayout layout = LumatoneLayout::IdentityMapping(controller->getNumBoards(), controller->getOctaveBoardSize());
-    queueLayout(layout);
-    return layout;
+    LumatoneLayout identity = LumatoneLayout::IdentityMapping(controller->getNumBoards(), controller->getOctaveBoardSize());
+
+    if (resetColors == false)
+    {
+        for (int b = 0; b < layoutBeforeStart.getNumBoards(); b++)
+        {
+            for (int k = 0; k < layoutBeforeStart.getOctaveBoardSize(); k++)
+            {
+                auto layoutKey = layoutBeforeStart.readKey(b, k);
+                auto idKey = identity.getKey(b, k);
+                idKey->colour = layoutKey->colour;
+            }
+        }
+    }
+
+    return identity;
+}
+
+LumatoneContext LumatoneSandboxGameBase::getIdentityWithLayoutContext(bool resetColors)
+{
+    LumatoneLayout identityLayout = getIdentityLayout(resetColors);
+    LumatoneContext layoutContext = LumatoneContext(layoutBeforeStart);
+
+    juce::Array<int> midiChannelContextMap;
+    juce::Array<int> midiNoteContextMap;
+
+    for (int b = 0; b < layoutBeforeStart.getNumBoards(); b++)
+    {
+        for (int k = 0; k < layoutBeforeStart.getOctaveBoardSize(); k++)
+        {
+            auto layoutKey = layoutBeforeStart.readKey(b, k);
+            midiChannelContextMap.add(layoutKey->channelNumber);
+            midiNoteContextMap.add(layoutKey->noteNumber);
+        }
+    }
+
+    LumatoneContext context = LumatoneContext(identityLayout);
+    context.setMappedMidiChannels(midiChannelContextMap);
+    context.setMappedMidiNotes(midiChannelContextMap);
+
+    return context;
 }

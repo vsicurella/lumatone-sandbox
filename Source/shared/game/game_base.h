@@ -43,7 +43,8 @@ public:
     }
 
     void queueLayout(const LumatoneLayout& layout);
-    LumatoneLayout queueIdentityLayout(bool resetColors);
+    LumatoneLayout getIdentityLayout(bool resetColors);
+    LumatoneContext getIdentityWithLayoutContext(bool resetColors);
 
     virtual void reset(bool clearActionQueue);
     virtual void nextTick() = 0;

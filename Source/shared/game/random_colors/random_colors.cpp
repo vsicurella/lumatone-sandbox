@@ -24,7 +24,7 @@ void RandomColors::reset(bool clearQueue)
 
     if (clearQueue)
     {
-        queueIdentityLayout(true);
+        getIdentityLayout(true);
     }
 
     LumatoneSandboxGameBase::reset(clearQueue);

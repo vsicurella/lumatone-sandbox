@@ -154,7 +154,7 @@ namespace HexagonAutomata
 
         GameState(std::shared_ptr<LumatoneLayout> layoutIn)
             : layout(layoutIn)
-            , hexMap(LumatoneHexMap(layoutIn)) 
+            , hexMap(layoutIn) 
         {
             resetState();
         }
@@ -270,8 +270,8 @@ namespace HexagonAutomata
 
             if (cell.isAlive())
                 AdjustLayoutColour::multiplyBrightness(aliveScalar, key);
-            else if (cell.isDead())
-                AdjustLayoutColour::multiplyBrightness(deadScalar, key);
+            // else if (cell.isDead())
+            //     AdjustLayoutColour::multiplyBrightness(deadScalar, key);
             else
                 AdjustLayoutColour::multiplyBrightness(emptyScalar, key);
 
@@ -353,7 +353,9 @@ public:
         // Returns whether or not cell is still populated
         bool applyUpdatedCell(const MappedHexState& cellUpdate);
 
-        void triggerCellMidi(const MappedHexState& cell);
+        // Produce midi note from cell and send immediately
+        // Returns whether or not cell can be triggered
+        bool triggerCellMidi(const MappedHexState& cell);
 
     private:
 
@@ -361,6 +363,8 @@ public:
 
         void initialize();
         void redoCensus();
+
+        void initializeLayoutContext();
 
     private:
 
