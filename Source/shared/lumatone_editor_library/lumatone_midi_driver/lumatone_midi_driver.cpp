@@ -47,7 +47,11 @@ void LumatoneFirmwareDriver::readNextBuffer(juce::MidiBuffer &nextBuffer)
     for (int i = 0; i < nextBufferQueue.size(); i++)
     {
         auto msg = nextBufferQueue[i];
-        nextBuffer.addEvent(msg, i);
+        if (!nextBuffer.addEvent(msg, i))
+        {
+            DBG("ERROR ADDING MESSAGE");
+            jassertfalse;
+        }
     }
 
     nextBufferQueue.clear();

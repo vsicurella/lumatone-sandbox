@@ -53,7 +53,7 @@ juce::ValueTree LumatoneState::loadStateProperties(juce::ValueTree stateIn)
                              ? stateIn
                              : juce::ValueTree(LumatoneStateProperty::StateTree);
 
-    DBG("LumatoneState::loadStateProperties:\n" + newState.toXmlString());
+    // DBG("LumatoneState::loadStateProperties:\n" + newState.toXmlString());
     for (auto property : getLumatoneStateProperties())
     {
         if (newState.hasProperty(property))

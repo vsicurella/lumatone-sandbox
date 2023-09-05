@@ -96,6 +96,8 @@ public:
 	LumatoneFirmwareDriver(HostMode hostModeIn, int numBoards=DEFAULT_NUM_BOARDS);
 	~LumatoneFirmwareDriver();
 
+	HostMode getHostMode() const { return hostMode; }
+
 //	void addListener(Listener* listenerToAdd);
 //	void removeListener(Listener* listenerToRemove);
     void addMessageCollector(Collector* collectorToAdd);
