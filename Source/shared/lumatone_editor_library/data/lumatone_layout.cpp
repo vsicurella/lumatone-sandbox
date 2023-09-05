@@ -226,7 +226,12 @@ LumatoneBoard* LumatoneLayout::getBoard(int index)
     return &boards[index];
 }
 
-const LumatoneKey* LumatoneLayout::readKey(int boardIndex, int keyIndex) const
+LumatoneKey *LumatoneLayout::getKey(int boardIndex, int keyIndex)
+{
+    return &boards[boardIndex].theKeys[keyIndex];
+}
+
+const LumatoneKey *LumatoneLayout::readKey(int boardIndex, int keyIndex) const
 {
     return &boards[boardIndex].theKeys[keyIndex];
 }
@@ -259,6 +264,24 @@ int LumatoneLayout::keyCoordToKeyNum(const LumatoneKeyCoord& coord) const
 LumatoneKeyCoord LumatoneLayout::keyNumToKeyCoord(int keyNum) const
 {
     return LumatoneKeyCoord(keyNum / getOctaveBoardSize(), keyNum % getOctaveBoardSize());
+}
+
+void LumatoneLayout::transform(std::function<void(int,int,LumatoneKey&)> transformFnc)
+{
+    for (int b = 0; b < getNumBoards(); b++)
+    {
+        for (int k = 0; k < getOctaveBoardSize(); k++)\
+        {
+            transformFnc(b, k, *getKey(b, k));
+        }
+    }
+}
+
+LumatoneLayout LumatoneLayout::withKeyTransform(std::function<void(int,int,LumatoneKey &)> transformFnc) const
+{
+    LumatoneLayout transformed = *this;
+    transformed.transform(transformFnc);
+    return transformed;
 }
 
 void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)

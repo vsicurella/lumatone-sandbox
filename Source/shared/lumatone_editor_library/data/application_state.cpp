@@ -111,10 +111,26 @@ void LumatoneApplicationState::handleStatePropertyChange(juce::ValueTree stateIn
     {
         monitorConnectionStatus = (bool)stateIn.getProperty(property, true);
     }
+    else if (property == LumatoneApplicationProperty::LayoutContextIsSetId)
+    {
+        contextIsSet = (bool)stateIn.getProperty(property, false);
+    }
     else
     {
         LumatoneState::handleStatePropertyChange(stateIn, property);
     }
+}
+
+LumatoneKeyContext LumatoneApplicationState::getKeyContext(int boardIndex, int keyIndex)
+{
+    if (layoutContext.get() == nullptr)
+    {
+        auto coord = LumatoneKeyCoord(boardIndex, keyIndex);
+        MappedLumatoneKey key = MappedLumatoneKey(*getKey(boardIndex, keyIndex), boardIndex, keyIndex);
+        return LumatoneKeyContext(key);
+    }
+
+    return layoutContext->getKeyContext(boardIndex, keyIndex);
 }
 
 void LumatoneApplicationState::setContext(std::shared_ptr<LumatoneContext> contextIn)
@@ -124,10 +140,14 @@ void LumatoneApplicationState::setContext(std::shared_ptr<LumatoneContext> conte
 
     layoutContext = contextIn;
     contextIsSet = true;
+
+    state.setPropertyExcludingListener(this, LumatoneApplicationProperty::LayoutContextIsSetId, contextIsSet, undoManager);
 }
 
 void LumatoneApplicationState::clearContext()
 {
     layoutContext = nullptr;
     contextIsSet = false;
+
+    state.setPropertyExcludingListener(this, LumatoneApplicationProperty::LayoutContextIsSetId, contextIsSet, undoManager);
 }

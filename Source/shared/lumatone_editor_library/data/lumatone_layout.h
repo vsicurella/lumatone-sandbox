@@ -85,6 +85,7 @@ public:
 	const LumatoneBoard* readBoard(int index) const;
 	LumatoneBoard* getBoard(int index);
 
+	LumatoneKey* getKey(int boardIndex, int keyIndex);
 	const LumatoneKey* readKey(int boardIndex, int keyIndex) const;
 	const LumatoneKey* readKey(int keyNum) const;
 
@@ -93,6 +94,9 @@ public:
     bool isKeyCoordValid(const LumatoneKeyCoord& coord) const;
 	int keyCoordToKeyNum(const LumatoneKeyCoord& coord) const;
 	LumatoneKeyCoord keyNumToKeyCoord(int keyNum) const;
+
+	void transform(std::function<void(int,int,LumatoneKey&)> transformFnc);
+	LumatoneLayout withKeyTransform(std::function<void(int,int,LumatoneKey&)> transformFnc) const;
 
 public:
 

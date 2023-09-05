@@ -25,6 +25,8 @@ namespace LumatoneApplicationProperty
     // UI States
     static const juce::Identifier ConnectionStateId = juce::Identifier("ConnectionState");
 
+    static const juce::Identifier LayoutContextIsSetId = juce::Identifier("LayoutContextIsSetId");
+
     // Settings
     static const juce::Identifier DefaultMappingsDirectory = juce::Identifier("DefaultMappingsDirectory");
     static const juce::Identifier LastMappingsDirectory = juce::Identifier("LastMappingsDirectory");
@@ -52,6 +54,8 @@ public:
     bool isContextSet() const { return contextIsSet; }
     const LumatoneContext* getContext() const { return contextIsSet ? layoutContext.get() : nullptr; }
     std::shared_ptr<LumatoneContext> shareContext() { return layoutContext; }
+
+    LumatoneKeyContext getKeyContext(int boardIndex, int keyIndex);
 
     virtual void setContext(std::shared_ptr<LumatoneContext> contextIn);
     virtual void clearContext();
