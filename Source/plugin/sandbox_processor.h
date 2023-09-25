@@ -13,7 +13,7 @@
 
 //==============================================================================
 class LumatoneSandboxProcessor  : public juce::AudioProcessor
-                                // , public juce::ApplicationCommandTarget
+                                , public juce::ApplicationCommandTarget
 {
 public:
     //==============================================================================
@@ -66,13 +66,13 @@ public:
 
     //==============================================================================
 
-    // juce::ApplicationCommandTarget* getNextCommandTarget() override;
+    juce::ApplicationCommandTarget* getNextCommandTarget() override;
 
-    // void getAllCommands(juce::Array<juce::CommandID>& commands) override;
+    void getAllCommands(juce::Array<juce::CommandID>& commands) override;
 
-    // void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo &result) override;
+    void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo &result) override;
 
-    // bool perform(const juce::ApplicationCommandTarget::InvocationInfo &info) override;
+    bool perform(const juce::ApplicationCommandTarget::InvocationInfo &info) override;
 
 
 private:

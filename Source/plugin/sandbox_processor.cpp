@@ -30,7 +30,7 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
     monitor->startDeviceDetection();
 
     commandManager = std::make_unique<juce::ApplicationCommandManager>();
-    // commandManager->registerAllCommandsForTarget(this);
+    commandManager->registerAllCommandsForTarget(this);
   
     gameEngine = std::make_unique<LumatoneSandboxGameEngine>(controller.get(), 30);
 }
@@ -208,4 +208,75 @@ void LumatoneSandboxProcessor::setStateInformation (const void* data, int sizeIn
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new LumatoneSandboxProcessor();
+}
+
+juce::ApplicationCommandTarget* LumatoneSandboxProcessor::getNextCommandTarget()
+{ 
+    return this;
+}
+
+void LumatoneSandboxProcessor::getAllCommands(juce::Array <juce::CommandID>& commands)
+{
+    commands.add(LumatoneSandbox::Menu::commandIDs::undo);
+    commands.add(LumatoneSandbox::Menu::commandIDs::redo);
+    commands.add(LumatoneSandbox::Menu::commandIDs::aboutSysEx);
+    commands.add(juce::StandardApplicationCommandIDs::quit);
+    // commands.add(LumatoneSandbox::Menu::commandIDs::aboutSysEx);
+}
+
+void LumatoneSandboxProcessor::getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result)
+{
+    result.setActive(true);
+
+    switch (commandID)
+        {
+        case LumatoneSandbox::Menu::commandIDs::undo:
+            result.setInfo("Undo", "Undo latest edit", "Edit", 0);
+            result.addDefaultKeypress('z', juce::ModifierKeys::commandModifier);
+            result.setActive(undoManager->canUndo());
+            break;
+
+        case LumatoneSandbox::Menu::commandIDs::redo:
+            result.setInfo("Redo", "Redo latest edit", "Edit", 0);
+            result.addDefaultKeypress('y', juce::ModifierKeys::commandModifier);
+            result.addDefaultKeypress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier);
+            result.setActive(undoManager->canRedo());
+            break;
+
+        case LumatoneSandbox::Menu::commandIDs::aboutSysEx:
+            result.setInfo("About Lumatone Editor", "Shows version and copyright", "Help", 0);
+            break;
+
+        case juce::StandardApplicationCommandIDs::quit:
+            result.setInfo("Quit", "Close window and terminate application", "File", 0);
+            break;
+
+         default:
+            result.setInfo("?", "Unknown command", "Unknown", 0);  
+            break;
+        }
+}
+
+bool LumatoneSandboxProcessor::perform(const juce::ApplicationCommandTarget::InvocationInfo& info)
+{
+    switch (info.commandID)
+    {
+    
+    case LumatoneSandbox::Menu::commandIDs::undo:
+        undoManager->undo();
+        return true;
+
+    case LumatoneSandbox::Menu::commandIDs::redo:
+        undoManager->redo();
+        return true;
+
+    case juce::StandardApplicationCommandIDs::quit:
+        juce::JUCEApplication::quit();
+        return true;
+
+    default:
+        return false;
+    }
+
+    return false;
 }

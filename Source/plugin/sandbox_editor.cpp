@@ -108,11 +108,6 @@ void LumatoneSandboxProcessorEditor::getAllCommands(juce::Array <juce::CommandID
     // commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes);
 
     commands.add(LumatoneSandbox::Menu::commandIDs::adjustColour);
-
-    commands.add(LumatoneSandbox::Menu::commandIDs::undo);
-    commands.add(LumatoneSandbox::Menu::commandIDs::redo);
-
-    // commands.add(LumatoneSandbox::Menu::commandIDs::aboutSysEx);
     
     commands.add(LumatoneSandbox::Menu::commandIDs::openRandomColorsGame);
     commands.add(LumatoneSandbox::Menu::commandIDs::openHexRingsGame);
@@ -150,62 +145,45 @@ void LumatoneSandboxProcessorEditor::getCommandInfo(juce::CommandID commandID, j
             result.addDefaultKeypress('i', juce::ModifierKeys::currentModifiers);
             break;
 
-        case LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard:
-            result.setInfo("Delete", "Delete section data", "Edit", 0);
-            result.addDefaultKeypress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers);
-            break;
+        // case LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard:
+        //     result.setInfo("Delete", "Delete section data", "Edit", 0);
+        //     result.addDefaultKeypress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers);
+        //     break;
 
-        case LumatoneSandbox::Menu::commandIDs::copyOctaveBoard:
-            result.setInfo("Copy section", "Copy current octave board data", "Edit", 0);
-            result.addDefaultKeypress('c', juce::ModifierKeys::commandModifier);
-            break;
+        // case LumatoneSandbox::Menu::commandIDs::copyOctaveBoard:
+        //     result.setInfo("Copy section", "Copy current octave board data", "Edit", 0);
+        //     result.addDefaultKeypress('c', juce::ModifierKeys::commandModifier);
+        //     break;
 
-        case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard:
-            result.setInfo("Paste section", "Paste copied section data", "Edit", 0);
-            result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier);
-            break;
+        // case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard:
+        //     result.setInfo("Paste section", "Paste copied section data", "Edit", 0);
+        //     result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier);
+        //     break;
 
-        case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes:
-            result.setInfo("Paste notes", "Paste copied section notes", "Edit", 0);
-            result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier);
-            break;
+        // case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardNotes:
+        //     result.setInfo("Paste notes", "Paste copied section notes", "Edit", 0);
+        //     result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier | juce::ModifierKeys::shiftModifier);
+        //     break;
 
-        case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardChannels:
-            result.setInfo("Paste channels", "Paste copied section channels", "Edit", 0);
-            result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier);
-            break;
+        // case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardChannels:
+        //     result.setInfo("Paste channels", "Paste copied section channels", "Edit", 0);
+        //     result.addDefaultKeypress('v', juce::ModifierKeys::commandModifier | juce::ModifierKeys::altModifier);
+        //     break;
                 
-        case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours:
-            result.setInfo("Paste colours", "Paste copied section colours", "Edit", 0);
-            result.addDefaultKeypress('v', juce::ModifierKeys::altModifier);
-            break;
+        // case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardColours:
+        //     result.setInfo("Paste colours", "Paste copied section colours", "Edit", 0);
+        //     result.addDefaultKeypress('v', juce::ModifierKeys::altModifier);
+        //     break;
                 
-        case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes:
-            result.setInfo("Paste types", "Paste copied section key types", "Edit", 0);
-            result.addDefaultKeypress('v', juce::ModifierKeys::altModifier | juce::ModifierKeys::shiftModifier);
-            break;
+        // case LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes:
+        //     result.setInfo("Paste types", "Paste copied section key types", "Edit", 0);
+        //     result.addDefaultKeypress('v', juce::ModifierKeys::altModifier | juce::ModifierKeys::shiftModifier);
+        //     break;
 
         case LumatoneSandbox::Menu::commandIDs::adjustColour:
             result.setInfo("Adjust colours", "Apply adjustments to colours across the layout", "Edit", 0);
             break;
                 
-        case LumatoneSandbox::Menu::commandIDs::undo:
-            result.setInfo("Undo", "Undo latest edit", "Edit", 0);
-            result.addDefaultKeypress('z', juce::ModifierKeys::commandModifier);
-            // result.setActive(undoManager.canUndo());
-            break;
-
-        case LumatoneSandbox::Menu::commandIDs::redo:
-            result.setInfo("Redo", "Redo latest edit", "Edit", 0);
-            result.addDefaultKeypress('y', juce::ModifierKeys::commandModifier);
-            result.addDefaultKeypress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier);
-            // result.setActive(undoManager.canRedo());
-            break;
-
-        case LumatoneSandbox::Menu::commandIDs::aboutSysEx:
-            result.setInfo("About Lumatone Editor", "Shows version and copyright", "Help", 0);
-            break;
-
         case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
             result.setInfo("Random Colors", "Open launcher for Random Colors game", "Game", 0);
             break;
