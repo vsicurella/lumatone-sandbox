@@ -128,10 +128,6 @@ private:
     std::atomic<int>            readQueueSize;
     int                         sendQueueSize = 0;
 
-    //int                         lastTestDeviceSent = -1;
-    //int                         lastTestDeviceResponded = -1;
-
-    //bool                        waitingForTestResponse = false;
-    //bool                        currentDevicePairConfirmed = false;
-
+    
+    int                         verbose = 0;
 };

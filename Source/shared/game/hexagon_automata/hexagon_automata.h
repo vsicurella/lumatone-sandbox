@@ -381,7 +381,7 @@ public:
         int ticksPerGeneration = 10;
         int ticksToNextGeneration = 0;
 
-        int verbose = 1;
+        int verbose = 0;
         
         // int ticksPerAge = 0;
         // int ticksToNextAge = 0;

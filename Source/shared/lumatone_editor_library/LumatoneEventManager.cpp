@@ -523,7 +523,12 @@ void LumatoneEventManager::timerCallback()
             auto cmd = sysExData[CMD_ID];
 
             configMsg = cmd < 0x2;
-            DBG("READ: " + midiMessage.getDescription());
+            
+            
+            #if JUCE_DEBUG
+                if (verbose > 1)
+                    DBG("READ: " + midiMessage.getDescription());
+            #endif
 
             auto errorCode = getBufferErrorCode(sysExData);
             handleMidiDriverError(errorCode, cmd);

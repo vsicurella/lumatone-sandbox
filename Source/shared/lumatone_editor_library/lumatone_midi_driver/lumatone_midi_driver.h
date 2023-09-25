@@ -557,6 +557,8 @@ private:
 	const int receiveTimeoutInMilliseconds = 2000;
 	const int busyTimeDelayInMilliseconds = 500;
 	TimerType timerType;
+
+	int verbose = 0;
 };
 
 #endif

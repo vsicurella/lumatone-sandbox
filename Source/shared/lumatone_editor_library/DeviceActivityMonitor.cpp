@@ -397,12 +397,13 @@ void DeviceActivityMonitor::timerCallback()
 
     case DetectConnectionMode::noDeviceMonitoring:
     case DetectConnectionMode::waitingForInactivity:
-        if (JUCE_DEBUG) 
+        #if JUCE_DEBUG
         {
             bool estab = isConnectionEstablished();
             bool devdef = midiDriver->hasDevicesDefined();
             jassert(estab && devdef);
         }
+        #endif
 
         if (!checkConnectionOnInactivity)
         {
