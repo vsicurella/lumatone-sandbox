@@ -1,0 +1,78 @@
+/*
+  ==============================================================================
+
+    lumatone_midi_manager.h
+    Created: 24 Sep 2023
+    Author:  vsicurella
+
+    Combine Device MIDI with app generated MIDI states and provide 
+    a listener interface to react to them inclusively or exclusively.
+
+  ==============================================================================
+*/
+
+
+#ifndef LUMATONE_MIDI_MANAGER_H
+#define LUMATONE_MIDI_MANAGER_H
+
+#include "./application_state.h"
+#include "./lumatone_midi_state.h"
+#include "../lumatone_midi_driver/lumatone_midi_driver.h"
+#include "./lumatone_context.h"
+
+namespace LumatoneEditor
+{
+    class MidiListener;
+}
+
+class LumatoneApplicationMidiController : public LumatoneMidiState::Listener
+                                        , protected LumatoneFirmwareDriver::Collector
+{
+public:
+
+    LumatoneApplicationMidiController(LumatoneApplicationState state, LumatoneFirmwareDriver& firmwareDriver);
+    virtual ~LumatoneApplicationMidiController() override;
+
+    LumatoneMidiState* getDeviceMidiState() { return &deviceMidiState; }
+    LumatoneMidiState* getAppMidiState() { return &appMidiState; }
+
+    void sendMidiMessage(const juce::MidiMessage msg);
+    void sendMidiMessageInContext(const juce::MidiMessage msg);
+
+
+private:
+    juce::ListenerList<LumatoneEditor::MidiListener> listeners;
+
+public:
+    void addMidiListener(LumatoneEditor::MidiListener* listenerIn) { listeners.add(listenerIn); }
+    void removeMidiListener(LumatoneEditor::MidiListener* listenerIn) { listeners.remove(listenerIn); }
+
+private:
+
+    // LumatoneMidiState::Listener implementation
+    void handleLumatoneMidi(LumatoneMidiState* midiState, const juce::MidiMessage& msg) override;
+
+    void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) override;
+    void handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch) override;
+    void handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 controller) override;
+
+
+    // LumatoneFirmwareDriver::Collector implementation
+	void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& message) override;
+    void midiMessageSent(juce::MidiOutput* target, const juce::MidiMessage& message) override {}
+    void midiSendQueueSize(int size) override {}
+    void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& message) override {}
+
+
+private:
+
+    LumatoneApplicationState appState;
+    LumatoneFirmwareDriver& firmwareDriver;
+
+    LumatoneMidiState deviceMidiState;
+    LumatoneMidiState appMidiState;
+};
+
+
+#endif

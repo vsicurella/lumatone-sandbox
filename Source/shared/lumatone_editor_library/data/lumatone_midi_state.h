@@ -9,15 +9,14 @@
 */
 
 #pragma once
-#include "../ApplicationListeners.h"
-#include "./lumatone_state.h"
 
+#include <JuceHeader.h>
 
 class LumatoneMidiState : private juce::MidiKeyboardState
 {
 public:
 
-    LumatoneMidiState(LumatoneState state);
+    LumatoneMidiState();
     virtual ~LumatoneMidiState() {}
 
     void reset();
@@ -65,8 +64,6 @@ protected:
     // virtual void lumatouchInternal(int midiChannel, int midiNote, juce::uint8 lumatouch);
     virtual void controllerInternal(int midiChannel, int midiNote, juce::uint8 value);
 
-protected:
-    LumatoneState lumatoneState;
 
 private:
 

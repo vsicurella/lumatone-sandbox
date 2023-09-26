@@ -10,8 +10,7 @@
 
 #include "lumatone_midi_state.h"
 
-LumatoneMidiState::LumatoneMidiState(LumatoneState stateIn) 
-    : lumatoneState(stateIn)
+LumatoneMidiState::LumatoneMidiState() 
 {
     reset();
 }
