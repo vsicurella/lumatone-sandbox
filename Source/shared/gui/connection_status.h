@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../lumatone_editor_library/ApplicationListeners.h"
+#include "../lumatone_editor_library/listeners/status_listener.h"
 #include "../lumatone_editor_library/data/lumatone_state.h"
 
 //==============================================================================
