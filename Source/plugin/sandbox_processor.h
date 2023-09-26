@@ -54,15 +54,15 @@ public:
 
     //==============================================================================
 
-    LumatoneController* getLumatoneController() { return controller.get(); }
+    juce::UndoManager*                  getUndoManager() { return undoManager.get(); }
+    juce::ApplicationCommandManager*    getCommandManager() { return commandManager.get(); }
 
-    juce::ApplicationCommandManager* getCommandManager() { return commandManager.get(); }
+    LumatonePaletteLibrary*         getPaletteLibrary() { return paletteLibrary.get(); }
+    
+    LumatoneController*             getLumatoneController() { return controller.get(); }
+    DeviceActivityMonitor*          getDeviceMonitor() { return monitor.get(); }
 
-    juce::UndoManager* getUndoManager() { return undoManager.get(); }
-
-    LumatoneSandboxGameEngine* getGameEngine() { return gameEngine.get(); }
-
-    LumatonePaletteLibrary* getPaletteLibrary() { return paletteLibrary.get(); }
+    LumatoneSandboxGameEngine*      getGameEngine() { return gameEngine.get(); }
 
     //==============================================================================
 

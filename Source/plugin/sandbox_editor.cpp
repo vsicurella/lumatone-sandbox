@@ -9,14 +9,14 @@
 
 //==============================================================================
 LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxProcessor& p)
-    : AudioProcessorEditor (&p), processorRef (p)
+    : AudioProcessorEditor (&p), processor (p)
     , controller(p.getLumatoneController())
     , undoManager(p.getUndoManager())
     , commandManager(p.getCommandManager())
     , paletteLibrary(p.getPaletteLibrary())
     , gameEngine(p.getGameEngine())
 {
-    juce::ignoreUnused (processorRef);
+    juce::ignoreUnused (processor);
 
     mainComponent = std::make_unique<MainComponent>(controller);
     mainComponent->setGameEngine(gameEngine);
