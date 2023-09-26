@@ -1,6 +1,9 @@
 #include "./hexagon_automata.h"
 #include "hexagon_automata.h"
 
+#include "../../lumatone_editor_library/LumatoneController.h"
+#include "../../lumatone_editor_library/actions/edit_actions.h"
+
 HexagonAutomata::MappedHexState HexagonAutomata::GameState::getMappedCell(int cellNum)
 {
     auto hex = hexMap.keyNumToHex(cellNum);
@@ -607,7 +610,7 @@ void HexagonAutomata::Game::updateGenerationAge()
 	
 }
 
-void HexagonAutomata::Game::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity)
+void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
 {
     auto hexCoord = hexMap.keyCoordsToHex(midiChannel - 1, midiNote);
     addSeed(hexCoord);

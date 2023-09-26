@@ -26,7 +26,6 @@ public:
 public:
 
     RandomColors(LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
-    ~RandomColors() {}
 
     void reset(bool clearQueue) override;
 

@@ -10,6 +10,9 @@
 
 #include "hex_rings.h"
 
+#include "../../lumatone_editor_library/LumatoneController.h"
+#include "../../lumatone_editor_library/actions/edit_actions.h"
+
 HexRings::HexRings(LumatoneController* controller)
     : LumatoneSandboxGameBase(controller, "Hex Rings")
 {
@@ -63,7 +66,7 @@ int HexRings::getRingSizeVelocity(juce::uint8 velocity) const
     return juce::roundToInt((float)velocity / 127.0f * 4);
 }
 
-void HexRings::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity)
+void HexRings::handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
 {
     auto colour = getRandomColourVelocity(velocity);
     auto ringSize = getRingSizeVelocity(velocity);
@@ -79,16 +82,4 @@ void HexRings::handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int m
 
         frameQueue.add({ coord, true, false, false, velocity, colour });
     }
-}
-void HexRings::handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote)
-{
-
-}
-void HexRings::handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch)
-{
-
-}
-void HexRings::handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 controller)
-{
-
 }

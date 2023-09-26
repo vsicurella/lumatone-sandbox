@@ -10,8 +10,12 @@
 
 #include "game_base.h"
 
+#include "../lumatone_editor_library/LumatoneController.h"
+#include "../lumatone_editor_library/actions/edit_actions.h"
+
 LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String actionName)
     : controller(controllerIn)
+    // , controller(midiMgrIn)
     , name(actionName)
     , layoutBeforeStart(*controllerIn->getMappingData())
 {
@@ -68,13 +72,13 @@ void LumatoneSandboxGameBase::end()
 void LumatoneSandboxGameBase::noteOff(int midiChannel, int midiNote)
 {
     auto msg = juce::MidiMessage::noteOff(midiChannel, midiNote);
-    controller->sendMidiMessage(msg);
+    controller->sendMidiMessageInContext(msg);
 }
 
 void LumatoneSandboxGameBase::allNotesOff(int midiChannel)
 {
     auto msg = juce::MidiMessage::allNotesOff(midiChannel);
-    controller->sendMidiMessage(msg);
+    controller->sendMidiMessageInContext(msg);
 }
 
 void LumatoneSandboxGameBase::allNotesOff()
@@ -86,7 +90,7 @@ void LumatoneSandboxGameBase::allNotesOff()
 void LumatoneSandboxGameBase::noteOn(int midiChannel, int midiNote, juce::uint8 velocity)
 {
     auto msg = juce::MidiMessage::noteOn(midiChannel, midiNote, velocity);
-    controller->sendMidiMessage(msg);
+    controller->sendMidiMessageInContext(msg);
 }
 
 void LumatoneSandboxGameBase::addToQueue(LumatoneAction* action)

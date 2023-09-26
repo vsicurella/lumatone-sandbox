@@ -10,9 +10,14 @@
 
 #pragma once
 
-#include "../lumatone_editor_library/actions/edit_actions.h"
+// #include "../lumatone_editor_library/LumatoneController.h"
+// #include "../lumatone_editor_library/actions/edit_actions.h"
 
-#include "../lumatone_editor_library/LumatoneController.h"
+#include "../lumatone_editor_library/data/lumatone_context.h"
+#include "../lumatone_editor_library/listeners/midi_listener.h"
+
+class LumatoneAction;
+class LumatoneController;
 
 class KeyColorConstrainer
 {
@@ -32,7 +37,7 @@ public:
 #define MAX_QUEUE_SIZE 280
 
 
-class LumatoneSandboxGameBase : public LumatoneMidiState::Listener
+class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener
 {
 public:
 
@@ -89,6 +94,5 @@ protected:
     LumatoneController* controller;
 
 private:
-
     juce::String name;
 };

@@ -10,6 +10,9 @@
 
 #include "random_colors.h"
 
+#include "../../lumatone_editor_library/LumatoneController.h"
+#include "../../lumatone_editor_library/actions/edit_actions.h"
+
 RandomColors::RandomColors(LumatoneController* controllerIn, RandomColors::Options options)
     : LumatoneSandboxGameBase(controllerIn, "Random Colors")
 {

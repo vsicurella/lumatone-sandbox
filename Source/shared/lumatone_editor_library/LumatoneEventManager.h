@@ -11,11 +11,14 @@
 #pragma once
 
 #include "./lumatone_midi_driver/lumatone_midi_driver.h"
-#include "ApplicationListeners.h"
+#include "listeners/status_listener.h"
 #include "./data/lumatone_midi_state.h"
+
+#include "./listeners/firmware_listener.h"
 
 class LumatoneEventManager : private LumatoneFirmwareDriver::Collector,
                              public LumatoneMidiState,
+                             public LumatoneState,
                              private juce::Timer
 {
 
@@ -115,7 +118,6 @@ private:
     //void onFirmwareUpdateReceived();
 
 private:
-
     LumatoneFirmwareDriver&         midiDriver;
 
     FirmwareSupport             firmwareSupport;

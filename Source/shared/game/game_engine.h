@@ -9,10 +9,15 @@
 */
 
 #pragma once
+
+#include "../Lumatone_editor_library/listeners/midi_listener.h"
+
 #include "game_base.h"
 
-class LumatoneSandboxGameEngine : public LumatoneMidiState
-                                , public LumatoneMidiState::Listener
+class LumatoneAction;
+class LumatoneController;
+
+class LumatoneSandboxGameEngine : private LumatoneEditor::MidiListener
                                 , private juce::Timer
 {
 public:
@@ -37,7 +42,7 @@ public:
 public:
 
     LumatoneSandboxGameEngine(LumatoneController* controllerIn, int fps);
-    ~LumatoneSandboxGameEngine();
+    ~LumatoneSandboxGameEngine() override;
 
     LumatoneController* getController()  { return controller; }
    
@@ -55,10 +60,6 @@ public:
     void forceFps(double fps);
 
     bool isGameRunning() const { return gameIsRunning; }
-
-public:
-
-    void handleLumatoneMidi(LumatoneMidiState* midiState, const juce::MidiMessage& msg) override;
 
 private:
 

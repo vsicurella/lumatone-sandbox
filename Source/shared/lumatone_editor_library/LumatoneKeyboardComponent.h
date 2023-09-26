@@ -16,20 +16,22 @@
 #include "./data/lumatone_midi_state.h"
 
 #include "LumatoneKeyComponent.h"
-#include "ApplicationListeners.h"
+
+#include "./listeners/editor_listener.h"
+#include "./listeners/midi_listener.h"
 
 #include "lumatone_assets.h"
 #include "lumatone_render.h"
-
 
 //==============================================================================
 /*
 */
 class LumatoneKeyboardComponent : public juce::Component,
                                   public juce::KeyListener,
-                                  public LumatoneEditor::EditorListener,
+                                  public LumatoneApplicationState,
                                   public LumatoneMidiState,
-                                  public LumatoneMidiState::Listener
+                                  public LumatoneEditor::EditorListener,
+                                  public LumatoneEditor::MidiListener
 {
 public:
     LumatoneKeyboardComponent(LumatoneApplicationState stateIn);
@@ -83,8 +85,12 @@ protected:
 
 private:
     bool keyStateChanged(bool isKeyDown) override;
-    bool keyPressed(const juce::KeyPress& key, Component* originatingComponent) override;
+    bool keyPressed(const juce::KeyPress& key, juce::Component* originatingComponent) override;
     void modifierKeysChanged(const juce::ModifierKeys& modifiers) override;
+
+private:
+    void noteOnInternal(int midiChannel, int midiNote, juce::uint8 velocity);
+    void noteOffInternal(int midiChannel, int midiNote);
 
 private:
     // LumatoneMidiState implementations (note callbacks)
@@ -94,10 +100,15 @@ private:
 private:
     // LumatoneMidiState::Listener implementations
 
-    void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
-    void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) override;
-    void handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch) override;
-    void handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 value) override;
+    // void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
+    // void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) override;
+    // void handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch) override;
+    // void handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 value) override;
+
+    void handleDeviceNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void handleDeviceNoteOff(int midiChannel, int midiNote) override;
+    void handleDeviceAftertouch(int midiChannel, int midiNote, juce::uint8 aftertouch) override { }
+    void handleDeviceController(int midiChannel, int midiNote, juce::uint8 value) override { }
 
 
 private:

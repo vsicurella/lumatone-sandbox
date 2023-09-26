@@ -9,10 +9,10 @@
 */
 
 #include "game_engine.h"
+#include "../lumatone_editor_library/LumatoneController.h"
 
 LumatoneSandboxGameEngine::LumatoneSandboxGameEngine(LumatoneController* controllerIn, int fps)
-    : LumatoneMidiState(*controllerIn)
-    , controller(controllerIn)
+    : controller(controllerIn)
     , runGameFps(fps)
 {
     controller->addMidiListener(this);
@@ -45,11 +45,6 @@ double LumatoneSandboxGameEngine::getFps() const
     return runGameFps;
 }
 
-void LumatoneSandboxGameEngine::handleLumatoneMidi(LumatoneMidiState* midiState, const juce::MidiMessage& msg)
-{
-    processNextMidiEvent(msg);
-}
-
 void LumatoneSandboxGameEngine::setGame(LumatoneSandboxGameBase* newGameIn)
 {
     endGame();
@@ -72,7 +67,7 @@ bool LumatoneSandboxGameEngine::startGame()
     }
     else if (game != nullptr)
     {
-        addMidiStateListener(game.get());
+        controller->addMidiListener(game.get());
         game->reset(true);
         gameIsRunning = true;
 
@@ -123,7 +118,7 @@ bool LumatoneSandboxGameEngine::endGame()
 
     if (game != nullptr)
     {
-        removeMidiStateListener(game.get());
+        controller->removeMidiListener(game.get());
         
         game->end();
         processGameActionQueue();
@@ -150,7 +145,7 @@ void LumatoneSandboxGameEngine::resetGame()
     }
     else if (game != nullptr)
     {
-        addMidiStateListener(game.get());
+        controller->addMidiListener(game.get());
         game->reset(true);
 
         DBG("LumatoneSandboxGameEngine: restarted " + game->getName());

@@ -12,7 +12,7 @@
 
 
 LumatoneEventManager::LumatoneEventManager(LumatoneFirmwareDriver& midiDriverIn, LumatoneState stateIn)
-    : LumatoneMidiState(stateIn)
+    : LumatoneState(stateIn)
     , midiDriver(midiDriverIn)
 {
     midiDriver.addMessageCollector(this);
@@ -82,7 +82,7 @@ FirmwareSupport::Error LumatoneEventManager::handleOctaveConfigResponse(
     int boardId = -1;
     int channelData[56];
 
-    int boardSize = lumatoneState.getOctaveBoardSize();
+    int boardSize = getOctaveBoardSize();
     auto errorCode = unpackFunction(midiMessage, boardId, boardSize, channelData);
     if (errorCode == FirmwareSupport::Error::noError)
     {
@@ -113,8 +113,8 @@ FirmwareSupport::Error LumatoneEventManager::handleLEDConfigResponse(const juce:
     int cmd = firmwareSupport.getCommandNumber(midiMessage);
     FirmwareSupport::Error errorCode;
 
-    auto version = lumatoneState.getLumatoneVersion();
-    auto boardSize = lumatoneState.getOctaveBoardSize();
+    auto version = getLumatoneVersion();
+    auto boardSize = getOctaveBoardSize();
 
     // Use correct unpacking function
     if (version < LumatoneFirmwareVersion::VERSION_1_0_11)

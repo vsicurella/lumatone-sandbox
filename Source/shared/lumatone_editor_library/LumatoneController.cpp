@@ -10,14 +10,16 @@
 
 #include "LumatoneController.h"
 
+#include "LumatoneEventManager.h"
+#include "./actions/lumatone_action.h"
+#include "./lumatone_midi_driver/firmware_definitions.h"
 
 LumatoneController::LumatoneController(juce::ValueTree state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager)
     : LumatoneApplicationState(state, undoManager)
+    , LumatoneApplicationMidiController(state, firmwareDriverIn)
     , firmwareDriver(firmwareDriverIn)
     , updateBuffer(firmwareDriverIn, state)
-    , readQueueSize(0)
 {
-    reset(bufferReadSize);
     firmwareDriver.addMessageCollector(this);
     
     eventManager = std::make_unique<LumatoneEventManager>(firmwareDriver, *this);
@@ -68,22 +70,6 @@ void LumatoneController::connectionStateChanged(ConnectionState newState)
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, newState);
 }
 
-void LumatoneController::sendMidiMessage(const juce::MidiMessage& msg)
-{
-    firmwareDriver.sendMessageNow(msg);
-}
-
-void LumatoneController::handleNoteOn(LumatoneMidiState *midiState, int midiChannel, int midiNote, juce::uint8 velocity)
-{
-    auto msg = juce::MidiMessage::noteOn(midiChannel, midiNote, velocity);
-    firmwareDriver.sendMessageNow(msg);
-}
-
-void LumatoneController::handleNoteOff(LumatoneMidiState *midiState, int midiChannel, int midiNote)
-{
-    auto msg = juce::MidiMessage::noteOff(midiChannel, midiNote);
-    firmwareDriver.sendMessageNow(msg);
-}
 
 void LumatoneController::setMidiInput(int deviceIndex, bool test)
 {
@@ -129,26 +115,6 @@ bool LumatoneController::performAction(LumatoneAction* action, bool undoable, bo
 
     return action->perform();
 }
-
-void LumatoneController::midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage)
-{
-    if (midiMessage.isSysEx())
-    {
-
-    }
-}
-
-void LumatoneController::noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage)
-{
-    if (midiMessage.isSysEx())
-    {
-        // if (currentDevicePairConfirmed)
-        //     statusListeners.call(&LumatoneEditor::StatusListener::connectionLost);
-        // else
-        //     statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
-    }
-}
-
 
 /*
 ==============================================================================
@@ -238,7 +204,7 @@ unsigned int LumatoneController::sendTestMessageToDevice(int deviceIndex, unsign
         firmwareDriver.sendGetSerialIdentityRequest(deviceIndex);
     }
 
-    lastTestDeviceSent = deviceIndex;
+    // lastTestDeviceSent = deviceIndex;
     waitingForTestResponse = true;
 
     return value;
@@ -653,16 +619,6 @@ bool LumatoneController::loadLayoutFromFile(const juce::File& file)
     }
 
     return loaded;
-}
-
-void LumatoneController::addMidiListener(LumatoneMidiState::Listener* listener)
-{
-    eventManager->addMidiStateListener(listener);
-}
-
-void LumatoneController::removeMidiListener(LumatoneMidiState::Listener* listener)
-{
-    eventManager->removeMidiStateListener(listener);
 }
 
 

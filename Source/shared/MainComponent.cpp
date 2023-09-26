@@ -13,25 +13,23 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
     
     lumatoneComponent = std::make_unique<LumatoneKeyboardComponent>((LumatoneState)*controller);
     addAndMakeVisible(*lumatoneComponent);
+    
     controller->addEditorListener(lumatoneComponent.get());
     controller->addMidiListener(lumatoneComponent.get());
-    
-    lumatoneComponent->addMidiStateListener(controller);
 }
 
 MainComponent::~MainComponent()
 {
-    lumatoneComponent->removeMidiStateListener(gameEngineComponent->getGameEngine());
-    lumatoneComponent->removeMidiStateListener(controller);
+    controller->removeMidiListener(lumatoneComponent.get());
+    controller->removeEditorListener(lumatoneComponent.get());
     
     controller->removeStatusListener(connectionStatus.get());
-    controller->removeEditorListener(lumatoneComponent.get());
 
     gameEngineComponent = nullptr;
     lumatoneComponent = nullptr;
     connectionStatus = nullptr;
 
-
+    // midiManager = nullptr;
     controller = nullptr;
 }
 
@@ -70,7 +68,6 @@ void MainComponent::setGameEngine(LumatoneSandboxGameEngine* engineIn)
 {
     jassert(gameEngineComponent.get() == nullptr);
     gameEngineComponent = std::make_unique<LumatoneSandboxGameEngineComponent>(engineIn);
-    lumatoneComponent->addMidiStateListener(gameEngineComponent->getGameEngine());
 
     if (showGameControl)
         addAndMakeVisible(*gameEngineComponent);

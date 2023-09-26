@@ -41,16 +41,11 @@ protected:
     LumatoneAction* renderFrame() override;
 
 public:
-
     juce::Colour getRandomColourVelocity(juce::uint8 velocity);
     int getRingSizeVelocity(juce::uint8 velocity) const;
 
 public:
-
-    void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
-    void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) override;
-    void handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch) override;
-    void handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 controller) override;
+    void handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
 
 private:
 

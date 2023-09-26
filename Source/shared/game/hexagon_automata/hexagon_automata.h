@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../game_base.h"
+
 #include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
 #include "../../lumatone_editor_library/color/adjust_layout_colour.h"
+
 
 namespace HexagonAutomata
 {
@@ -347,7 +349,7 @@ public:
 
     private:
 
-        void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
+        void handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
 
         // Apply cell updates to game state
         // Returns whether or not cell is still populated

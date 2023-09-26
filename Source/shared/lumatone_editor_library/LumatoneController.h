@@ -10,30 +10,33 @@
 
 #pragma once
 
-#include "./ApplicationListeners.h"
+#include "./listeners/status_listener.h"
+#include "./listeners/editor_listener.h"
+#include "./listeners/firmware_listener.h"
 
-#include "LumatoneEventManager.h"
 #include "key_update_buffer.h"
 
 #include "./data/application_state.h"
-#include "./actions/lumatone_action.h"
+#include "./data/lumatone_midi_manager.h"
+
+class LumatoneEventManager;
+class LumatoneAction;
 
 //==============================================================================
 // Helper class for parsing and comparing (todo) firmware versions
 
 
-class LumatoneController :  public LumatoneApplicationState,
-                            public LumatoneMidiState::Listener,
-                            private LumatoneFirmwareDriver::Collector,
-                            public LumatoneEditor::StatusListener,
-                            public LumatoneEditor::StatusEmitter,
-                            public LumatoneEditor::EditorEmitter,
-                            protected LumatoneEditor::FirmwareListener
+class LumatoneController :  public LumatoneApplicationState
+                         ,  public LumatoneApplicationMidiController
+                         ,  public LumatoneEditor::StatusListener
+                         ,  public LumatoneEditor::StatusEmitter
+                         ,  public LumatoneEditor::EditorEmitter
+                         ,  protected LumatoneEditor::FirmwareListener
 {
 public:
 
     LumatoneController(juce::ValueTree state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager);
-    ~LumatoneController();
+    ~LumatoneController() override;
 
     juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
 
@@ -55,7 +58,6 @@ public:
     void setMidiOutput(int deviceIndex, bool test = true);
 
 public:
-
     bool performAction(LumatoneAction* action, bool undoable = true, bool newTransaction = true);
 
 private:
@@ -67,14 +69,6 @@ public:
     // Status Listener implementation
 
     void connectionStateChanged(ConnectionState newState) override;
-
-public:
-    //============================================================================
-    void sendMidiMessage(const juce::MidiMessage& msg);
-
-private:
-    void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
-    void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) override;
 
 public:
     //============================================================================
@@ -226,11 +220,6 @@ public:
 
     bool loadLayoutFromFile(const juce::File& file) override;
 
-public:
-
-    void addMidiListener(LumatoneMidiState::Listener* listener);
-    void removeMidiListener(LumatoneMidiState::Listener* listener);
-
 protected:
     //============================================================================
     // LumatoneEditor::FirmwareListener implementation
@@ -251,17 +240,6 @@ protected:
 
     //void loadRandomMapping(int testTimeoutMs, int maxIterations, int i = 0);
 
-protected:
-    //============================================================================
-    // Implementation of LumatoneFirmwareDriver::Listener
-
-    virtual void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage) override;
-
-    virtual void midiMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage) override {};
-    virtual void midiSendQueueSize(int queueSize) override {};
-    //virtual void generalLogMessage(juce::String textMessage, HajuErrorVisualizer::ErrorLevel errorLevel) override;
-    virtual void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage) override;
-    
 private:
 
     LumatoneFirmwareDriver& firmwareDriver;
@@ -269,15 +247,6 @@ private:
 
     std::unique_ptr<LumatoneEventManager>   eventManager;
 
-    const int bufferReadTimeoutMs   = 30;
-    const int bufferReadSize        = 16;
-    bool      bufferReadRequested   = false;
-
-    std::atomic<int>    readQueueSize;
-    int                 sendQueueSize = 0;
-
-    int     lastTestDeviceSent          = -1;
-    int     lastTestDeviceResponded     = -1;
     bool    waitingForTestResponse      = false;
     bool    currentDevicePairConfirmed  = false;
 };
