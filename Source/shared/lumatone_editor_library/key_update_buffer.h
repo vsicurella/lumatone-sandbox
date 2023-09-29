@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./data/lumatone_layout.h"
 #include "./data/lumatone_state.h"
 
 #include "./lumatone_midi_driver/lumatone_midi_driver.h"
@@ -10,7 +9,7 @@ class LumatoneKeyUpdateBuffer : public LumatoneState,
 {
 public:
 
-    LumatoneKeyUpdateBuffer(LumatoneFirmwareDriver& firmwareDriver, juce::ValueTree lumatoneState);
+    LumatoneKeyUpdateBuffer(LumatoneFirmwareDriver& firmwareDriver, LumatoneState state);
     ~LumatoneKeyUpdateBuffer() override;
 
     void sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& noteDataConfig, bool signalEditorListeners = true);

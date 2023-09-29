@@ -22,8 +22,8 @@ juce::Array<juce::Identifier> LumatoneState::getLumatoneStateProperties()
     return properties;
 }
 
-LumatoneState::LumatoneState(juce::ValueTree stateIn, juce::UndoManager* undoManagerIn)
-    : LumatoneStateBase(), undoManager(undoManagerIn) 
+LumatoneState::LumatoneState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManagerIn)
+    : LumatoneStateBase(nameIn), undoManager(undoManagerIn) 
 { 
     state = loadStateProperties(stateIn);
     state.addListener(this);
@@ -32,8 +32,8 @@ LumatoneState::LumatoneState(juce::ValueTree stateIn, juce::UndoManager* undoMan
     midiKeyMap = std::make_shared<LumatoneOutputMap>(mappingData.get());
 }
 
-LumatoneState::LumatoneState(const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn)
-    : LumatoneState(stateToCopy.state, undoManagerIn)
+LumatoneState::LumatoneState(juce::String nameIn, const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn)
+    : LumatoneState(nameIn, stateToCopy.state, undoManagerIn)
 {
     // mappingData = stateToCopy.mappingData;
     // midiKeyMap = stateToCopy.midiKeyMap;

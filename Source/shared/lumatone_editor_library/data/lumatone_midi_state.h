@@ -29,9 +29,9 @@ public:
     void processNextMidiBuffer(juce::MidiBuffer& buffer, int startSample, int numSamples, bool injectIndirectEvents);
 
 public:
-
     void noteOn(const int midiChannel, const int midiNote, const juce::uint8 velocity);
     void noteOff(const int midiChannel, const int midiNote, const juce::uint8 velocity);
+
     void aftertouch(const int midiChannel, const int midiNote, const juce::uint8 aftertouch);
     void controller(const int midiChannel, const int number, const juce::uint8 value);
 

@@ -14,9 +14,9 @@
 #include "./actions/lumatone_action.h"
 #include "./lumatone_midi_driver/firmware_definitions.h"
 
-LumatoneController::LumatoneController(juce::ValueTree state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager)
-    : LumatoneApplicationState(state, undoManager)
-    , LumatoneApplicationMidiController(state, firmwareDriverIn)
+LumatoneController::LumatoneController(LumatoneApplicationState state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager)
+    : LumatoneApplicationState("LumatoneController", state, undoManager)
+    , LumatoneApplicationMidiController((LumatoneApplicationState)*this, firmwareDriverIn)
     , firmwareDriver(firmwareDriverIn)
     , updateBuffer(firmwareDriverIn, state)
 {
@@ -39,7 +39,7 @@ juce::ValueTree LumatoneController::loadStateProperties(juce::ValueTree stateIn)
     return state;
 }
 
-void LumatoneController::setContext(std::shared_ptr<LumatoneContext> contextIn)
+void LumatoneController::setContext(const LumatoneContext& contextIn)
 {
     LumatoneApplicationState::setContext(contextIn);
     editorListeners.call(&LumatoneEditor::EditorListener::contextChanged, layoutContext.get());
@@ -69,7 +69,6 @@ void LumatoneController::connectionStateChanged(ConnectionState newState)
 
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, newState);
 }
-
 
 void LumatoneController::setMidiInput(int deviceIndex, bool test)
 {

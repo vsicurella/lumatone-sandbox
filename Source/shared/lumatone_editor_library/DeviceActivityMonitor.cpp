@@ -13,7 +13,7 @@
 
 
 DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneApplicationState stateIn)
-    :   LumatoneApplicationState(stateIn)
+    :   LumatoneApplicationState("DeviceActivityMonitor", stateIn)
     ,   midiDriver(midiDriverIn) 
     ,   readQueueSize(0)
 {

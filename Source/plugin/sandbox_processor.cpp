@@ -13,6 +13,7 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
                        )
 {
     treeState = juce::ValueTree(LumatoneStateProperty::StateTree);
+    appState = std::make_unique<LumatoneApplicationState>("LumatoneSandboxProcessor", treeState);
 
     undoManager = std::make_unique<juce::UndoManager>();
 
@@ -23,9 +24,9 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
         : LumatoneFirmwareDriver::HostMode::Plugin;
 
     midiDriver = std::make_unique<LumatoneFirmwareDriver>(hostMode);
-    controller = std::make_unique<LumatoneController>(treeState, *midiDriver, undoManager.get());
+    controller = std::make_unique<LumatoneController>(*appState, *midiDriver, undoManager.get());
 
-    monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), *(LumatoneState*)controller.get()); 
+    monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), (LumatoneApplicationState)*controller.get()); 
     monitor->addStatusListener(controller.get());
     monitor->startDeviceDetection();
 

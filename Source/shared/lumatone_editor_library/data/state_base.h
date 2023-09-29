@@ -15,7 +15,7 @@ class LumatoneStateBase : protected juce::ValueTree::Listener
 {
 public:
 
-    LumatoneStateBase() { }
+    LumatoneStateBase(juce::String nameIn) : name(nameIn) { }
     LumatoneStateBase(const LumatoneStateBase& stateIn) : state(stateIn.state) { }
 
     bool getBoolProperty(const juce::Identifier key, bool fallback) const;
@@ -27,6 +27,8 @@ public:
 protected:
 
     juce::ValueTree state;
+
+    juce::String name;
 
     void writeBoolProperty(const juce::Identifier key, bool value, juce::UndoManager* undo=nullptr);
     void writeIntProperty(const juce::Identifier key, int value, juce::UndoManager* undo=nullptr);

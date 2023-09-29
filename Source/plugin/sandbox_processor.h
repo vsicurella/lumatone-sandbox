@@ -83,6 +83,7 @@ private:
     std::unique_ptr<juce::ApplicationCommandManager> commandManager;
 
     juce::ValueTree treeState;
+    std::unique_ptr<LumatoneApplicationState> appState;
 
     std::unique_ptr<LumatonePaletteLibrary> paletteLibrary;
 

@@ -1,8 +1,8 @@
 #include "key_update_buffer.h"
 
-LumatoneKeyUpdateBuffer::LumatoneKeyUpdateBuffer(LumatoneFirmwareDriver& driverIn, juce::ValueTree stateIn)
+LumatoneKeyUpdateBuffer::LumatoneKeyUpdateBuffer(LumatoneFirmwareDriver& driverIn, LumatoneState state)
     : firmwareDriver(driverIn)
-    , LumatoneState(stateIn)
+    , LumatoneState("LumatoneKeyUpdateBuffer", state)
 {
     keysToUpdate.remapTable(280);
 }

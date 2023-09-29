@@ -38,9 +38,9 @@ class LumatoneApplicationState : public LumatoneState
 {
 public:
 
-    LumatoneApplicationState(juce::ValueTree state=juce::ValueTree(), juce::UndoManager* undoManager=nullptr);
-    LumatoneApplicationState(const LumatoneState& stateIn, juce::UndoManager* undoManager=nullptr);
-    LumatoneApplicationState(const LumatoneApplicationState& stateIn, juce::UndoManager* undoManager=nullptr);
+    LumatoneApplicationState(juce::String nameIn, juce::ValueTree state=juce::ValueTree(), juce::UndoManager* undoManager=nullptr);
+    LumatoneApplicationState(juce::String nameIn, const LumatoneState& stateIn, juce::UndoManager* undoManager=nullptr);
+    LumatoneApplicationState(juce::String nameIn, const LumatoneApplicationState& stateIn, juce::UndoManager* undoManager=nullptr);
 
     virtual ~LumatoneApplicationState();
 
@@ -57,7 +57,7 @@ public:
 
     LumatoneKeyContext getKeyContext(int boardIndex, int keyIndex);
 
-    virtual void setContext(std::shared_ptr<LumatoneContext> contextIn);
+    virtual void setContext(const LumatoneContext& contextIn);
     virtual void clearContext();
 
 protected:

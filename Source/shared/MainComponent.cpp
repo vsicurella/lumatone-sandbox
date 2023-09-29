@@ -11,18 +11,12 @@ MainComponent::MainComponent(LumatoneController* controllerIn)
     addAndMakeVisible(*connectionStatus);
     connectionStatus->handleStatus(controller->getConnectionState());
     
-    lumatoneComponent = std::make_unique<LumatoneKeyboardComponent>((LumatoneState)*controller);
+    lumatoneComponent = std::make_unique<LumatoneKeyboardComponent>(controller);
     addAndMakeVisible(*lumatoneComponent);
-    
-    controller->addEditorListener(lumatoneComponent.get());
-    controller->addMidiListener(lumatoneComponent.get());
 }
 
 MainComponent::~MainComponent()
 {
-    controller->removeMidiListener(lumatoneComponent.get());
-    controller->removeEditorListener(lumatoneComponent.get());
-    
     controller->removeStatusListener(connectionStatus.get());
 
     gameEngineComponent = nullptr;

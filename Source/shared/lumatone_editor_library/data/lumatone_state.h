@@ -38,8 +38,8 @@ class LumatoneState : public LumatoneStateBase
 {
 public:
 
-    LumatoneState(juce::ValueTree stateIn, juce::UndoManager* undoManager=nullptr);
-    LumatoneState(const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn=nullptr);
+    LumatoneState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManager=nullptr);
+    LumatoneState(juce::String nameIn, const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn=nullptr);
 
     virtual ~LumatoneState();
 

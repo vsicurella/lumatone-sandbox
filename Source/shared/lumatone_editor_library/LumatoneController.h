@@ -35,12 +35,12 @@ class LumatoneController :  public LumatoneApplicationState
 {
 public:
 
-    LumatoneController(juce::ValueTree state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager);
+    LumatoneController(LumatoneApplicationState stateIn, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager);
     ~LumatoneController() override;
 
     juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
 
-    void setContext(std::shared_ptr<LumatoneContext> contextIn) override;
+    void setContext(const LumatoneContext& contextIn) override;
     void clearContext() override;
     
     //============================================================================

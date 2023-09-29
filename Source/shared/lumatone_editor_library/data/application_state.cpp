@@ -1,27 +1,33 @@
 #include "application_state.h"
 #include "../color/colour_model.h"
 
-LumatoneApplicationState::LumatoneApplicationState(juce::ValueTree stateIn, juce::UndoManager *undoManagerIn)
-    : LumatoneState(stateIn, undoManagerIn)
-{ 
+LumatoneApplicationState::LumatoneApplicationState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager *undoManagerIn)
+    : LumatoneState(nameIn, stateIn, undoManagerIn)
+{
     colourModel = std::make_shared<LumatoneColourModel>();
+    layoutContext = std::make_shared<LumatoneContext>(*mappingData);
     loadStateProperties(stateIn);
 }
 
-LumatoneApplicationState::LumatoneApplicationState(const LumatoneState &stateIn, juce::UndoManager *undoManagerIn)
-    : LumatoneState(stateIn, undoManagerIn)
+LumatoneApplicationState::LumatoneApplicationState(juce::String nameIn, const LumatoneState &stateIn, juce::UndoManager *undoManagerIn)
+    : LumatoneState(nameIn, stateIn, undoManagerIn)
 {
     colourModel = std::make_shared<LumatoneColourModel>();
+    layoutContext = std::make_shared<LumatoneContext>(*mappingData);
+    loadStateProperties(state);
 }
 
-LumatoneApplicationState::LumatoneApplicationState(const LumatoneApplicationState &stateIn, juce::UndoManager *undoManagerIn)
-    : LumatoneState((const LumatoneState&)stateIn, undoManagerIn)
+LumatoneApplicationState::LumatoneApplicationState(juce::String nameIn, const LumatoneApplicationState &stateIn, juce::UndoManager *undoManagerIn)
+    : LumatoneState(nameIn, (const LumatoneState&)stateIn, undoManagerIn)
 {
     colourModel = stateIn.colourModel;
+    layoutContext = stateIn.layoutContext;
+    loadStateProperties(state);
 }
 
 LumatoneApplicationState::~LumatoneApplicationState()
 {
+    layoutContext = nullptr;
     colourModel = nullptr;
 }
 
@@ -123,22 +129,21 @@ void LumatoneApplicationState::handleStatePropertyChange(juce::ValueTree stateIn
 
 LumatoneKeyContext LumatoneApplicationState::getKeyContext(int boardIndex, int keyIndex)
 {
-    if (layoutContext.get() == nullptr)
+    if (contextIsSet)
     {
-        auto coord = LumatoneKeyCoord(boardIndex, keyIndex);
-        MappedLumatoneKey key = MappedLumatoneKey(*getKey(boardIndex, keyIndex), boardIndex, keyIndex);
-        return LumatoneKeyContext(key);
+        return layoutContext->getKeyContext(boardIndex, keyIndex);
     }
 
-    return layoutContext->getKeyContext(boardIndex, keyIndex);
+    MappedLumatoneKey key = MappedLumatoneKey(*getKey(boardIndex, keyIndex), boardIndex, keyIndex);
+    return LumatoneKeyContext(key);
 }
 
-void LumatoneApplicationState::setContext(std::shared_ptr<LumatoneContext> contextIn)
+void LumatoneApplicationState::setContext(const LumatoneContext& contextIn)
 {
     if (layoutContext.get() != nullptr)
         clearContext();
 
-    layoutContext = contextIn;
+    *layoutContext = contextIn;
     contextIsSet = true;
 
     state.setPropertyExcludingListener(this, LumatoneApplicationProperty::LayoutContextIsSetId, contextIsSet, undoManager);
@@ -146,7 +151,7 @@ void LumatoneApplicationState::setContext(std::shared_ptr<LumatoneContext> conte
 
 void LumatoneApplicationState::clearContext()
 {
-    layoutContext = nullptr;
+    *layoutContext = LumatoneContext(*mappingData);
     contextIsSet = false;
 
     state.setPropertyExcludingListener(this, LumatoneApplicationProperty::LayoutContextIsSetId, contextIsSet, undoManager);
