@@ -68,6 +68,8 @@ bool LumatoneSandboxGameEngine::startGame()
     else if (game != nullptr)
     {
         controller->addMidiListener(game.get());
+        controller->addEditorListener(game.get());
+
         game->reset(true);
         gameIsRunning = true;
 
@@ -119,6 +121,7 @@ bool LumatoneSandboxGameEngine::endGame()
     if (game != nullptr)
     {
         controller->removeMidiListener(game.get());
+        controller->removeEditorListener(game.get());
         
         game->end();
         processGameActionQueue();

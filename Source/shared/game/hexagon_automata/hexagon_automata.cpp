@@ -615,3 +615,12 @@ void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce:
     auto hexCoord = hexMap.keyCoordsToHex(midiChannel - 1, midiNote);
     addSeed(hexCoord, false);
 }
+
+void HexagonAutomata::Game::completeMappingLoaded(LumatoneLayout layout)
+{
+    // this is fine because we update via section update actions
+    // so this should only be triggered by loading a new layout
+
+    layoutBeforeStart = layout;
+    reset(true);
+}

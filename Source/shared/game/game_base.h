@@ -15,6 +15,7 @@
 
 #include "../lumatone_editor_library/data/lumatone_context.h"
 #include "../lumatone_editor_library/listeners/midi_listener.h"
+#include "../lumatone_editor_library/listeners/editor_listener.h"
 
 class LumatoneAction;
 class LumatoneController;
@@ -37,7 +38,8 @@ public:
 #define MAX_QUEUE_SIZE 280
 
 
-class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener
+class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener,
+                                public LumatoneEditor::EditorListener
 {
 public:
 

@@ -351,6 +351,10 @@ public:
 
         void handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
 
+        void completeMappingLoaded(LumatoneLayout layout);
+
+    private:
+
         // Apply cell updates to game state
         // Returns whether or not cell is still populated
         bool applyUpdatedCell(const MappedHexState& cellUpdate);
