@@ -39,6 +39,8 @@ bool LumatoneContext::setMappedMidiChannels(juce::Array<int> midiChannelMap)
         mappedMidiChannels.set(i, midiChannelMap[i]);
     }
 
+    midiChannelsMapped = true;
+
     return true;
 }
 
@@ -62,6 +64,8 @@ bool LumatoneContext::setMappedMidiNotes(juce::Array<int> midiNoteMap)
     {
         mappedMidiNotes.set(i, midiNoteMap[i]);
     }
+
+    midiNotesMapped = true;
 
     return true;
 }

@@ -8,6 +8,9 @@ struct LumatoneKeyContext : public MappedLumatoneKey
 {
     LumatoneKeyContext() : MappedLumatoneKey() {}
 
+    LumatoneKeyContext(const LumatoneKey& keyData, int boardIndex, int keyIndex) 
+        : MappedLumatoneKey(keyData, boardIndex, keyIndex) {}
+
     LumatoneKeyContext(const MappedLumatoneKey& key) : MappedLumatoneKey(key) {}
 
     // TODO add more properties
