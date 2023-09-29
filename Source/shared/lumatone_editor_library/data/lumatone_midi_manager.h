@@ -37,8 +37,13 @@ public:
     LumatoneMidiState* getAppMidiState() { return &appMidiState; }
 
     void sendMidiMessage(const juce::MidiMessage msg);
-    void sendMidiMessageInContext(const juce::MidiMessage msg);
+    void sendMidiMessageInContext(const juce::MidiMessage msg, int boardIndex, int keyIndex);
 
+    void sendKeyNoteOn(int boardIndex, int keyIndex, juce::uint8 velocity, bool ignoreContext=false);
+    void sendKeyNoteOff(int boardIndex, int keyIndex, bool ignoreContext=false);
+
+    void allNotesOff(int midiChannel);
+    void allNotesOff();
 
 private:
     juce::ListenerList<LumatoneEditor::MidiListener> listeners;
@@ -47,7 +52,7 @@ public:
     void addMidiListener(LumatoneEditor::MidiListener* listenerIn) { listeners.add(listenerIn); }
     void removeMidiListener(LumatoneEditor::MidiListener* listenerIn) { listeners.remove(listenerIn); }
 
-private:
+protected:
 
     // LumatoneMidiState::Listener implementation
     void handleLumatoneMidi(LumatoneMidiState* midiState, const juce::MidiMessage& msg) override;

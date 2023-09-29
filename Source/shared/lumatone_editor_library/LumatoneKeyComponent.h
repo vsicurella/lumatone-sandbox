@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "./data/lumatone_layout.h"
+#include "./data/lumatone_context.h"
 #include "ViewComponents.h"
 #include "ImageResampling/ImageResampler.h"
 #include "lumatone_tiling.h"
@@ -30,7 +30,7 @@ enum class LumatoneComponentRenderMode
 };
 
 // Representation of a key inside the overview
-class LumatoneKeyDisplay : public MappedLumatoneKey, 
+class LumatoneKeyDisplay : public LumatoneKeyContext, 
                            public juce::Component
 {
 public:

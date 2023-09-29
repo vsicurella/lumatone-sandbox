@@ -10,12 +10,13 @@
 
 #include "LumatoneKeyboardComponent.h"
 #include "./color/colour_model.h"
+#include "./LumatoneController.h"
 
-LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneApplicationState stateIn)
-    : LumatoneApplicationState(stateIn)
-    , state(stateIn)
+LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneController* controllerIn)
+    : LumatoneApplicationState("LumatoneKeyboardComponent", *controllerIn)
+    , controller(controllerIn)
     , lumatoneMidiMap()
-    , lumatoneRender(stateIn)
+    , lumatoneRender(*controllerIn)
 {
     renderMode = LumatoneComponentRenderMode::GraphicInteractive;
     resetOctaveSize(false);
@@ -23,10 +24,17 @@ LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneApplicationState st
 
     addMouseListener(this, this);
     addKeyListener(this);
+
+    controller->addEditorListener(this);
+    controller->addMidiListener(this);
+    addMidiStateListener(controller);
 }
 
 LumatoneKeyboardComponent::~LumatoneKeyboardComponent()
 {
+    controller->removeMidiListener(this);
+    controller->removeEditorListener(this);
+    controller = nullptr;
 }
 
 void LumatoneKeyboardComponent::paint (juce::Graphics& g)
@@ -205,6 +213,15 @@ void LumatoneKeyboardComponent::boardChanged(LumatoneBoard boardData)
     resetLayoutState();
 }
 
+void LumatoneKeyboardComponent::contextChanged(LumatoneContext *newOrEmptyContext)
+{
+    // LumatoneLayout layout = (newOrEmptyContext == nullptr)
+    //     ? *getMappingData()
+    //     : *newOrEmptyContext;
+
+    // completeMappingLoaded(layout);
+}
+
 void LumatoneKeyboardComponent::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
 {
     keyUpdateCallback(boardIndex, keyIndex, lumatoneKey);
@@ -283,8 +300,7 @@ void LumatoneKeyboardComponent::rerender()
 
 void LumatoneKeyboardComponent::updateKeyColour(int boardIndex, int keyIndex, const juce::Colour& colour)
 {
-    auto colourModel = state.getColourModel();
-    auto modelColour = colourModel->getModelColour(colour);
+    auto modelColour = getColourModel()->getModelColour(colour);
     auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
     key->setDisplayColour(modelColour);
 }
@@ -324,19 +340,7 @@ void LumatoneKeyboardComponent::lumatoneKeyDown(int boardIndex, int keyIndex)
     auto coord = LumatoneKeyCoord(boardIndex, keyIndex);
     if (getMappingData()->isKeyCoordValid(coord))
     {
-        auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
-        jassert(key != nullptr);
-
-        switch (key->keyType)
-        {
-        case LumatoneKeyType::noteOnNoteOff:
-            
-            noteOn(key->channelNumber, key->noteNumber, (juce::uint8)127);
-            updateKeyState(boardIndex, keyIndex, true);
-            break;
-        default:
-            break;
-        }
+        keyDownInternal(boardIndex, keyIndex);
     }
 }
 
@@ -345,18 +349,7 @@ void LumatoneKeyboardComponent::lumatoneKeyUp(int boardIndex, int keyIndex)
     auto coord = LumatoneKeyCoord(boardIndex, keyIndex);
     if (getMappingData()->isKeyCoordValid(coord))
     {
-        auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
-        jassert(key != nullptr);
-        
-        switch (key->keyType)
-        {
-        case LumatoneKeyType::noteOnNoteOff:
-            noteOff(key->channelNumber, key->noteNumber, 0);
-            updateKeyState(boardIndex, keyIndex, false);
-            break;
-        default:
-            break;
-        }
+        keyUpInternal(boardIndex, keyIndex);
     }
 }
 
@@ -465,16 +458,8 @@ void LumatoneKeyboardComponent::mouseDrag(const juce::MouseEvent& e)
     
     bool setLastNoteOff = !e.mods.isShiftDown() && (onNewKey || !validKey);
     if (mouseKeyLastDown != nullptr && setLastNoteOff)
-    {
-        switch (mouseKeyLastDown->keyType)
-        {
-        case LumatoneKeyType::noteOnNoteOff:
-            noteOff(mouseKeyLastDown->channelNumber, mouseKeyLastDown->noteNumber, 0);
-            keysOn.removeFirstMatchingValue(mouseKeyLastDown);
-            break;
-        default:
-            break;
-        }
+    {            
+        keyUpInternal(mouseKeyLastDown->boardIndex, mouseKeyLastDown->keyIndex);
     }
 
     if (onNewKey)
@@ -482,15 +467,7 @@ void LumatoneKeyboardComponent::mouseDrag(const juce::MouseEvent& e)
         keysDownPerMouse.set(mouseIndex, keyCoord);
         keysOverPerMouse.set(mouseIndex, keyCoord);
 
-        switch (key->keyType)
-        {
-        case LumatoneKeyType::noteOnNoteOff:
-            noteOn(key->channelNumber, key->noteNumber, 100);
-            keysOn.addIfNotAlreadyThere(key);
-            break;
-        default:
-            break;
-        }
+        keyDownInternal(keyCoord.boardIndex, keyCoord.keyIndex);
 
         lastMouseKeyOver = key;
         lastMouseKeyDown = key;
@@ -598,6 +575,48 @@ void LumatoneKeyboardComponent::modifierKeysChanged(const juce::ModifierKeys& mo
     //{
     //    ctrlHeld = false;
     //}
+}
+
+void LumatoneKeyboardComponent::keyDownInternal(int boardIndex, int keyIndex)
+{
+    auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
+    jassert(key != nullptr);
+
+    switch (key->keyType)
+    {
+    case LumatoneKeyType::noteOnNoteOff:
+    {
+        juce::uint8 velocity = 0x70;
+        controller->sendKeyNoteOn(boardIndex, keyIndex, velocity);
+
+        noteOn(key->channelNumber, key->noteNumber, velocity);
+        updateKeyState(boardIndex, keyIndex, true);
+        break;
+    }
+    default:
+        break;
+    }
+
+    keysOn.addIfNotAlreadyThere(key);
+};
+
+void LumatoneKeyboardComponent::keyUpInternal(int boardIndex, int keyIndex)
+{
+    auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
+    jassert(key != nullptr);
+    
+    switch (key->keyType)
+    {
+    case LumatoneKeyType::noteOnNoteOff:
+        controller->sendKeyNoteOff(boardIndex, keyIndex);
+        noteOff(key->channelNumber, key->noteNumber, 0);
+        updateKeyState(boardIndex, keyIndex, false);
+        break;
+    default:
+        break;
+    }
+
+    keysOn.removeFirstMatchingValue(key);
 }
 
 void LumatoneKeyboardComponent::noteOnInternal(int midiChannel, int midiNote, juce::uint8 velocity)

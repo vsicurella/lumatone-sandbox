@@ -13,7 +13,7 @@
 //==============================================================================
 
 LumatoneKeyDisplay::LumatoneKeyDisplay(int newBoardIndex, int newKeyIndex, const LumatoneKey& keyDataIn)
-    : MappedLumatoneKey(keyDataIn, newBoardIndex, newKeyIndex)
+    : LumatoneKeyContext(keyDataIn, newBoardIndex, newKeyIndex)
     , Component("LumatoneKeyDisplay_" + LumatoneKeyCoord::toString(newBoardIndex, newKeyIndex))
 {
     renderMode = LumatoneComponentRenderMode::GraphicInteractive;

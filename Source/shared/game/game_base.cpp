@@ -69,30 +69,6 @@ void LumatoneSandboxGameBase::end()
     queueLayout(layoutBeforeStart);
 }
 
-void LumatoneSandboxGameBase::noteOff(int midiChannel, int midiNote)
-{
-    auto msg = juce::MidiMessage::noteOff(midiChannel, midiNote);
-    controller->sendMidiMessageInContext(msg);
-}
-
-void LumatoneSandboxGameBase::allNotesOff(int midiChannel)
-{
-    auto msg = juce::MidiMessage::allNotesOff(midiChannel);
-    controller->sendMidiMessageInContext(msg);
-}
-
-void LumatoneSandboxGameBase::allNotesOff()
-{
-    for (int ch = 1; ch <=16; ch++)
-        allNotesOff(ch);
-}
-
-void LumatoneSandboxGameBase::noteOn(int midiChannel, int midiNote, juce::uint8 velocity)
-{
-    auto msg = juce::MidiMessage::noteOn(midiChannel, midiNote, velocity);
-    controller->sendMidiMessageInContext(msg);
-}
-
 void LumatoneSandboxGameBase::addToQueue(LumatoneAction* action)
 {
     // jassert(action != nullptr);
@@ -158,7 +134,7 @@ LumatoneContext LumatoneSandboxGameBase::getIdentityWithLayoutContext(bool reset
 
     LumatoneContext context = LumatoneContext(identityLayout);
     context.setMappedMidiChannels(midiChannelContextMap);
-    context.setMappedMidiNotes(midiChannelContextMap);
+    context.setMappedMidiNotes(midiNoteContextMap);
 
     return context;
 }

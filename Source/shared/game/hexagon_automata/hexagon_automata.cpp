@@ -136,7 +136,7 @@ void HexagonAutomata::Game::reset(bool clearQueue)
         });
 
         queueLayout(newLayoutContext);
-        controller->setContext(std::make_shared<LumatoneContext>(newLayoutContext));
+        controller->setContext(newLayoutContext);
         break;
     }
 
@@ -147,7 +147,7 @@ void HexagonAutomata::Game::reset(bool clearQueue)
 
 void HexagonAutomata::Game::resetState()
 {
-    allNotesOff();
+    controller->allNotesOff();
     
     juce::ScopedLock l(lock);
 
@@ -234,11 +234,11 @@ bool HexagonAutomata::Game::triggerCellMidi(const MappedHexState& cell)
 
     if (cell.isAlive())
     {
-        noteOn(configKey->channelNumber, configKey->noteNumber, (juce::uint8)0x7f);
+        controller->sendKeyNoteOn(cell.boardIndex, cell.keyIndex, 0x70);
     }
     else
     {
-        noteOff(configKey->channelNumber, configKey->noteNumber);
+        controller->sendKeyNoteOff(cell.boardIndex, cell.keyIndex, 0x0);
     }
 
     return true;
@@ -374,7 +374,7 @@ void HexagonAutomata::Game::rerenderState()
 	
 }
 
-void HexagonAutomata::Game::addSeed(Hex::Point point)
+void HexagonAutomata::Game::addSeed(Hex::Point point, bool triggerMidi)
 {
 	juce::ScopedLock l(lock);
 
@@ -388,7 +388,7 @@ void HexagonAutomata::Game::addSeed(Hex::Point point)
 
     newCell.HexState::colour = render->getAliveColour();
 
-    if (mode == GameMode::Sequencer)
+    if (triggerMidi && mode == GameMode::Sequencer)
     {
         triggerCellMidi(newCell);
     }
@@ -396,17 +396,17 @@ void HexagonAutomata::Game::addSeed(Hex::Point point)
     newCells.add(newCell);
 }
 
-void HexagonAutomata::Game::addSeeds(juce::Array<Hex::Point> seedCoords)
+void HexagonAutomata::Game::addSeeds(juce::Array<Hex::Point> seedCoords, bool triggerMidi)
 {
 	juce::ScopedLock l(lock);
 
     for (auto point : seedCoords)
     {
-        addSeed(point);
+        addSeed(point, triggerMidi);
     }
 }
 
-void HexagonAutomata::Game::addSeeds(int numSeeds)
+void HexagonAutomata::Game::addSeeds(int numSeeds, bool triggerMidi)
 {
     float probablity = 0.5f;
 
@@ -430,7 +430,7 @@ void HexagonAutomata::Game::addSeeds(int numSeeds)
             float chance = random.nextFloat();
             if (chance <= probablity)
             {
-                addSeed(seed);
+                addSeed(seed, triggerMidi);
             }
         }
     }
@@ -613,5 +613,5 @@ void HexagonAutomata::Game::updateGenerationAge()
 void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
 {
     auto hexCoord = hexMap.keyCoordsToHex(midiChannel - 1, midiNote);
-    addSeed(hexCoord);
+    addSeed(hexCoord, false);
 }

@@ -328,9 +328,9 @@ namespace HexagonAutomata
         double getLockedFps() const { return 0; }
 
 public:
-        void addSeed(Hex::Point coord);
-        void addSeeds(juce::Array<Hex::Point> seedCoords);
-        void addSeeds(int numSeeds);
+        void addSeed(Hex::Point coord, bool triggerMidi=true);
+        void addSeeds(juce::Array<Hex::Point> seedCoords, bool triggerMidi=true);
+        void addSeeds(int numSeeds, bool triggerMidi=true);
         
         void updateNextGeneration();
         void updateGenerationAge(); 

@@ -66,14 +66,6 @@ public:
 
     const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
 
-protected:
-
-    void noteOn(int midiChannel, int midiNote, juce::uint8 velocity);
-    void noteOff(int midiChannel, int midiNote);
-
-    void allNotesOff(int midiChannel);
-    void allNotesOff();
-
 private:
 
     int getQueuePtr() const { return (queuePtr + queueSize - 1) % MAX_QUEUE_SIZE; }

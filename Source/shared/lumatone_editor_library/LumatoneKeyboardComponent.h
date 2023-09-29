@@ -23,6 +23,8 @@
 #include "lumatone_assets.h"
 #include "lumatone_render.h"
 
+class LumatoneController;
+
 //==============================================================================
 /*
 */
@@ -34,7 +36,7 @@ class LumatoneKeyboardComponent : public juce::Component,
                                   public LumatoneEditor::MidiListener
 {
 public:
-    LumatoneKeyboardComponent(LumatoneApplicationState stateIn);
+    LumatoneKeyboardComponent(LumatoneController* controllerIn);
     ~LumatoneKeyboardComponent() override;
 
     void paint (juce::Graphics&) override;
@@ -49,6 +51,7 @@ public:
     // LumatoneEditor::EditorListener Implementation
     void completeMappingLoaded(LumatoneLayout mappingData) override;
     void boardChanged(LumatoneBoard boardData) override;
+    void contextChanged(LumatoneContext* newOrEmptyContext) override; 
     void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
     void keyConfigChanged(int boardIndex, int keyIndex, LumatoneKey keyData) override;
     void keyColourChanged(int octaveNumber, int keyNumber, juce::Colour keyColour) override;
@@ -89,6 +92,11 @@ private:
     void modifierKeysChanged(const juce::ModifierKeys& modifiers) override;
 
 private:
+    // Private implementations of other methods
+
+    void keyDownInternal(int boardIndex, int keyIndex);
+    void keyUpInternal(int boardIndex, int keyIndex);
+
     void noteOnInternal(int midiChannel, int midiNote, juce::uint8 velocity);
     void noteOffInternal(int midiChannel, int midiNote);
 
@@ -118,7 +126,7 @@ private:
 
 private:
 
-    LumatoneApplicationState state;
+    LumatoneController* controller;
 
     struct OctaveBoard
     {

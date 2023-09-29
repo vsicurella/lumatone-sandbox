@@ -3,7 +3,7 @@
 #include "../listeners/midi_listener.h"
 
 LumatoneApplicationMidiController::LumatoneApplicationMidiController(LumatoneApplicationState stateIn, LumatoneFirmwareDriver& firmwareDriverIn)
-    : appState(stateIn)
+    : appState("LumatoneApplicationMidiController", stateIn)
     , firmwareDriver(firmwareDriverIn)
 {
     firmwareDriver.addMessageCollector(this);
@@ -20,7 +20,7 @@ void LumatoneApplicationMidiController::sendMidiMessage(const juce::MidiMessage 
     firmwareDriver.sendMessageNow(msg);
 }
 
-void LumatoneApplicationMidiController::sendMidiMessageInContext(const juce::MidiMessage msg)
+void LumatoneApplicationMidiController::sendMidiMessageInContext(const juce::MidiMessage msg, int boardIndex, int keyIndex)
 {
     if (! appState.isContextSet())
     {
@@ -31,7 +31,8 @@ void LumatoneApplicationMidiController::sendMidiMessageInContext(const juce::Mid
     bool setNote = msg.isNoteOnOrOff() || msg.isAftertouch();
     bool setController = msg.isController();
 
-    auto key = appState.getKeyContext(msg.getChannel(), setNote ? msg.getNoteNumber() : msg.getControllerNumber());
+    // auto key = appState.getKeyContext(msg.getChannel(), setNote ? msg.getNoteNumber() : msg.getControllerNumber());
+    auto key = appState.getKeyContext(boardIndex, keyIndex);
         
     juce::MidiMessage newMsg = msg;
     newMsg.setChannel(key.channelNumber);
@@ -43,6 +44,76 @@ void LumatoneApplicationMidiController::sendMidiMessageInContext(const juce::Mid
         newMsg = juce::MidiMessage::controllerEvent(key.channelNumber, key.noteNumber, msg.getControllerValue());
         
     sendMidiMessage(newMsg);
+}
+
+void LumatoneApplicationMidiController::sendKeyNoteOn(int boardIndex, int keyIndex, juce::uint8 velocity, bool ignoreContext)
+{
+    bool useContext = !ignoreContext && appState.isContextSet();
+
+    // const LumatoneKey* keyData = appState.getKey(boardIndex, keyIndex);
+    // LumatoneKeyContext context = appState.getKeyContext(boardIndex, keyIndex);
+    // LumatoneKey key = *keyData;
+    // LumatoneKey ctx = appState.getKeyContext(boardIndex, keyIndex);
+
+// #if JUCE_DEBUG
+//     LumatoneKey key;
+//     if (useContext)
+//         key = (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex);
+//     else 
+//         key = appState.getKeyContext(boardIndex, keyIndex);
+// #else
+//     LumatoneKey key = (useContext)
+//         ? (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex);
+//         : appState.getKeyContext(boardIndex, keyIndex); 
+// #endif
+
+    LumatoneKey key
+    #if JUCE_DEBUG
+    ; if (useContext)
+        key = 
+    #else 
+        (useContext) ? 
+    #endif
+        (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex)
+    #if JUCE_DEBUG
+    ; else
+        key = 
+    #else
+        :
+    #endif
+        *appState.getKey(boardIndex, keyIndex);
+    
+
+    jassert(key.channelNumber > 0 && key.channelNumber <= 16 && key.noteNumber >= 0 && key.noteNumber < 128);
+        
+    juce::MidiMessage msg = juce::MidiMessage::noteOn(key.channelNumber, key.noteNumber, velocity);
+    sendMidiMessage(msg);
+}
+
+void LumatoneApplicationMidiController::sendKeyNoteOff(int boardIndex, int keyIndex, bool ignoreContext)
+{
+    bool useContext = !ignoreContext && appState.isContextSet();
+
+    LumatoneKey key = (useContext)
+        ? (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex)
+        : *appState.getKey(boardIndex, keyIndex);
+
+    jassert(key.channelNumber > 0 && key.channelNumber <= 16 && key.noteNumber >= 0 && key.noteNumber < 128);
+        
+    juce::MidiMessage msg = juce::MidiMessage::noteOff(key.channelNumber, key.noteNumber);
+    sendMidiMessage(msg);
+}
+
+void LumatoneApplicationMidiController::allNotesOff(int midiChannel)
+{
+    auto msg = juce::MidiMessage::allNotesOff(midiChannel);
+    sendMidiMessage(msg);
+}
+
+void LumatoneApplicationMidiController::allNotesOff()
+{
+    for (int ch = 1; ch <=16; ch++)
+        allNotesOff(ch);
 }
 
 void LumatoneApplicationMidiController::handleLumatoneMidi(LumatoneMidiState *midiState, const juce::MidiMessage &msg)
