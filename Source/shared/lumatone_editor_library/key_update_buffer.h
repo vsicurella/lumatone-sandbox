@@ -2,7 +2,7 @@
 
 #include "./data/lumatone_state.h"
 
-#include "./lumatone_midi_driver/lumatone_midi_driver.h"
+class LumatoneFirmwareDriver;
 
 class LumatoneKeyUpdateBuffer : public LumatoneState,
                                 private juce::Timer

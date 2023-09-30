@@ -178,311 +178,20 @@ System exclusive command bytes
 #define GET_PITCH_AND_MOD_BOUNDS 0x4E
 #define GET_EXPRESSION_PEDAL_BOUNDS 0x4F
 
-/*
-==============================================================================
-Board Properties
-==============================================================================
-*/
 
-#define DEFAULT_NUM_BOARDS 5
 #define VELOCITYINTERVALTABLESIZE 127
 
+#define ADCSCALAR 2.44140625e-4f;
 
-typedef enum
+namespace LumatoneFirmware
 {
-	NACK    = 0x00, // Not recognized
-	ACK     = 0x01, // Acknowledged, OK
-	BUSY    = 0x02, // Controller busy
-	ERROR   = 0x03, // Error
-	STATE   = 0x04, // Not in MIDI state
-} TerpstraMIDIAnswerReturnCode;
 
-typedef enum
+struct PresetFlags
 {
-    disabledDefault      = 0,
-	noteOnNoteOff        = 1,
-	continuousController = 2,
-	lumaTouch            = 3,
-	disabled             = 4
-} LumatoneKeyType;
-
-typedef enum
-{
-	ExpressionPedal = 0,
-	PitchAndModWheels
-} PeripheralCalibrationDataMode;
-
-enum class LumatoneFirmwareVersion
-{
-	NO_VERSION      = 0,  // Used for instantiation
-	UNKNOWN_VERSION = 0,  // Used when no other version applies
-	VERSION_55_KEYS = 1,  // Used when GetSerialIdentity returns 00000000
-	VERSION_1_0_3 = 0x10,
-	VERSION_1_0_4,
-	VERSION_1_0_5,
-	VERSION_1_0_6,
-	VERSION_1_0_7,
-	VERSION_1_0_8,
-	VERSION_1_0_9,
-	VERSION_1_0_10,
-	VERSION_1_0_11,
-	VERSION_1_0_12,
-    VERSION_1_1_0 = VERSION_1_0_12,
-    VERSION_1_2_0,
-	LAST_VERSION = VERSION_1_2_0,
-	FUTURE_VERSION = 0xFFFF  // Used when version is nonnegative and below 9.9.999
-} ;
-
-struct FirmwareVersion
-{
-	int major = 0;
-	int minor = 0;
-	int revision = 0;
-
-	FirmwareVersion(int majorVersion, int minorVersion, int revisionNumber)
-		: major(majorVersion), minor(minorVersion), revision(revisionNumber) {}
-
-	bool isValid() { return major > 0 || minor > 0 || revision > 0; }
-
-	juce::String toString() const { return juce::String(major) + "." + juce::String(minor) + "." + juce::String(revision); }
-
-	juce::String toDisplayString() const 
-	{ 
-		juce::String str = juce::String(major) + "." + juce::String(minor);
-		if (revision > 0)
-			str += ("." + juce::String(revision));
-
-		return str;
-	}
-
-	//============================================================================
-
-	static FirmwareVersion fromString(juce::String firmwareVersion)
-	{
-		FirmwareVersion version(0, 0, 0);
-
-		juce::String afterFirstDecimal = firmwareVersion.fromFirstOccurrenceOf(".", false, true);
-
-		// Just check if it contains at least two decimals
-		if (firmwareVersion.contains(".") && afterFirstDecimal.contains("."))
-		{
-			juce::String majorNum = firmwareVersion.upToFirstOccurrenceOf(".", false, true);
-
-			juce::String minorNum = afterFirstDecimal.upToFirstOccurrenceOf(".", false, true);
-
-			if (minorNum == afterFirstDecimal)
-			{
-				// This means there was only one decimal, don't try to parse
-				return version;
-			}
-
-			juce::String revisionNum = firmwareVersion.fromLastOccurrenceOf(".", false, true);
-			if (revisionNum != revisionNum.upToFirstOccurrenceOf(".", false, true))
-			{
-				// This means there's an additional decimal, don't try to parse
-				return version;
-			}
-
-			version.major = majorNum.getIntValue();
-			version.minor = majorNum.getIntValue();
-			version.revision = majorNum.getIntValue();
-		}
-
-		return version;
-	}
-
-	static FirmwareVersion fromDeterminedVersion(LumatoneFirmwareVersion versionIn)
-	{
-		int versionIndex = (int)versionIn;
-		if (versionIn >= LumatoneFirmwareVersion::VERSION_1_0_3)
-		{
-			// Return special definition for future version
-			if (versionIn > LumatoneFirmwareVersion::LAST_VERSION)
-				return FirmwareVersion(0, 0, (int)LumatoneFirmwareVersion::FUTURE_VERSION);
-			else
-				return FirmwareVersion(1, 0, versionIndex - (int)LumatoneFirmwareVersion::VERSION_1_0_3);
-		}
-		// Return special definition for 55-keys version
-		else if (versionIn == LumatoneFirmwareVersion::VERSION_55_KEYS)
-			return FirmwareVersion(0, 0, 55);
-		
-		return FirmwareVersion(0, 0, 0);
-	}
-};
-
-struct FirmwareSupport
-{
-	enum class Error
-	{
-		noError = 0,
-		noMidiOutputSet,
-		deviceIsBusy,
-		messageTooShort,
-		messageTooLong,
-        messageIsAnEcho,
-		messageHasIncorrectManufacturerId,
-		messageHasInvalidBoardIndex,
-		messageHasInvalidStatusByte,
-		messageIsNotResponseToCommand,
-		messageIsNotSysEx,
-		unknownCommand,
-		externalError,
-        commandNotImplemented
-	};
-
-	juce::String errorToString(Error err)
-	{
-		switch (err)
-		{
-		case Error::noError:
-			return "No error";
-		case Error::noMidiOutputSet:
-			return "No Midi output set";
-		case Error::deviceIsBusy:
-			return "Device is busy";
-		case Error::messageTooShort:
-            return "Message too short";
-		case Error::messageTooLong:
-            return "Message too long";
-        case Error::messageIsAnEcho:
-            return "Message is an echo";
-		case Error::messageHasIncorrectManufacturerId:
-			return "Incorrect manufacturer ID";
-		case Error::messageHasInvalidBoardIndex:
-			return "Invalid board index";
-		case Error::messageHasInvalidStatusByte:
-			return "Message has invalid status byte";
-		case Error::messageIsNotResponseToCommand:
-			return "Message is not a response to the command";
-		case Error::messageIsNotSysEx:
-			return "Message is not a valid SysEx message.";
-		case Error::unknownCommand:
-			return "Unknown command / Not Acknowledged";
-		case Error::externalError:
-			return "Error from device";
-        case Error::commandNotImplemented:
-            return "Command handling not implemented";
-		default:
-			return "Undefined error..";
-		}
-	}
-
-	LumatoneFirmwareVersion getLumatoneFirmwareVersion(FirmwareVersion versionIn)
-	{
-		if (!(versionIn.major | versionIn.minor | versionIn.revision))
-			return LumatoneFirmwareVersion::VERSION_55_KEYS;
-
-		else if ((versionIn.major < 0) | (versionIn.minor < 0) | (versionIn.revision < 0))
-			return LumatoneFirmwareVersion::UNKNOWN_VERSION;
-		
-        // MAJOR: 1
-		else if (versionIn.major == 1)
-		{
-            // MINOR: 0
-			if (versionIn.minor == 0)
-			{
-				if (versionIn.revision < 3)
-					return LumatoneFirmwareVersion::VERSION_55_KEYS;
-
-                // Computing is probably not the best thing to do but edge cases are extremely unlikely here
-				else if (versionIn.revision - 3 > (int)LumatoneFirmwareVersion::LAST_VERSION - (int)LumatoneFirmwareVersion::VERSION_1_0_3)
-					return LumatoneFirmwareVersion::FUTURE_VERSION;
-
-				else if (versionIn.revision >= 3)
-					return (LumatoneFirmwareVersion)((int)LumatoneFirmwareVersion::VERSION_1_0_3 + (versionIn.revision - 3));
-			}
-            
-            // MINOR: 1
-            else if (versionIn.minor == 1)
-            {
-                if (versionIn.revision == 0)
-                    return LumatoneFirmwareVersion::VERSION_1_1_0;
-            }
-            
-            else if (versionIn.minor == 2)
-            {
-                if (versionIn.revision == 0)
-                    return LumatoneFirmwareVersion::VERSION_1_2_0;
-            }
-            
-            return LumatoneFirmwareVersion::FUTURE_VERSION;
-		}
-
-        // Unsure if this is needed, or if returning FUTURE_VERSION without a condition is better
-		else if (versionIn.major < 9 && versionIn.minor < 9 && versionIn.revision < 999)
-			return LumatoneFirmwareVersion::FUTURE_VERSION;
-
-		return LumatoneFirmwareVersion::UNKNOWN_VERSION;
-	}
-
-	// TODO use map instead
-	// Returns the lowest version that will return ACK for a given command
-	LumatoneFirmwareVersion getLowestVersionAcknowledged(unsigned int CMD)
-	{
-		if (CMD < CHANGE_KEY_NOTE) // 0x00
-			return LumatoneFirmwareVersion::UNKNOWN_VERSION;
-
-		else if (CMD <= GET_SERIAL_IDENTITY) // 0x23
-			return LumatoneFirmwareVersion::NO_VERSION;
-
-		else if (CMD <= DEMO_MODE) // 0x25
-			return LumatoneFirmwareVersion::VERSION_1_0_5;
-
-		else if (CMD <= CALIBRATE_PITCH_MOD_WHEEL) // 0x26
-			return LumatoneFirmwareVersion::VERSION_1_0_6;
-
-		else if (CMD <= SET_KEY_MAX_THRESHOLD) // 0x29
-			return LumatoneFirmwareVersion::VERSION_1_0_7;
-
-		else if (CMD <= GET_FIRMWARE_REVISION) // 0x31
-			return LumatoneFirmwareVersion::VERSION_1_0_8;
-
-		else if (CMD <= LUMA_PING) // 0x33
-			return LumatoneFirmwareVersion::VERSION_1_0_9;
-
-		else if (CMD <= SET_KEY_SAMPLING) // 0x35
-			return LumatoneFirmwareVersion::VERSION_1_0_10;
-
-		else if (CMD <= RESET_EXPRESSION_PEDAL_BOUNDS) // 0x39
-			return LumatoneFirmwareVersion::VERSION_1_0_11;
-
-		else if (CMD <= GET_EXPRESSION_PEDAL_BOUNDS) // 0x4F
-			return LumatoneFirmwareVersion::VERSION_1_1_0;
-
-		else
-			return LumatoneFirmwareVersion::FUTURE_VERSION;
-	}
-
-	bool versionAcknowledgesCommand(LumatoneFirmwareVersion VERSION, unsigned int CMD)
-	{
-		return getLowestVersionAcknowledged(CMD) <= VERSION;
-	}
-
-	bool versionAcknowledgesCommand(FirmwareVersion versionIn, unsigned int CMD)
-	{
-		auto VERSION = getLumatoneFirmwareVersion(versionIn);
-		return versionAcknowledgesCommand(VERSION, CMD);
-	}
-
-	// Should always be 56 in production
-	int getOctaveSize(LumatoneFirmwareVersion VERSION)
-	{
-		if (VERSION >= LumatoneFirmwareVersion::VERSION_1_0_3)
-			return 56;
-		else
-			return 55;
-	}
-
-	int getCommandNumber(const juce::MidiMessage& msg)
-	{
-		return msg.getSysExData()[CMD_ID];
-	}
-    
-    juce::String serialIdentityToString(const int* serialBytes)
-    {
-        return juce::String::toHexString(serialBytes, 6);
-    }
-
+	bool expressionPedalInverted = false;
+	bool lightsOnKeystroke = false;
+	bool polyphonicAftertouch = false;
+	bool sustainPedalInverted = false;
 };
 
 typedef enum
@@ -493,97 +202,32 @@ typedef enum
 	Sustain
 } PeripheralChannel;
 
-struct PeripheralChannelSettings
+typedef enum
 {
-	int pitchWheel = 1;
-	int modWheel = 1;
-	int expressionPedal = 1;
-	int sustainPedal = 1;
+	NACK    = 0x00, // Not recognized
+	ACK     = 0x01, // Acknowledged, OK
+	BUSY    = 0x02, // Controller busy
+	ERROR   = 0x03, // Error
+	STATE   = 0x04, // Not in MIDI state
+} ReturnCode;
 
-	void setChannel(PeripheralChannel controlId, int channelIn)
-	{
-		if (channelIn < 1)
-			channelIn = 1;
 
-		if (channelIn > 16)
-			channelIn = 16;
-
-		switch (controlId)
-		{
-		case PeripheralChannel::PitchWheel:
-			pitchWheel = channelIn;
-			break;
-
-		case PeripheralChannel::ModWheel:
-			modWheel = channelIn;
-			break;
-
-		case PeripheralChannel::Expression:
-			expressionPedal = channelIn;
-			break;
-
-		case PeripheralChannel::Sustain:
-			sustainPedal = channelIn;
-			break;
-		}
-	}
-
-	int getChannel(PeripheralChannel controlId)
-	{
-		switch (controlId)
-		{
-		case PeripheralChannel::PitchWheel:
-			return pitchWheel;
-
-		case PeripheralChannel::ModWheel:
-			return modWheel;
-
-		case PeripheralChannel::Expression:
-			return expressionPedal;
-
-		case PeripheralChannel::Sustain:
-			return sustainPedal;
-		}
-
-		return 0;
-	}
-};
-
-#define ADCSCALAR 2.44140625e-4;
-
-struct WheelsCalibrationData
+typedef enum
 {
-	int centerPitch = 0;
-	int minPitch = 0;
-	int maxPitch = 0;
+    disabledDefault      = 0,
+	noteOnNoteOff        = 1,
+	continuousController = 2,
+	lumaTouch            = 3,
+	disabled             = 4
+} LumatoneKeyType;
 
-	int minMod = 0;
-	int maxMod = 0;
 
-	float getCentrePitchNorm() const { return centerPitch * ADCSCALAR; }
-	float getMinPitchNorm() const { return minPitch * ADCSCALAR; }
-	float getMaxPitchNorm() const { return maxPitch * ADCSCALAR; }
-	float getMinModNorm() const { return minMod * ADCSCALAR; }
-	float getMaxModNorm() const { return maxMod * ADCSCALAR; }
-
-	juce::String toString() const
-	{
-		juce::String str;
-		str += ("Center Pitch: " + juce::String(centerPitch) + juce::newLine);
-		str += ("   Min Pitch: " + juce::String(minPitch) + juce::newLine);
-		str += ("   Max Pitch: " + juce::String(maxPitch) + juce::newLine);
-		str += ("     Min Mod: " + juce::String(minMod) + juce::newLine);
-		str += ("     Max Mod: " + juce::String(maxMod) + juce::newLine);
-		return str;
-	}
-};
-
-struct PresetFlags
+typedef enum
 {
-	bool expressionPedalInverted = false;
-	bool lightsOnKeystroke = false;
-	bool polyphonicAftertouch = false;
-	bool sustainPedalInverted = false;
-};
+	ExpressionPedal = 0,
+	PitchAndModWheels
+} PeripheralCalibrationDataMode;
+
+}
 
 #endif

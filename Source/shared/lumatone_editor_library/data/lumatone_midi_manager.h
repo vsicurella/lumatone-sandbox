@@ -17,8 +17,10 @@
 
 #include "./application_state.h"
 #include "./lumatone_midi_state.h"
-#include "../lumatone_midi_driver/lumatone_midi_driver.h"
+#include "../lumatone_midi_driver/firmware_driver_listener.h"
 #include "./lumatone_context.h"
+
+class LumatoneFirmwareDriver;
 
 namespace LumatoneEditor
 {
@@ -26,7 +28,7 @@ namespace LumatoneEditor
 }
 
 class LumatoneApplicationMidiController : public LumatoneMidiState::Listener
-                                        , protected LumatoneFirmwareDriver::Collector
+                                        , protected LumatoneFirmwareDriverListener
 {
 public:
 

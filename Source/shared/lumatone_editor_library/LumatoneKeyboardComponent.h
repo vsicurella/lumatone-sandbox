@@ -14,6 +14,7 @@
 
 #include "./data/application_state.h"
 #include "./data/lumatone_midi_state.h"
+#include "./lumatone_output_map.h"
 
 #include "LumatoneKeyComponent.h"
 

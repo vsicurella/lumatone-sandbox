@@ -9,20 +9,21 @@
 */
 
 #include "LumatoneEventManager.h"
-
+#include "./lumatone_midi_driver/lumatone_midi_driver.h"
+#include "./lumatone_midi_driver/firmware_sysex.h"
 
 LumatoneEventManager::LumatoneEventManager(LumatoneFirmwareDriver& midiDriverIn, LumatoneState stateIn)
     : LumatoneState(stateIn)
     , midiDriver(midiDriverIn)
 {
-    midiDriver.addMessageCollector(this);
+    midiDriver.addDriverListener(this);
 
     juce::MidiMessageCollector::reset(bufferReadTimeoutMs);
 }
 
 LumatoneEventManager::~LumatoneEventManager()
 {
-    midiDriver.removeMessageCollector(this);
+    midiDriver.removeDriverListener(this);
 }
 
 //=============================================================================
@@ -117,13 +118,13 @@ FirmwareSupport::Error LumatoneEventManager::handleLEDConfigResponse(const juce:
     auto boardSize = getOctaveBoardSize();
 
     // Use correct unpacking function
-    if (version < LumatoneFirmwareVersion::VERSION_1_0_11)
+    if (version < LumatoneFirmware::ReleaseVersion::VERSION_1_0_11)
     {
-        errorCode = midiDriver.unpackGetLEDConfigResponse_Version_1_0_0(midiMessage, boardId, boardSize, colourData);
+        errorCode = LumatoneSysEx::unpackGetLEDConfigResponse_Version_1_0_0(midiMessage, boardId, boardSize, colourData);
     }
     else
     {
-        errorCode = midiDriver.unpackGetLEDConfigResponse(midiMessage, boardId, colourData);
+        errorCode = LumatoneSysEx::unpackGetLEDConfigResponse(midiMessage, boardId, colourData);
     }
 
     if (errorCode == FirmwareSupport::Error::noError)
@@ -138,7 +139,7 @@ FirmwareSupport::Error LumatoneEventManager::handleLEDConfigResponse(const juce:
 FirmwareSupport::Error LumatoneEventManager::handleChannelConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int& boardId, juce::uint8 numKeys, int* data) {
-        auto errorCode = midiDriver.unpackGetChannelConfigResponse(msg, boardId, numKeys, data);
+        auto errorCode = LumatoneSysEx::unpackGetChannelConfigResponse(msg, boardId, numKeys, data);
         if (errorCode == FirmwareSupport::Error::noError)
             for (int i = 0; i < numKeys; i++)
                 data[i]++; // MIDI Channels are 1-based
@@ -151,7 +152,7 @@ FirmwareSupport::Error LumatoneEventManager::handleChannelConfigResponse(const j
 FirmwareSupport::Error LumatoneEventManager::handleNoteConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int& boardId, juce::uint8 numKeys, int* data) {
-        return midiDriver.unpackGetNoteConfigResponse(msg, boardId, numKeys, data);
+        return LumatoneSysEx::unpackGetNoteConfigResponse(msg, boardId, numKeys, data);
     };
     auto callback = [&](int boardId, void* data) { firmwareListeners.call(&LumatoneEditor::FirmwareListener::octaveNoteConfigReceived, boardId, (int*)data); };
     return handleOctaveConfigResponse(midiMessage, unpack, callback);
@@ -160,7 +161,7 @@ FirmwareSupport::Error LumatoneEventManager::handleNoteConfigResponse(const juce
 FirmwareSupport::Error LumatoneEventManager::handleKeyTypeConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int& boardId, juce::uint8 numKeys, int* data) {
-        return midiDriver.unpackGetTypeConfigResponse(msg, boardId, numKeys, data);
+        return LumatoneSysEx::unpackGetTypeConfigResponse(msg, boardId, numKeys, data);
     };
     auto callback = [&](int boardId, void* data) { firmwareListeners.call(&LumatoneEditor::FirmwareListener::keyTypeConfigReceived, boardId, (int*)data); };
     return handleOctaveConfigResponse(midiMessage, unpack, callback);
@@ -169,7 +170,7 @@ FirmwareSupport::Error LumatoneEventManager::handleKeyTypeConfigResponse(const j
 FirmwareSupport::Error LumatoneEventManager::handleVelocityConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int* data) {
-        return midiDriver.unpackGetVelocityConfigResponse(msg, data);
+        return LumatoneSysEx::unpackGetVelocityConfigResponse(msg, data);
     };
     auto callback = [&](void* data) { firmwareListeners.call(&LumatoneEditor::FirmwareListener::velocityConfigReceived, (int*)data); };
     return handleTableConfigResponse(midiMessage, unpack, callback);
@@ -178,7 +179,7 @@ FirmwareSupport::Error LumatoneEventManager::handleVelocityConfigResponse(const 
 FirmwareSupport::Error LumatoneEventManager::handleAftertouchConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int* data) {
-        return midiDriver.unpackGetAftertouchConfigResponse(msg, data);
+        return LumatoneSysEx::unpackGetAftertouchConfigResponse(msg, data);
     };
     auto callback = [&](void* data) { firmwareListeners.call(&LumatoneEditor::FirmwareListener::aftertouchConfigReceived, (int*)data); };
     return handleTableConfigResponse(midiMessage, unpack, callback);
@@ -187,7 +188,7 @@ FirmwareSupport::Error LumatoneEventManager::handleAftertouchConfigResponse(cons
 FirmwareSupport::Error LumatoneEventManager::handleVelocityIntervalConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int* data) {
-        return midiDriver.unpackGetVelocityIntervalConfigResponse(msg, data);
+        return LumatoneSysEx::unpackGetVelocityIntervalConfigResponse(msg, data);
     };
     auto callback = [&](void* data) { firmwareListeners.call(&LumatoneEditor::FirmwareListener::velocityIntervalConfigReceived, (int*)data); };
     return handleTableConfigResponse(midiMessage, unpack, callback);
@@ -196,7 +197,7 @@ FirmwareSupport::Error LumatoneEventManager::handleVelocityIntervalConfigRespons
 FirmwareSupport::Error LumatoneEventManager::handleFaderConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int* data) {
-        return midiDriver.unpackGetFaderConfigResponse(msg, data);
+        return LumatoneSysEx::unpackGetFaderConfigResponse(msg, data);
     };
     auto callback = [&](void* data) { firmwareListeners.call(&LumatoneEditor::FirmwareListener::faderConfigReceived, (int*)data); };
     return handleTableConfigResponse(midiMessage, unpack, callback);
@@ -205,7 +206,7 @@ FirmwareSupport::Error LumatoneEventManager::handleFaderConfigResponse(const juc
 FirmwareSupport::Error LumatoneEventManager::handleFaderTypeConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int& boardId, juce::uint8 numKeys, int* data) {
-        return midiDriver.unpackGetTypeConfigResponse(msg, boardId, numKeys, data);
+        return LumatoneSysEx::unpackGetTypeConfigResponse(msg, boardId, numKeys, data);
     };
     auto callback = [&](int boardId, void* data) { firmwareListeners.call(&LumatoneEditor::FirmwareListener::faderTypeConfigReceived, boardId, (int*)data); };
     return handleOctaveConfigResponse(midiMessage, unpack, callback);
@@ -214,7 +215,7 @@ FirmwareSupport::Error LumatoneEventManager::handleFaderTypeConfigResponse(const
 FirmwareSupport::Error LumatoneEventManager::handleSerialIdentityResponse(const juce::MidiMessage& midiMessage)
 {
     int serialBytes[6];
-    auto errorCode = midiDriver.unpackGetSerialIdentityResponse(midiMessage, serialBytes);
+    auto errorCode = LumatoneSysEx::unpackGetSerialIdentityResponse(midiMessage, serialBytes);
     if (errorCode != FirmwareSupport::Error::noError)
         return errorCode;
 
@@ -226,11 +227,11 @@ FirmwareSupport::Error LumatoneEventManager::handleSerialIdentityResponse(const 
 FirmwareSupport::Error LumatoneEventManager::handleFirmwareRevisionResponse(const juce::MidiMessage& midiMessage)
 {
     int major, minor, revision;
-    auto errorCode = midiDriver.unpackGetFirmwareRevisionResponse(midiMessage, major, minor, revision);
+    auto errorCode = LumatoneSysEx::unpackGetFirmwareRevisionResponse(midiMessage, major, minor, revision);
     if (errorCode != FirmwareSupport::Error::noError)
         return errorCode;
 
-    auto version = FirmwareVersion(major, minor, revision);
+    auto version = LumatoneFirmware::Version(major, minor, revision);
     DBG("Firmware version is: " + version.toString());
 
     firmwareListeners.call(&LumatoneEditor::FirmwareListener::firmwareRevisionReceived, version);
@@ -241,7 +242,7 @@ FirmwareSupport::Error LumatoneEventManager::handleFirmwareRevisionResponse(cons
 FirmwareSupport::Error LumatoneEventManager::handleLumatouchConfigResponse(const juce::MidiMessage& midiMessage)
 {
     auto unpack = [&](const juce::MidiMessage& msg, int* data) {
-        return midiDriver.unpackGetLumatouchConfigResponse(msg, data);
+        return LumatoneSysEx::unpackGetLumatouchConfigResponse(msg, data);
     };
     auto callback = [&](void* data) { firmwareListeners.call(&LumatoneEditor::FirmwareListener::lumatouchConfigReceived, (int*)data); };
     return handleTableConfigResponse(midiMessage, unpack, callback);
@@ -250,7 +251,7 @@ FirmwareSupport::Error LumatoneEventManager::handleLumatouchConfigResponse(const
 FirmwareSupport::Error LumatoneEventManager::handlePingResponse(const juce::MidiMessage& midiMessage)
 {
     unsigned int value = 0;
-    auto errorCode = midiDriver.unpackPingResponse(midiMessage, value);
+    auto errorCode = LumatoneSysEx::unpackPingResponse(midiMessage, value);
 
     if (errorCode != FirmwareSupport::Error::noError)
         return errorCode;
@@ -262,8 +263,8 @@ FirmwareSupport::Error LumatoneEventManager::handlePingResponse(const juce::Midi
 
 FirmwareSupport::Error LumatoneEventManager::handleGetPeripheralChannelResponse(const juce::MidiMessage& midiMessage)
 {
-    auto channelSettings = PeripheralChannelSettings();
-    auto errorCode = midiDriver.unpackGetPeripheralChannelsResponse(midiMessage,
+    auto channelSettings = LumatoneFirmware::PeripheralChannelSettings();
+    auto errorCode = LumatoneSysEx::unpackGetPeripheralChannelsResponse(midiMessage,
         channelSettings.pitchWheel,
         channelSettings.modWheel,
         channelSettings.expressionPedal,
@@ -277,8 +278,8 @@ FirmwareSupport::Error LumatoneEventManager::handleGetPeripheralChannelResponse(
 
 FirmwareSupport::Error LumatoneEventManager::handleGetPresetFlagsResponse(const juce::MidiMessage& midiMessage)
 {
-    auto presetFlags = PresetFlags();
-    auto errorCode = midiDriver.unpackGetPresetFlagsResponse(midiMessage,
+    auto presetFlags = LumatoneFirmware::PresetFlags();
+    auto errorCode = LumatoneSysEx::unpackGetPresetFlagsResponse(midiMessage,
         presetFlags.expressionPedalInverted,
         presetFlags.lightsOnKeystroke,
         presetFlags.polyphonicAftertouch,
@@ -293,7 +294,7 @@ FirmwareSupport::Error LumatoneEventManager::handleGetPresetFlagsResponse(const 
 FirmwareSupport::Error LumatoneEventManager::handleGetExpressionPedalSensitivityResponse(const juce::MidiMessage& midiMessage)
 {
     int sensitivity = 127;
-    auto errorCode = midiDriver.unpackGetExpressionPedalSensitivityResponse(midiMessage, sensitivity);
+    auto errorCode = LumatoneSysEx::unpackGetExpressionPedalSensitivityResponse(midiMessage, sensitivity);
 
     firmwareListeners.call(&LumatoneEditor::FirmwareListener::expressionPedalSensitivityReceived, sensitivity);
 
@@ -303,17 +304,17 @@ FirmwareSupport::Error LumatoneEventManager::handleGetExpressionPedalSensitivity
 FirmwareSupport::Error LumatoneEventManager::handlePeripheralCalibrationData(const juce::MidiMessage& midiMessage)
 {
     int mode = -1;
-    auto errorCode = midiDriver.unpackPeripheralCalibrationMode(midiMessage, mode);
+    auto errorCode = LumatoneSysEx::unpackPeripheralCalibrationMode(midiMessage, mode);
 
     if (errorCode != FirmwareSupport::Error::noError)
         return errorCode;
 
     switch (mode)
     {
-    case PeripheralCalibrationDataMode::ExpressionPedal:
+    case LumatoneFirmware::PeripheralCalibrationDataMode::ExpressionPedal:
         errorCode = handleExpressionPedalCalibrationData(midiMessage);
         break;
-    case PeripheralCalibrationDataMode::PitchAndModWheels:
+    case LumatoneFirmware::PeripheralCalibrationDataMode::PitchAndModWheels:
         errorCode = handleWheelsCalibrationData(midiMessage);
         break;
     default:
@@ -332,7 +333,7 @@ FirmwareSupport::Error LumatoneEventManager::handleExpressionPedalCalibrationDat
     int maxBound = 0;
     bool isValid = false;
 
-    auto errorCode = midiDriver.unpackExpressionPedalCalibrationPayload(midiMessage, minBound, maxBound, isValid);
+    auto errorCode = LumatoneSysEx::unpackExpressionPedalCalibrationPayload(midiMessage, minBound, maxBound, isValid);
 
     firmwareListeners.call(&LumatoneEditor::FirmwareListener::pedalCalibrationDataReceived, minBound, maxBound, isValid);
 
@@ -341,8 +342,8 @@ FirmwareSupport::Error LumatoneEventManager::handleExpressionPedalCalibrationDat
 
 FirmwareSupport::Error LumatoneEventManager::handleWheelsCalibrationData(const juce::MidiMessage& midiMessage)
 {
-    WheelsCalibrationData calibrationData;
-    auto errorCode = midiDriver.unpackWheelsCalibrationPayload(midiMessage,
+    LumatoneFirmware::WheelsCalibrationData calibrationData;
+    auto errorCode = LumatoneSysEx::unpackWheelsCalibrationPayload(midiMessage,
         calibrationData.centerPitch,
         calibrationData.minPitch,
         calibrationData.maxPitch,
@@ -382,27 +383,27 @@ FirmwareSupport::Error LumatoneEventManager::getBufferErrorCode(const juce::uint
 {
     switch (sysExData[MSG_STATUS])
     {
-    case TerpstraMIDIAnswerReturnCode::NACK:  // Not recognized
+    case LumatoneFirmware::ReturnCode::NACK:  // Not recognized
         //errorVisualizer.setErrorLevel(
         //    LumatoneFirmwareDriver::ErrorLevel::error,
         //    "Not Recognized");
         return FirmwareSupport::Error::unknownCommand;
         break;
 
-    case TerpstraMIDIAnswerReturnCode::ACK:  // Acknowledged, OK
+    case LumatoneFirmware::ReturnCode::ACK:  // Acknowledged, OK
         //errorVisualizer.setErrorLevel(
         //    LumatoneFirmwareDriver::ErrorLevel::noError,
         //    "Ack");
         break;
 
-    case TerpstraMIDIAnswerReturnCode::BUSY: // Controller busy
+    case LumatoneFirmware::ReturnCode::BUSY: // Controller busy
         //errorVisualizer.setErrorLevel(
         //    LumatoneFirmwareDriver::ErrorLevel::warning,
         //    "Busy");
         return FirmwareSupport::Error::deviceIsBusy;
         break;
 
-    case TerpstraMIDIAnswerReturnCode::ERROR:    // Error
+    case LumatoneFirmware::ReturnCode::ERROR:    // Error
         //errorVisualizer.setErrorLevel(
         //    LumatoneFirmwareDriver::ErrorLevel::error,
         //    "Error from device");
@@ -460,7 +461,7 @@ FirmwareSupport::Error LumatoneEventManager::handleBufferCommand(const juce::Mid
         return handleSerialIdentityResponse(midiMessage);
 
     case CALIBRATE_PITCH_MOD_WHEEL:
-        firmwareListeners.call(&LumatoneEditor::FirmwareListener::calibratePitchModWheelAnswer, (TerpstraMIDIAnswerReturnCode)sysExData[MSG_STATUS]);
+        firmwareListeners.call(&LumatoneEditor::FirmwareListener::calibratePitchModWheelAnswer, (LumatoneFirmware::ReturnCode)sysExData[MSG_STATUS]);
         return FirmwareSupport::Error::noError;
 
     case GET_LUMATOUCH_CONFIG:
@@ -490,7 +491,7 @@ FirmwareSupport::Error LumatoneEventManager::handleBufferCommand(const juce::Mid
         return FirmwareSupport::Error::noError;
 
     default:
-        jassert(sysExData[MSG_STATUS] == TerpstraMIDIAnswerReturnCode::ACK);
+        jassert(sysExData[MSG_STATUS] == LumatoneFirmware::ReturnCode::ACK);
         if (midiMessage.getRawDataSize() <= 8)
         {
             // Simple confirmation

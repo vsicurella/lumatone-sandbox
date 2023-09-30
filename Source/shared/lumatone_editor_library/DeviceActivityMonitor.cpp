@@ -9,8 +9,9 @@
 */
 
 #include "DeviceActivityMonitor.h"
-//#include "Main.h"
 
+#include "./lumatone_midi_driver/lumatone_midi_driver.h"
+#include "./lumatone_midi_driver/firmware_sysex.h"
 
 DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneApplicationState stateIn)
     :   LumatoneApplicationState("DeviceActivityMonitor", stateIn)
@@ -23,7 +24,7 @@ DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverI
 
 //    midiDriver->addListener(this);
     reset(readBlockSize);
-    midiDriver->addMessageCollector(this);
+    midiDriver->addDriverListener(this);
 
     // avoid resizing during communication
     ensureStorageAllocated(2000);
@@ -32,7 +33,7 @@ DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverI
 
 DeviceActivityMonitor::~DeviceActivityMonitor()
 {
-    midiDriver->removeMessageCollector(this);
+    midiDriver->removeDriverListener(this);
 }
 
 void DeviceActivityMonitor::setDetectDeviceIfDisconnected(bool doDetection)
@@ -200,7 +201,7 @@ void DeviceActivityMonitor::stopMonitoringDevice()
 
 bool DeviceActivityMonitor::initializeConnectionTest()
 {    
-    if (getSerialNumber().isNotEmpty() && getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_9)
+    if (getSerialNumber().isNotEmpty() && getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_9)
     {
         midiDriver->ping(0xf);
     }
@@ -250,7 +251,7 @@ void DeviceActivityMonitor::onSerialIdentityResponse(const juce::MidiMessage& ms
 void DeviceActivityMonitor::onFailedPing(const juce::MidiMessage& msg)
 {
     unsigned int pingId = -1;
-    midiDriver->unpackPingResponse(msg, pingId);
+    LumatoneSysEx::unpackPingResponse(msg, pingId);
     if (pingId >= 0 && pingId < outputDevices.size())
         outputDevices.remove(outputPingIds.indexOf(pingId));
 }
@@ -262,7 +263,7 @@ void DeviceActivityMonitor::onPingResponse(const juce::MidiMessage& msg, int dev
     if (deviceConnectionMode == DetectConnectionMode::lookingForDevice && outputPingIds.size() > 0)
     {
         unsigned int pingId = 0;
-        auto errorCode = midiDriver->unpackPingResponse(msg, pingId);
+        auto errorCode = LumatoneSysEx::unpackPingResponse(msg, pingId);
 
         if (errorCode != FirmwareSupport::Error::noError)
         {
@@ -477,7 +478,7 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
                 break;
             }
 
-            case TerpstraMIDIAnswerReturnCode::ACK:
+            case LumatoneFirmware::ReturnCode::ACK:
             {
                 switch (cmd)
                 {
@@ -511,7 +512,7 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
             }
 
             // Consider a response from a different firmware state as successful
-            case TerpstraMIDIAnswerReturnCode::STATE:
+            case LumatoneFirmware::ReturnCode::STATE:
             {
                 // Find 'off' message if possible
                 //activityResponseReceived();

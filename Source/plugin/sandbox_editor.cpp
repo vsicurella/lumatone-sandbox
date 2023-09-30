@@ -7,6 +7,8 @@
 #include "../shared/game/hex_rings/hex_rings_launcher.h"
 #include "../shared/game/hexagon_automata/hexagon_automata_launcher.h"
 
+#include "../shared/MainComponent.h"
+
 //==============================================================================
 LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxProcessor& p)
     : AudioProcessorEditor (&p), processor (p)

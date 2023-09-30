@@ -13,7 +13,10 @@
 #include "../lumatone_editor_common.h"
 #include "../lumatone_midi_driver/firmware_definitions.h"
 
+typedef LumatoneFirmware::LumatoneKeyType LumatoneKeyType;
+
 // Mapping of one key
+
 class LumatoneKey
 {
 public:

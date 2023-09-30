@@ -3,6 +3,11 @@
 
 #include "sandbox_processor.h"
 
+#include "../shared/SandboxMenu.h"
+
+class MainComponent;
+
+
 //==============================================================================
 class LumatoneSandboxProcessorEditor  : public juce::AudioProcessorEditor
                                       , public juce::ApplicationCommandTarget

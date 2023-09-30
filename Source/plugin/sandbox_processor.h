@@ -1,15 +1,13 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../shared/SandboxMenu.h"
-#include "../shared/MainComponent.h"
 
-#include "../shared/lumatone_editor_library/LumatoneController.h"
-#include "../shared/lumatone_editor_library/DeviceActivityMonitor.h"
-
-#include "../shared/lumatone_editor_library/palettes/palette_library.h"
-
-#include "../shared/game/game_engine.h"
+class LumatoneApplicationState;
+class LumatoneFirmwareDriver;
+class DeviceActivityMonitor;
+class LumatoneController;
+class LumatonePaletteLibrary;
+class LumatoneSandboxGameEngine;
 
 //==============================================================================
 class LumatoneSandboxProcessor  : public juce::AudioProcessor

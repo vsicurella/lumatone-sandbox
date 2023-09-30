@@ -10,6 +10,8 @@
 
 #include "lumatone_state.h"
 
+#include "../lumatone_output_map.h"
+
 juce::Array<juce::Identifier> LumatoneState::getLumatoneStateProperties()
 {
     juce::Array<juce::Identifier> properties;
@@ -23,7 +25,8 @@ juce::Array<juce::Identifier> LumatoneState::getLumatoneStateProperties()
 }
 
 LumatoneState::LumatoneState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManagerIn)
-    : LumatoneStateBase(nameIn), undoManager(undoManagerIn) 
+    : LumatoneStateBase(nameIn)
+    , undoManager(undoManagerIn)
 { 
     state = loadStateProperties(stateIn);
     state.addListener(this);
@@ -72,9 +75,9 @@ void LumatoneState::handleStatePropertyChange(juce::ValueTree stateIn, const juc
     else if (property == LumatoneStateProperty::LastConnectedFirmwareVersion)
     {
         setLumatoneVersion(
-            LumatoneFirmwareVersion((int)stateIn.getProperty(property, (int)LumatoneFirmwareVersion::FUTURE_VERSION))
+            LumatoneFirmware::ReleaseVersion((int)stateIn.getProperty(property, (int)LumatoneFirmware::ReleaseVersion::FUTURE_VERSION))
             );
-        firmwareVersion = FirmwareVersion::fromDeterminedVersion(determinedVersion);
+        firmwareVersion = LumatoneFirmware::Version::fromReleaseVersion(determinedVersion);
     }
     else if (property == LumatoneStateProperty::MappingData)
     {
@@ -118,17 +121,17 @@ void LumatoneState::setConnectedSerialNumber(juce::String serialNumberIn)
 
     if (connectedSerialNumber == SERIAL_55_KEYS)
     {
-        setLumatoneVersion(LumatoneFirmwareVersion::VERSION_55_KEYS);
+        setLumatoneVersion(LumatoneFirmware::ReleaseVersion::VERSION_55_KEYS);
     }
 }
 
-void LumatoneState::setFirmwareVersion(FirmwareVersion& versionIn, bool writeToState)
+void LumatoneState::setFirmwareVersion(LumatoneFirmware::Version& versionIn, bool writeToState)
 {
-    firmwareVersion = FirmwareVersion(versionIn);
-    setLumatoneVersion(firmwareSupport.getLumatoneFirmwareVersion(firmwareVersion), writeToState);
+    firmwareVersion = LumatoneFirmware::Version(versionIn);
+    setLumatoneVersion(firmwareSupport.getReleaseVersion(firmwareVersion), writeToState);
 }
 
-void LumatoneState::setLumatoneVersion(LumatoneFirmwareVersion versionIn, bool writeToState)
+void LumatoneState::setLumatoneVersion(LumatoneFirmware::ReleaseVersion versionIn, bool writeToState)
 {
     determinedVersion = versionIn;
 
@@ -136,7 +139,7 @@ void LumatoneState::setLumatoneVersion(LumatoneFirmwareVersion versionIn, bool w
 
     switch (determinedVersion)
     {
-    case LumatoneFirmwareVersion::VERSION_55_KEYS:
+    case LumatoneFirmware::ReleaseVersion::VERSION_55_KEYS:
         octaveBoardSize = 55;
         break;
     default:
@@ -166,12 +169,12 @@ void LumatoneState::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyH
     }
 }
 
-LumatoneFirmwareVersion LumatoneState::getLumatoneVersion() const
+LumatoneFirmware::ReleaseVersion LumatoneState::getLumatoneVersion() const
 {
     return determinedVersion;
 }
 
-FirmwareVersion LumatoneState::getFirmwareVersion() const
+LumatoneFirmware::Version LumatoneState::getFirmwareVersion() const
 {
     return firmwareVersion;
 }

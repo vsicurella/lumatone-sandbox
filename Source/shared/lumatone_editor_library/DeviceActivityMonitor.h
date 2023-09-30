@@ -17,13 +17,16 @@
 
 #pragma once
 
-#include "LumatoneController.h"
-#include "lumatone_midi_driver/lumatone_midi_driver.h"
+#include "lumatone_midi_driver/firmware_driver_listener.h"
+#include "./data/application_state.h"
+#include "./listeners/status_listener.h"
+
+class LumatoneFirmwareDriver;
 
 class DeviceActivityMonitor : protected LumatoneApplicationState,
                               public juce::Timer, 
                               public LumatoneEditor::StatusEmitter,
-                              protected LumatoneFirmwareDriver::Collector
+                              protected LumatoneFirmwareDriverListener
 {
     
 public:

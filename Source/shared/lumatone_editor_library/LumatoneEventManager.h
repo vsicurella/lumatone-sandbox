@@ -10,13 +10,15 @@
 
 #pragma once
 
-#include "./lumatone_midi_driver/lumatone_midi_driver.h"
+#include "./lumatone_midi_driver/firmware_driver_listener.h"
 #include "listeners/status_listener.h"
 #include "./data/lumatone_midi_state.h"
 
 #include "./listeners/firmware_listener.h"
 
-class LumatoneEventManager : private LumatoneFirmwareDriver::Collector,
+class LumatoneFirmwareDriver;
+
+class LumatoneEventManager : private LumatoneFirmwareDriverListener,
                              public LumatoneMidiState,
                              public LumatoneState,
                              private juce::Timer

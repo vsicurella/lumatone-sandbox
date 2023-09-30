@@ -1,4 +1,5 @@
 #include "key_update_buffer.h"
+#include "./lumatone_midi_driver/lumatone_midi_driver.h"
 
 LumatoneKeyUpdateBuffer::LumatoneKeyUpdateBuffer(LumatoneFirmwareDriver& driverIn, LumatoneState state)
     : firmwareDriver(driverIn)
@@ -111,7 +112,7 @@ void LumatoneKeyUpdateBuffer::timerCallback()
                 if (!currentKey.colourIsEqual(keyUpdate))
                 {
                     auto colour = keyUpdate.colour;
-                    if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
+                    if (getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_11)
                         firmwareDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
                     else
                         firmwareDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() * 0.5f, colour.getGreen() * 0.5f, colour.getBlue() * 0.5f);

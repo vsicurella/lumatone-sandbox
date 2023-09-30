@@ -12,7 +12,7 @@
 
 #include "LumatoneEventManager.h"
 #include "./actions/lumatone_action.h"
-#include "./lumatone_midi_driver/firmware_definitions.h"
+#include "./lumatone_midi_driver/lumatone_midi_driver.h"
 
 LumatoneController::LumatoneController(LumatoneApplicationState state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager)
     : LumatoneApplicationState("LumatoneController", state, undoManager)
@@ -20,7 +20,7 @@ LumatoneController::LumatoneController(LumatoneApplicationState state, LumatoneF
     , firmwareDriver(firmwareDriverIn)
     , updateBuffer(firmwareDriverIn, state)
 {
-    firmwareDriver.addMessageCollector(this);
+    firmwareDriver.addDriverListener(this);
     
     eventManager = std::make_unique<LumatoneEventManager>(firmwareDriver, *this);
     eventManager->addFirmwareListener(this);
@@ -28,7 +28,7 @@ LumatoneController::LumatoneController(LumatoneApplicationState state, LumatoneF
 
 LumatoneController::~LumatoneController()
 {
-    firmwareDriver.removeMessageCollector(this);
+    firmwareDriver.removeDriverListener(this);
 }
 
 juce::ValueTree LumatoneController::loadStateProperties(juce::ValueTree stateIn)
@@ -68,6 +68,26 @@ void LumatoneController::connectionStateChanged(ConnectionState newState)
     }
 
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, newState);
+}
+
+juce::Array<juce::MidiDeviceInfo> LumatoneController::getMidiInputList()
+{
+    return firmwareDriver.getMidiInputList();
+}
+
+juce::Array<juce::MidiDeviceInfo> LumatoneController::getMidiOutputList()
+{
+    return firmwareDriver.getMidiOutputList();
+}
+
+int LumatoneController::getMidiInputIndex() const
+{
+    return firmwareDriver.getMidiInputIndex();
+}
+
+int LumatoneController::getMidiOutputIndex() const
+{
+    return firmwareDriver.getMidiOutputIndex();
 }
 
 void LumatoneController::setMidiInput(int deviceIndex, bool test)
@@ -194,7 +214,7 @@ unsigned int LumatoneController::sendTestMessageToDevice(int deviceIndex, unsign
         ? deviceIndex
         : pingId &= 0xFFFFFFF;
 
-    if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_9)
+    if (getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_9)
     {
         firmwareDriver.ping(value, deviceIndex);
     }
@@ -216,7 +236,7 @@ void LumatoneController::testCurrentDeviceConnection()
     {
         waitingForTestResponse = true;
 
-        if (getSerialNumber().isNotEmpty() && getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_9)
+        if (getSerialNumber().isNotEmpty() && getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_9)
         {
             pingLumatone(0xf);
         }
@@ -308,7 +328,7 @@ void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const Lumatone
 
 void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners, bool bufferKeyUpdates)
 {
-    // if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
+    // if (getLumatoneVersion() >= ReleaseVersion::VERSION_1_0_11)
     //     firmwareDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
     // else
     //     firmwareDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
@@ -317,7 +337,7 @@ void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, juce::Co
         updateBuffer.sendKeyColourConfig(boardId, keyIndex, colour);
     else
     {
-        if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
+        if (getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_11)
             firmwareDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
         else
             firmwareDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
@@ -355,7 +375,7 @@ void LumatoneController::sendInvertFootController(bool value)
 void LumatoneController::sendMacroButtonActiveColour(juce::String colourAsString)
 {
     auto c = juce::Colour::fromString(colourAsString);
-    if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
+    if (getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_11)
         firmwareDriver.sendMacroButtonActiveColour(c.getRed(), c.getGreen(), c.getBlue());
     else
         firmwareDriver.sendMacroButtonActiveColour_Version_1_0_0(c.getRed(), c.getGreen(), c.getBlue());
@@ -366,7 +386,7 @@ void LumatoneController::sendMacroButtonActiveColour(juce::String colourAsString
 void LumatoneController::sendMacroButtonInactiveColour(juce::String colourAsString)
 {
     auto c = juce::Colour::fromString(colourAsString);
-    if (getLumatoneVersion() >= LumatoneFirmwareVersion::VERSION_1_0_11)
+    if (getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_11)
         firmwareDriver.sendMacroButtonInactiveColour(c.getRed(), c.getGreen(), c.getBlue());
     else
         firmwareDriver.sendMacroButtonInactiveColour_Version_1_0_0(c.getRed(), c.getGreen(), c.getBlue());
@@ -542,7 +562,7 @@ void LumatoneController::setPeripheralChannels(int pitchWheelChannel, int modWhe
         firmwareDriver.setPeripheralChannels(pitchWheelChannel, modWheelChannel, expressionChannel, sustainChannel);
 }
 
-void LumatoneController::setPeripheralChannels(PeripheralChannelSettings channelSettings)
+void LumatoneController::setPeripheralChannels(LumatoneFirmware::PeripheralChannelSettings channelSettings)
 {
     setPeripheralChannels(channelSettings.pitchWheel, channelSettings.modWheel, channelSettings.expressionPedal, channelSettings.sustainPedal);
 }
@@ -588,6 +608,11 @@ void LumatoneController::requestExpressionPedalSensitivity()
 {
     if (firmwareSupport.versionAcknowledgesCommand(getLumatoneVersion(), GET_EXPRESSION_PEDAL_SENSITIVIY))
         firmwareDriver.sendGetExpressionPedalSensitivity();
+}
+
+bool LumatoneController::connectionConfirmed() const
+{
+    return firmwareDriver.hasDevicesDefined() && currentDevicePairConfirmed;
 }
 
 void LumatoneController::onConnectionConfirmed()
@@ -636,7 +661,7 @@ void LumatoneController::serialIdentityReceived(const int* serialBytes)
     }
 }
 
-void LumatoneController::firmwareRevisionReceived(FirmwareVersion version)
+void LumatoneController::firmwareRevisionReceived(LumatoneFirmware::Version version)
 {
     setFirmwareVersion(version, true);
 }

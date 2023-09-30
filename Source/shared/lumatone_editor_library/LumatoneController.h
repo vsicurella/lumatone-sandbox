@@ -48,11 +48,11 @@ public:
 
     const FirmwareSupport& getFirmwareSupport() const { return firmwareSupport; }
 
-    juce::Array<juce::MidiDeviceInfo> getMidiInputList() { return firmwareDriver.getMidiInputList(); }
-    juce::Array<juce::MidiDeviceInfo> getMidiOutputList() { return firmwareDriver.getMidiOutputList(); }
+    juce::Array<juce::MidiDeviceInfo> getMidiInputList();
+    juce::Array<juce::MidiDeviceInfo> getMidiOutputList();
 
-    int getMidiInputIndex() const { return firmwareDriver.getMidiInputIndex(); }
-    int getMidiOutputIndex() const { return firmwareDriver.getMidiOutputIndex(); }
+    int getMidiInputIndex() const;
+    int getMidiOutputIndex() const;
 
     void setMidiInput(int deviceIndex, bool test = true);
     void setMidiOutput(int deviceIndex, bool test = true);
@@ -61,7 +61,7 @@ public:
     bool performAction(LumatoneAction* action, bool undoable = true, bool newTransaction = true);
 
 private:
-    bool connectionConfirmed() const { return firmwareDriver.hasDevicesDefined() && currentDevicePairConfirmed; }
+    bool connectionConfirmed() const; 
     void onConnectionConfirmed();
 
 public:
@@ -198,7 +198,7 @@ public:
 
     // Set MIDI Channels of peripheral controllers, pitch & mod wheels, expression & sustain pedals
     void setPeripheralChannels(int pitchWheelChannel, int modWheelChannel, int expressionChannel, int sustainChannel);
-    void setPeripheralChannels(PeripheralChannelSettings channelSettings);
+    void setPeripheralChannels(LumatoneFirmware::PeripheralChannelSettings channelSettings);
 
     // Get MIDI Channels of peripheral controllers, pitch & mod wheels, expression & sustain pedals
     void getPeripheralChannels();
@@ -226,7 +226,7 @@ protected:
 
     void serialIdentityReceived(const int* serialBytes) override;
 
-    void firmwareRevisionReceived(FirmwareVersion version) override;
+    void firmwareRevisionReceived(LumatoneFirmware::Version version) override;
 
     void pingResponseReceived(unsigned int pingValue) override;
 

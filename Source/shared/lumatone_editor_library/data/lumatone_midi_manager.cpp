@@ -2,17 +2,19 @@
 #include "./application_state.h"
 #include "../listeners/midi_listener.h"
 
+#include "../lumatone_midi_driver/lumatone_midi_driver.h"
+
 LumatoneApplicationMidiController::LumatoneApplicationMidiController(LumatoneApplicationState stateIn, LumatoneFirmwareDriver& firmwareDriverIn)
     : appState("LumatoneApplicationMidiController", stateIn)
     , firmwareDriver(firmwareDriverIn)
 {
-    firmwareDriver.addMessageCollector(this);
+    firmwareDriver.addDriverListener(this);
 }
 
 LumatoneApplicationMidiController::~LumatoneApplicationMidiController()
 {
     listeners.clear();
-    firmwareDriver.removeMessageCollector(this);
+    firmwareDriver.removeDriverListener(this);
 }
 
 void LumatoneApplicationMidiController::sendMidiMessage(const juce::MidiMessage msg)

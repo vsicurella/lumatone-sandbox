@@ -13,9 +13,9 @@
 #include "state_base.h"
 #include "lumatone_layout.h"
 
-#include "../lumatone_midi_driver/firmware_definitions.h"
-#include "../lumatone_output_map.h"
+#include "../lumatone_midi_driver/firmware_support.h"
 
+class LumatoneOutputMap;
 
 
 namespace LumatoneStateProperty
@@ -43,8 +43,8 @@ public:
 
     virtual ~LumatoneState();
 
-    LumatoneFirmwareVersion getLumatoneVersion() const;
-    FirmwareVersion getFirmwareVersion() const;
+    LumatoneFirmware::ReleaseVersion getLumatoneVersion() const;
+    LumatoneFirmware::Version getFirmwareVersion() const;
 
     juce::String getSerialNumber() const;
 
@@ -72,9 +72,9 @@ public:
 protected:
 
     void setConnectedSerialNumber(juce::String serialNumberIn);
-    void setFirmwareVersion(FirmwareVersion& versionIn, bool writeToState=false);
+    void setFirmwareVersion(LumatoneFirmware::Version& versionIn, bool writeToState=false);
 
-    void setLumatoneVersion(LumatoneFirmwareVersion versionIn, bool writeToState=false);
+    void setLumatoneVersion(LumatoneFirmware::ReleaseVersion versionIn, bool writeToState=false);
 
     void setInvertExpression(bool invert);
     void setInvertSustain(bool invert);
@@ -110,9 +110,9 @@ private:
     juce::uint8     expressionSensitivity = 0;
 
     juce::String                connectedSerialNumber = juce::String();
-    LumatoneFirmwareVersion     determinedVersion = LumatoneFirmwareVersion::NO_VERSION;
-    FirmwareVersion             firmwareVersion = { 0, 0, 0 };
-    FirmwareVersion             incomingVersion = { 0, 0, 0 };
+    LumatoneFirmware::ReleaseVersion     determinedVersion;
+    LumatoneFirmware::Version             firmwareVersion;
+    LumatoneFirmware::Version             incomingVersion;
 
     int                         numBoards = 5;
     int                         octaveBoardSize = 56;
