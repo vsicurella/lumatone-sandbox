@@ -77,6 +77,8 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LumatoneSandboxProcessor)
 
+    bool isStandalone = false;
+    
     std::unique_ptr<juce::UndoManager> undoManager;
     std::unique_ptr<juce::ApplicationCommandManager> commandManager;
 

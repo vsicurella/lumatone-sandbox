@@ -26,11 +26,12 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
 
     paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
 
-    auto hostMode = (juce::PluginHostType::getPluginLoadedAs() == AudioProcessor::wrapperType_Standalone)
-        ? LumatoneFirmwareDriver::HostMode::Driver
-        : LumatoneFirmwareDriver::HostMode::Plugin;
+    isStandalone = (juce::PluginHostType::getPluginLoadedAs() == AudioProcessor::wrapperType_Standalone);
 
-    midiDriver = std::make_unique<LumatoneFirmwareDriver>(hostMode);
+    midiDriver = std::make_unique<LumatoneFirmwareDriver>(isStandalone
+               ? LumatoneFirmwareDriver::HostMode::Driver
+               : LumatoneFirmwareDriver::HostMode::Plugin);
+
     controller = std::make_unique<LumatoneController>(*appState, *midiDriver, undoManager.get());
 
     monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), (LumatoneApplicationState)*controller.get()); 
@@ -170,11 +171,8 @@ void LumatoneSandboxProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-    }
+    if (isStandalone)
+        return;
 
     for (auto msg : midiMessages)
     {
