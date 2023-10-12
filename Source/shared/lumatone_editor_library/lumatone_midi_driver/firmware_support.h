@@ -33,7 +33,7 @@ struct FirmwareSupport
         commandNotImplemented
 	};
 
-	juce::String errorToString(Error err)
+	static juce::String errorToString(Error err)
 	{
 		switch (err)
 		{
@@ -70,7 +70,7 @@ struct FirmwareSupport
 		}
 	}
 
-	LumatoneFirmware::ReleaseVersion getReleaseVersion(LumatoneFirmware::Version versionIn)
+	static LumatoneFirmware::ReleaseVersion getReleaseVersion(LumatoneFirmware::Version versionIn)
 	{
 		if (!(versionIn.major | versionIn.minor | versionIn.revision))
 			return LumatoneFirmware::ReleaseVersion::VERSION_55_KEYS;
@@ -120,7 +120,7 @@ struct FirmwareSupport
 
 	// TODO use map instead
 	// Returns the lowest version that will return ACK for a given command
-	LumatoneFirmware::ReleaseVersion getLowestVersionAcknowledged(unsigned int CMD)
+	static LumatoneFirmware::ReleaseVersion getLowestVersionAcknowledged(unsigned int CMD)
 	{
 		if (CMD < CHANGE_KEY_NOTE) // 0x00
 			return LumatoneFirmware::ReleaseVersion::UNKNOWN_VERSION;
@@ -156,19 +156,19 @@ struct FirmwareSupport
 			return LumatoneFirmware::ReleaseVersion::FUTURE_VERSION;
 	}
 
-	bool versionAcknowledgesCommand(LumatoneFirmware::ReleaseVersion VERSION, unsigned int CMD)
+	static bool versionAcknowledgesCommand(LumatoneFirmware::ReleaseVersion VERSION, unsigned int CMD)
 	{
 		return getLowestVersionAcknowledged(CMD) <= VERSION;
 	}
 
-	bool versionAcknowledgesCommand(LumatoneFirmware::Version versionIn, unsigned int CMD)
+	static bool versionAcknowledgesCommand(LumatoneFirmware::Version versionIn, unsigned int CMD)
 	{
 		auto VERSION = getReleaseVersion(versionIn);
 		return versionAcknowledgesCommand(VERSION, CMD);
 	}
 
 	// Should always be 56 in production
-	int getOctaveSize(LumatoneFirmware::ReleaseVersion VERSION)
+	static int getOctaveSize(LumatoneFirmware::ReleaseVersion VERSION)
 	{
 		if (VERSION >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_3)
 			return 56;
@@ -176,12 +176,12 @@ struct FirmwareSupport
 			return 55;
 	}
 
-	int getCommandNumber(const juce::MidiMessage& msg)
+	static int getCommandNumber(const juce::MidiMessage& msg)
 	{
 		return msg.getSysExData()[CMD_ID];
 	}
     
-    juce::String serialIdentityToString(const int* serialBytes)
+    static juce::String serialIdentityToString(const int* serialBytes)
     {
         return juce::String::toHexString(serialBytes, 6);
     }
