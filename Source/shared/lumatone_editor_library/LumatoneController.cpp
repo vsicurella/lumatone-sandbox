@@ -619,6 +619,7 @@ void LumatoneController::onConnectionConfirmed()
 {
     waitingForTestResponse = false;
     currentDevicePairConfirmed = true;
+    waitingForFirmwareVersion = true;
 
     if (getSerialNumber().isEmpty())
     {
@@ -631,7 +632,6 @@ void LumatoneController::onConnectionConfirmed()
     }
 
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::ONLINE);
-    sendGetCompleteMappingRequest();
 }
 
 bool LumatoneController::loadLayoutFromFile(const juce::File& file)
@@ -645,6 +645,16 @@ bool LumatoneController::loadLayoutFromFile(const juce::File& file)
     return loaded;
 }
 
+void LumatoneController::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
+{
+    LumatoneApplicationState::handleStatePropertyChange(stateIn, property);
+
+    if (waitingForFirmwareVersion && property == LumatoneStateProperty::LastConnectedFirmwareVersion)
+    {
+        waitingForFirmwareVersion = false;
+        sendGetCompleteMappingRequest();
+    }
+}
 
 // LumatoneEditor::FirmwareListener Implementation
 
@@ -655,15 +665,21 @@ void LumatoneController::serialIdentityReceived(const int* serialBytes)
 
     setConnectedSerialNumber(serialNumber);
 
-    if (waitingForTestResponse && serialNumber != SERIAL_55_KEYS)
+    if (waitingForTestResponse)
     {
-        onConnectionConfirmed();
+        if (serialNumber != SERIAL_55_KEYS)
+            sendGetFirmwareRevisionRequest();
+        else
+            onConnectionConfirmed();
     }
 }
 
 void LumatoneController::firmwareRevisionReceived(LumatoneFirmware::Version version)
 {
-    setFirmwareVersion(version, true);
+    // setFirmwareVersion(version, true);
+    
+    if (waitingForTestResponse)
+        onConnectionConfirmed();
 }
 
 void LumatoneController::pingResponseReceived(unsigned int pingValue)

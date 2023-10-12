@@ -232,8 +232,9 @@ FirmwareSupport::Error LumatoneEventManager::handleFirmwareRevisionResponse(cons
         return errorCode;
 
     auto version = LumatoneFirmware::Version(major, minor, revision);
-    DBG("Firmware version is: " + version.toString());
+    setLumatoneVersion(getFirmwareSupport().getReleaseVersion(version), true);
 
+    DBG("Firmware version is: " + version.toString());
     firmwareListeners.call(&LumatoneEditor::FirmwareListener::firmwareRevisionReceived, version);
 
     return FirmwareSupport::Error::noError;

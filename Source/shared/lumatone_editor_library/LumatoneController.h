@@ -61,7 +61,7 @@ public:
     bool performAction(LumatoneAction* action, bool undoable = true, bool newTransaction = true);
 
 private:
-    bool connectionConfirmed() const; 
+    bool connectionConfirmed() const;
     void onConnectionConfirmed();
 
 public:
@@ -220,6 +220,11 @@ public:
 
     bool loadLayoutFromFile(const juce::File& file) override;
 
+private:
+    // juce::ValueTree::Listener implementation
+
+    void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
+
 protected:
     //============================================================================
     // LumatoneEditor::FirmwareListener implementation
@@ -249,4 +254,5 @@ private:
 
     bool    waitingForTestResponse      = false;
     bool    currentDevicePairConfirmed  = false;
+    bool    waitingForFirmwareVersion   = false;
 };
