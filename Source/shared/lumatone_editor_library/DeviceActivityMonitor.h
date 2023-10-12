@@ -88,7 +88,7 @@ private:
     /// If a MIDI device identifier is defined in properties, send a GetSerialIdentity to it.
     /// Returns whether or not a test response was sent
     /// </summary>
-    bool testLastConnectedDevice();
+    // bool testLastConnectedDevice();
 
     /// <summary>
     /// Prepares to ping devices by refreshing available devices, opening them, and starting pinging routine

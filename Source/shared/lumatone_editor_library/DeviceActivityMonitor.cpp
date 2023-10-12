@@ -65,6 +65,8 @@ void DeviceActivityMonitor::setCheckForInactivity(bool monitorActivity)
 
 void DeviceActivityMonitor::pingAllDevices()
 {
+    DBG("Ping all devices!");
+
     deviceDetectInProgress = true;
 
     outputDevices = midiDriver->getMidiOutputList();
@@ -74,6 +76,9 @@ void DeviceActivityMonitor::pingAllDevices()
     waitingForResponse = true;
 
     int maxDevices = juce::jmin(outputDevices.size(), 128);
+    if (midiDriver->getHostMode() == LumatoneFirmwareDriver::HostMode::Plugin)
+        maxDevices = 1;
+
     for (int i = 0; i < maxDevices; i++)
     {
         unsigned int id = (unsigned int)i + 1;
@@ -84,35 +89,35 @@ void DeviceActivityMonitor::pingAllDevices()
     startTimer(responseTimeoutMs);
 }
 
-bool DeviceActivityMonitor::testLastConnectedDevice()
-{
-    juce::String inputId = getStringProperty(LumatoneApplicationProperty::LastInputDeviceId);
-    if (inputId.length() <= 0)
-        return false;
+// bool DeviceActivityMonitor::testLastConnectedDevice()
+// {
+//     juce::String inputId = getStringProperty(LumatoneApplicationProperty::LastInputDeviceId);
+//     if (inputId.length() <= 0)
+//         return false;
 
-    int inputIndex = midiDriver->findIndexOfInputDevice(inputId);
-    if (inputIndex >= 0)
-    {
-        juce::String outputId = getStringProperty(LumatoneApplicationProperty::LastOutputDeviceId);
-        if (outputId.length() <= 0)
-            return false;
+//     int inputIndex = midiDriver->findIndexOfInputDevice(inputId);
+//     if (inputIndex >= 0)
+//     {
+//         juce::String outputId = getStringProperty(LumatoneApplicationProperty::LastOutputDeviceId);
+//         if (outputId.length() <= 0)
+//             return false;
         
-        int outputIndex = midiDriver->findIndexOfOutputDevice(outputId);
-        if (outputIndex >= 0)
-        {
-            deviceDetectInProgress = true;
-            waitingForResponse = true;
+//         int outputIndex = midiDriver->findIndexOfOutputDevice(outputId);
+//         if (outputIndex >= 0)
+//         {
+//             deviceDetectInProgress = true;
+//             waitingForResponse = true;
 
-            DBG("Testing last connected device");
-            midiDriver->setMidiInput(inputIndex);
-            midiDriver->setMidiOutput(outputIndex);
-            midiDriver->sendGetSerialIdentityRequest();
-            return true;
-        }
-    }
+//             DBG("Testing last connected device");
+//             midiDriver->setMidiInput(inputIndex);
+//             midiDriver->setMidiOutput(outputIndex);
+//             midiDriver->sendGetSerialIdentityRequest();
+//             return true;
+//         }
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
 void DeviceActivityMonitor::startIndividualDetection()
 {
@@ -137,30 +142,40 @@ void DeviceActivityMonitor::startIndividualDetection()
 
 void DeviceActivityMonitor::testNextOutput()
 {
-    testOutputIndex++;
 
-    if (testOutputIndex >= 0 && testOutputIndex < outputDevices.size()) 
+    if (midiDriver->getHostMode() == LumatoneFirmwareDriver::HostMode::Driver)
     {
-        DBG("Testing " + outputDevices[testOutputIndex].name);
-        if (sendCalibratePitchModOff)
-            midiDriver->sendCalibratePitchModWheel(false, testOutputIndex);
-        else
-            midiDriver->sendGetSerialIdentityRequest(testOutputIndex);
-        
-        waitingForResponse = true;
-        startTimer(responseTimeoutMs);
+        testOutputIndex++;
+        if (testOutputIndex < 0 || testOutputIndex >= outputDevices.size())
+        {
+            // Start over
+            startTimer(10);
+        }
     }
-    // failed
+
+    #if JUCE_DEBUG
+        juce::String deviceName = midiDriver->getHostMode() == LumatoneFirmwareDriver::HostMode::Driver ? outputDevices[testOutputIndex].name : "Host";
+        juce::String command = sendCalibratePitchModOff ? "Calibrate" : "GetSerial";
+        DBG("Test via " + command + ": " + deviceName);
+    #endif
+
+    if (sendCalibratePitchModOff)
+    {
+        midiDriver->sendCalibratePitchModWheel(false, testOutputIndex);
+    }
     else
     {
-        startTimer(10);
+        midiDriver->sendGetSerialIdentityRequest(testOutputIndex);
     }
+    
+    waitingForResponse = true;
+    startTimer(responseTimeoutMs);
 }
 
 void DeviceActivityMonitor::startDeviceDetection()
 {
-    if (midiDriver->getHostMode() != LumatoneFirmwareDriver::HostMode::Driver)
-        return; // Only allow in Driver mode
+    // if (midiDriver->getHostMode() != LumatoneFirmwareDriver::HostMode::Driver)
+    //     return; // Only allow in Driver mode
         
     // Belongs somewhere else?
     if (!midiDriver->hasDevicesDefined())
@@ -201,19 +216,24 @@ void DeviceActivityMonitor::stopMonitoringDevice()
 
 bool DeviceActivityMonitor::initializeConnectionTest()
 {    
-    if (getSerialNumber().isNotEmpty() && getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_9)
+    bool isIdle = !midiDriver->isWaitingForResponse();
+    if (isIdle)
     {
-        midiDriver->ping(0xf);
+        if (getSerialNumber().isNotEmpty() && getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_9)
+        {
+            midiDriver->ping(0xf);
+        }
+
+        else
+        {
+            midiDriver->sendGetSerialIdentityRequest();
+        }
+
+        waitingForResponse = true;
     }
 
-    else
-    {
-        midiDriver->sendGetSerialIdentityRequest();
-    }
-
-    waitingForResponse = true;
     startTimer(inactivityTimeoutMs);
-    return true;
+    return isIdle;
 }
 
 
@@ -314,6 +334,32 @@ void DeviceActivityMonitor::checkDetectionStatus()
     {
         activityResponseReceived();
     }
+    else if (midiDriver->getHostMode() == LumatoneFirmwareDriver::HostMode::Plugin)
+    {
+        if (deviceDetectInProgress)
+        {
+            DBG("Detect device timeout.");
+            deviceDetectInProgress = false;
+            waitingForResponse = false;
+            startTimer(detectRoutineTimeoutMs);
+            statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
+        }
+        else
+        {
+            deviceDetectInProgress = true;
+            if (sendCalibratePitchModOff)
+            {
+                midiDriver->sendCalibratePitchModWheel(false, testOutputIndex);
+            }
+            else
+            {
+                midiDriver->sendGetSerialIdentityRequest(testOutputIndex);
+            }
+
+            waitingForResponse = true;
+            startTimer(responseTimeoutMs);
+        }
+    }
     else
     {
         if (deviceDetectInProgress)
@@ -398,14 +444,6 @@ void DeviceActivityMonitor::timerCallback()
 
     case DetectConnectionMode::noDeviceMonitoring:
     case DetectConnectionMode::waitingForInactivity:
-        #if JUCE_DEBUG
-        {
-            bool estab = isConnectionEstablished();
-            bool devdef = midiDriver->hasDevicesDefined();
-            jassert(estab && devdef);
-        }
-        #endif
-
         if (!checkConnectionOnInactivity)
         {
             stopMonitoringDevice();
@@ -427,7 +465,7 @@ void DeviceActivityMonitor::timerCallback()
         }
         else
         {
-            DBG("waiting for test response...");
+            DBG("DAM: testing connection...");
         }
 
         break;
@@ -456,11 +494,12 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
             // Skip echos, or mark as a failed ping
             case TEST_ECHO:
             {
+                DBG("DAM ignoring feedback from device " + juce::String(inputDeviceIndex) + " with message: " + msg.getDescription());
+
                 switch (cmd)
                 {
                 case LUMA_PING:
                 {
-                    DBG("Ignoring Ping Echo");
                     onFailedPing(msg);
                     break;
                 }
@@ -468,7 +507,6 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
                     break;
 
                 case GET_FIRMWARE_REVISION:
-                    DBG("Ignoring Firmware Echo");
                     // activityResponseReceived();
                     break;
 
@@ -522,6 +560,7 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
         // Edge case if we're disconnected but get a response
         else if (!isConnectionEstablished())
         {
+            DBG("DAM Confirming device " + juce::String(inputDeviceIndex) + " with message: " + msg.getDescription());
             connectionEstablished(midiDriver->getMidiInputIndex(), midiDriver->getMidiOutputIndex());
         }
         else
@@ -538,6 +577,7 @@ void DeviceActivityMonitor::handleMessageQueue(const juce::MidiBuffer& readBuffe
     for (auto event : readBuffer)
     {
         auto msg = event.getMessage();
+        DBG("DAMR: " + msg.getDescription());
         handleResponse(devices[smpl], msg);
         smpl++;
     }
@@ -564,7 +604,7 @@ void DeviceActivityMonitor::midiMessageReceived(juce::MidiInput* source, const j
 void DeviceActivityMonitor::noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage)
 {
     stopTimer();
-    
+
     if (waitingForResponse && deviceConnectionMode < DetectConnectionMode::noDeviceMonitoring)
     {
         waitingForResponse = false;
@@ -625,14 +665,16 @@ void DeviceActivityMonitor::connectionEstablished(int inputIndex, int outputInde
     outputPingIds.clear();
     stopTimer();
 
-    midiDriver->setMidiInput(inputIndex);
-    midiDriver->setMidiOutput(outputIndex);
+    if (midiDriver->getHostMode() == LumatoneFirmwareDriver::HostMode::Driver)
+    {
+        midiDriver->setMidiInput(inputIndex);
+        midiDriver->setMidiOutput(outputIndex);
 
-    confirmedInputIndex = inputIndex;
-    confirmedOutputIndex = outputIndex;
+        confirmedInputIndex = inputIndex;
+        confirmedOutputIndex = outputIndex;
+    }
 
     statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::ONLINE);
-
 
     if (checkConnectionOnInactivity)
     {
