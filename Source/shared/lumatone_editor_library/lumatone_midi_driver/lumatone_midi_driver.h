@@ -54,7 +54,8 @@ private:
 	enum class TimerType
 	{
 		waitForAnswer,
-		delayWhileDeviceBusy
+		delayWhileDeviceBusy,
+		checkQueue
 	};
 
 public:
@@ -88,6 +89,8 @@ public:
 	void readNextBuffer(juce::MidiBuffer& nextBuffer);
 
 	void restrictToRequestMessages(bool testMessagesOnly) { onlySendRequestMessages = testMessagesOnly; }
+
+	bool isWaitingForResponse() const { return hasMsgWaitingForAck; }
 
 	// Low-level send MIDI message in a host dependent way
 	void sendMessageNow(const juce::MidiMessage& msg);
@@ -348,13 +351,16 @@ public:
 	// Handle timeout
 	void timerCallback() override;
 
+
+	//============================================================================
+
 	// Clear MIDI message buffer
 	void clearMIDIMessageBuffer();
 
 private:
 
 	// Send a message now without confirming it's a Lumatone
-	void sendTestMessageNow(int outputDeviceIndex, const  juce::MidiMessage& message);
+	void sendTestMessageNow(int outputDeviceIndex, const juce::MidiMessage& message);
 
 	// Low-level SysEx message sending
 	void sendMessageWithAcknowledge(const juce::MidiMessage& message);
@@ -381,11 +387,14 @@ protected:
 private:
 
 	HostMode hostMode;
+	juce::PluginHostType host;
 
-	juce::Array<juce::MidiMessage, juce::CriticalSection> nextBufferQueue;
+	juce::CriticalSection hostLock;
+	juce::MidiBuffer hostQueue;
+	int hostQueueSize = 0;
 
-    juce::MidiMessage currentMsgWaitingForAck;    // std::optional would be the object of choice,once that is available...
-	bool hasMsgWaitingForAck = false;       // will be obsolete when std::optional is available
+    juce::MidiMessage currentMsgWaitingForAck;
+	bool hasMsgWaitingForAck = false;
 
 	juce::Array<juce::MidiMessage, juce::CriticalSection> sysexQueue;
 
@@ -396,7 +405,10 @@ private:
 
 	const int receiveTimeoutInMilliseconds = 2000;
 	const int busyTimeDelayInMilliseconds = 500;
+	const int checkQueueTimerDelayInMilliseconds = 10;
 	TimerType timerType;
+
+	bool receivedAnswer = false; // Debug helper flag
 
 	int verbose = 0;
 };

@@ -47,19 +47,13 @@ void LumatoneFirmwareDriver::removeDriverListener(LumatoneFirmwareDriverListener
 
 void LumatoneFirmwareDriver::readNextBuffer(juce::MidiBuffer &nextBuffer)
 {
-    juce::ScopedLock l(nextBufferQueue.getLock());
-
-    for (int i = 0; i < nextBufferQueue.size(); i++)
+    juce::ScopedTryLock l(hostLock);
+    if (l.isLocked())
     {
-        auto msg = nextBufferQueue[i];
-        if (!nextBuffer.addEvent(msg, i))
-        {
-            DBG("ERROR ADDING MESSAGE");
-            jassertfalse;
-        }
+        nextBuffer.swapWith(hostQueue);
+        hostQueue.clear();
+        hostQueueSize = 0;
     }
-
-    nextBufferQueue.clear();
 }
 
 void LumatoneFirmwareDriver::sendMessageNow(const juce::MidiMessage &msg)
@@ -71,8 +65,8 @@ void LumatoneFirmwareDriver::sendMessageNow(const juce::MidiMessage &msg)
         break;
     case HostMode::Plugin:
     {
-        juce::ScopedLock l(nextBufferQueue.getLock());
-        nextBufferQueue.add(msg); 
+        juce::ScopedLock l(hostLock);
+        hostQueue.addEvent(msg, hostQueueSize++);
     }
     break;
     }
@@ -129,7 +123,7 @@ Single (mid-level) commands, firmware specific
 // CMD 00h: Send a single key's functionctional configuration
 void LumatoneFirmwareDriver::sendKeyFunctionParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 noteOrCCNum, juce::uint8 midiChannel, juce::uint8 keyType, bool faderUpIsNull)
 {
-    DBG("SEND KEY FUNCTION REQUESTED " + juce::String(boardIndex) + "," + juce::String(keyIndex));
+    // DBG("SEND KEY FUNCTION REQUESTED " + juce::String(boardIndex) + "," + juce::String(keyIndex));
     // boardIndex is expected 1-based
     jassert(boardIndex > 0 && boardIndex <= numBoards);
     jassert(midiChannel > 0 && midiChannel <= 16);
@@ -144,7 +138,7 @@ void LumatoneFirmwareDriver::sendKeyFunctionParameters(juce::uint8 boardIndex, j
 // CMD 01h: Send a single key's LED channel intensities
 void LumatoneFirmwareDriver::sendKeyLightParameters(juce::uint8 boardIndex, juce::uint8 keyIndex, juce::uint8 red, juce::uint8 green, juce::uint8 blue)
 {
-    DBG("SEND KEY COLOUR REQUESTED " + juce::String(boardIndex) + "," + juce::String(keyIndex));
+    // DBG("SEND KEY COLOUR REQUESTED " + juce::String(boardIndex) + "," + juce::String(keyIndex));
 
     juce::MidiMessage msg = LumatoneSysEx::createExtendedKeyColourSysEx(boardIndex, SET_KEY_COLOUR, keyIndex, red, green, blue);
 
@@ -827,31 +821,24 @@ void LumatoneFirmwareDriver::sendMessageWithAcknowledge(const juce::MidiMessage 
         }
     }
 
-//    jassert(midiInput != nullptr);
     if (hostMode == HostMode::Driver && getMidiInputIndex() < 0)
     {
         DBG("No juce::MidiInput open to send message to.");
-//        sendMessageNow(message);
-
-	    // Notify listeners
-		// const juce::MessageManagerLock mmLock;
-		// this->listeners.call(&Listener::midiMessageSent, message);
-//        notifyMessageSent(midiOutput, message);
+        // notifyMessageSent(midiOutput, message);
     }
     else
     {
         // Add message to queue first. The oldest message in queue will be sent.
-		{
+        {
             juce::ScopedLock l(sysexQueue.getLock());
 			sysexQueue.add(message);
-			// const juce::MessageManagerLock mmLock;
-			// this->listeners.call(&Listener::midiSendQueueSize, sysexQueue.size());
             notifySendQueueSize();
-		}
+        }
 
         // If there is no message waiting for acknowledge: send oldest message of queue
-       	if (!isTimerRunning() && !hasMsgWaitingForAck)
+       	if (timerType == TimerType::checkQueue || !hasMsgWaitingForAck)
         {
+            stopTimer();
             sendOldestMessageInQueue();
         }
     }
@@ -859,21 +846,24 @@ void LumatoneFirmwareDriver::sendMessageWithAcknowledge(const juce::MidiMessage 
 
 void LumatoneFirmwareDriver::sendOldestMessageInQueue()
 {
-    if (!sysexQueue.isEmpty())
+    if (sysexQueue.isEmpty())
+        return;
+
+    // jassert(timerType == TimerType::checkQueue);
+    jassert(!isTimerRunning());
+    jassert(!hasMsgWaitingForAck);
+
+    currentMsgWaitingForAck = sysexQueue[0];     // oldest element in buffer
+    hasMsgWaitingForAck = true;
+    receivedAnswer = false;
+
     {
-        jassert(!isTimerRunning());
-        jassert(!hasMsgWaitingForAck);
-
-        currentMsgWaitingForAck = sysexQueue[0];     // oldest element in buffer
-        hasMsgWaitingForAck = true;
-		sysexQueue.remove(0);                        // remove from buffer
-        
-        // const juce::MessageManagerLock mmLock;
-        // this->listeners.call(&Listener::midiSendQueueSize, sysexQueue.size());
-        notifySendQueueSize();
-
-        sendCurrentMessage();
+        juce::ScopedLock l(sysexQueue.getLock());
+        sysexQueue.remove(0);                        // remove from buffer
     }
+    
+    notifySendQueueSize();
+    sendCurrentMessage();
 }
 
 void LumatoneFirmwareDriver::sendCurrentMessage()
@@ -881,14 +871,14 @@ void LumatoneFirmwareDriver::sendCurrentMessage()
     jassert(!isTimerRunning());
     jassert(hasMsgWaitingForAck);
 
-#if JUCE_DEBUG
-    if (currentMsgWaitingForAck.isSysEx())
-    {
-        auto sysExData = currentMsgWaitingForAck.getSysExData();
-        for (int i = 0; i < currentMsgWaitingForAck.getSysExDataSize(); i++)
-            jassert(sysExData[i] <= 0x7f);
-    }
-#endif
+// #if JUCE_DEBUG
+//     if (currentMsgWaitingForAck.isSysEx())
+//     {
+//         auto sysExData = currentMsgWaitingForAck.getSysExData();
+//         for (int i = 0; i < currentMsgWaitingForAck.getSysExDataSize(); i++)
+//             jassert(sysExData[i] <= 0x7f);
+//     }
+// #endif
 
     sendMessageNow(currentMsgWaitingForAck);        // send it
 
@@ -906,36 +896,38 @@ void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, 
 {
 #if JUCE_DEBUG
     if (message.isSysEx())
-        DBG("RCVD: " + message.getDescription());
+    {
+        if (source)
+            DBG("RCVD: " + message.getDescription() + "; from " + source->getName());
+        else
+            DBG("RCVD: " + message.getDescription() + "; called by processor");
+    }
 #endif
 
-    //const juce::MessageManagerLock mmLock;
-    //this->listeners.call(&Listener::midiMessageReceived, source, message);
-    notifyMessageReceived(source, message);
+    juce::MessageManager::callAsync([=]() { notifyMessageReceived(source, message); });
 
+    if (!hasMsgWaitingForAck)
+        return;
+
+    jassert(timerType == TimerType::waitForAnswer);
+ 
     // Check whether received message is an answer to the previously sent one
-    if (hasMsgWaitingForAck && LumatoneSysEx::messageIsResponseToMessage(message, currentMsgWaitingForAck))
+    if (LumatoneSysEx::messageIsResponseToMessage(message, currentMsgWaitingForAck))
     {
-        jassert(timerType == TimerType::waitForAnswer);
-
         // Answer has come, we can stop the timer
         stopTimer();
+        
+        receivedAnswer = true;
 
         // Check answer state (error yes/no)
-        auto answerState = message.getSysExData()[5];
-        
-        // This would be nice but we can't be sure the state is demo mode
-//        if (answerState == ReturnCode::STATE)
-//        {
-//            // turn demo mode off
-//            startDemoMode(false);
-//        }
+        auto answerState = message.getSysExData()[MSG_STATUS];
 
         // if answer state is "busy": resend message after a little delay
         if (answerState == LumatoneFirmware::ReturnCode::BUSY)
         {
             // Start delay timer, after which message will be sent again
             timerType = TimerType::delayWhileDeviceBusy;
+            DBG("Starting Busy Timer");
             startTimer(busyTimeDelayInMilliseconds);
         }
         else
@@ -945,7 +937,8 @@ void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, 
             hasMsgWaitingForAck = false;
 
             // If there are more messages waiting in the queue: send the next one
-            sendOldestMessageInQueue();
+            timerType = TimerType::checkQueue;
+            startTimer(checkQueueTimerDelayInMilliseconds);
         }
     }
 
@@ -954,22 +947,29 @@ void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, 
 
 void LumatoneFirmwareDriver::timerCallback()
 {
+    jassert(
+           ((hasMsgWaitingForAck == false) && (receivedAnswer == true))
+        || ((hasMsgWaitingForAck == true) && (receivedAnswer == false))
+        );
+
     stopTimer();
 
     if (timerType == TimerType::waitForAnswer)
     {
+        // Rare race condition
+        if (receivedAnswer)
+        {
+            DBG("DRIVER: Got answer in timercallback, bailing no answer!");
+            return;
+        }
+
         // For now: Remove from buffer, try to send next one
         hasMsgWaitingForAck = false;
 
         // No answer came from MIDI input
 		
         DBG("DRIVER: NO ANSWER");
-        //const juce::MessageManagerLock mmLock;
-        // listeners.call(&Listener::generalLogMessage, "No answer from device", HajuErrorVisualizer::ErrorLevel::error);
-        // listeners.call(&Listener::noAnswerToMessage, currentMsgWaitingForAck);
-        // notifyLogMessage("No answer from device", ErrorLevel::error);
         notifyNoAnswerToMessage(getMidiInputInfo(), currentMsgWaitingForAck);
-    
 
         sendOldestMessageInQueue();
     }
@@ -978,16 +978,30 @@ void LumatoneFirmwareDriver::timerCallback()
         // Resend current message and start waiting for answer again
         sendCurrentMessage();
     }
+    else if (timerType == TimerType::checkQueue)
+    {
+        jassert(!hasMsgWaitingForAck);
+        sendOldestMessageInQueue();
+    }
     else
         jassertfalse;
 }
 
 void LumatoneFirmwareDriver::clearMIDIMessageBuffer()
-{ 
-    sysexQueue.clear();
-    hasMsgWaitingForAck = false;
+{
     stopTimer();
-    // this->listeners.call(&Listener::midiSendQueueSize, 0); 
+    hasMsgWaitingForAck = false;
+
+    {
+        juce::ScopedLock l(sysexQueue.getLock());
+        sysexQueue.clear();
+    }
+
+    {
+        juce::ScopedLock l(hostLock);
+        hostQueue.clear();
+    }
+
     notifySendQueueSize();
 }
 
