@@ -171,12 +171,12 @@ void LumatoneSandboxProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    if (isStandalone)
-        return;
-
-    for (auto msg : midiMessages)
+    if (!isStandalone)
     {
-        midiDriver->handleIncomingMidiMessage(nullptr, msg.getMessage());
+        for (auto msg : midiMessages)
+        {
+            midiDriver->handleIncomingMidiMessage(nullptr, msg.getMessage());
+        }
     }
 
     midiDriver->readNextBuffer(midiMessages);
