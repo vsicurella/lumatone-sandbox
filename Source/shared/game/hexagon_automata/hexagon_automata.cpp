@@ -188,9 +188,7 @@ void HexagonAutomata::Game::nextTick()
     addToQueue(renderFrame());
 
     ticks++;
-    ticksToNextGeneration++;
-
-    
+    ticksToNextGeneration++;    
 }
 
 void HexagonAutomata::Game::pauseTick()
@@ -200,8 +198,6 @@ void HexagonAutomata::Game::pauseTick()
 
     agingCells = juce::Array<MappedHexState>(populatedCells);
     addToQueue(renderFrame());
-
-    
 }
 
 void HexagonAutomata::Game::setTicksPerGeneration(int ticks)
@@ -339,7 +335,10 @@ LumatoneAction* HexagonAutomata::Game::renderFrame()
 
     // redoCensus();
 
-    return new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, false);
+    if (keyUpdates.size() > 0)
+        return new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, false);
+
+    return nullptr;
 }
 
 void HexagonAutomata::Game::rerenderState()
@@ -509,7 +508,6 @@ void HexagonAutomata::Game::updateNextGeneration()
                 {
                     emptyCells.add(neighbors[n]);
                     emptyNeighbors.set(cellHash, neighbors[n]);
-
                 }
             }
             // else if (emptyCells.addIfNotAlreadyThere((Hex::Point)neighbors[n]))
