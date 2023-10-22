@@ -32,9 +32,8 @@ class DeviceActivityMonitor : protected LumatoneApplicationState,
 public:
     enum class DetectConnectionMode
     {
-        noDeviceActivity = -1,
+        idle = -1,
         lookingForDevice,
-        confirmingDevice,
         noDeviceMonitoring,
         waitingForInactivity
     };
@@ -56,13 +55,15 @@ public:
     int getConfirmedOutputIndex() const { return confirmedOutputIndex; }
     int getConfirmedInputIndex() const { return confirmedInputIndex; }
 
+    int getResponseTimeoutMs() { return responseTimeoutMs; }
+    void setResponseTimeoutMs(int timeoutMs) { responseTimeoutMs = timeoutMs; }
+
+    //=========================================================================
+
     // Start monitoring available MIDI devices and wait for an expected response
     // First uses the "Ping" command to send to all available devices,
     // then goes through a legacy-supported routine with individual output devices.
     void startDeviceDetection();
-
-    // Set the timeout for message responses
-    void setResponseTimeoutMs(int timeoutMs) { responseTimeoutMs = timeoutMs; }
 
     // Begin polling selected device until it stops responding. Other messages
     // will reset the inactivity timer.
@@ -70,14 +71,16 @@ public:
 
     // Turn off device monitoring and idle
     void stopMonitoringDevice();
+    
+private:
 
     //=========================================================================
     // juce::Timer Implementation
 
     void timerCallback() override;
 
-    
-private:
+
+    //=========================================================================
 
     /// <summary>
     /// Sends a ping to all devices to see if we get a response
@@ -91,7 +94,7 @@ private:
     // bool testLastConnectedDevice();
 
     /// <summary>
-    /// Prepares to ping devices by refreshing available devices, opening them, and starting pinging routine
+    /// Resets device list and starts routine for sending tests to each device individually
     /// </summary>
     void startIndividualDetection();
 
@@ -126,22 +129,12 @@ private:
     //=========================================================================
     // Callback functions
 
-    void handleMessageQueue(const juce::MidiBuffer& readBuffer, const juce::Array<int, juce::CriticalSection>& devices);
+    void removeFailedPingDevice(const juce::MidiMessage& msg);
 
-    void onSerialIdentityResponse(const juce::MidiMessage& msg, int deviceIndexResponded);
-
-    void onFailedPing(const juce::MidiMessage& msg);
-    void onPingResponse(const juce::MidiMessage& msg, int deviceIndexResponded);
-
-    void activityResponseReceived();
-
-    void onSuccessfulDetection();
-
+    void establishConnection(int inputIndex, int outputIndex);
     void onDisconnection();
 
-    void connectionFailed();
-    void connectionEstablished(int inputIndex, int outputIndex);
-    void connectionLost();
+    static int getPingIdFromResponse(const juce::MidiMessage& msg);
     
 protected:
 
@@ -149,33 +142,30 @@ protected:
     // LumatoneFirmwareDriver::Listener Implementation
 
     void midiMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage) override;
-    void midiMessageSent(juce::MidiOutput* target, const juce::MidiMessage& midiMessage) override {}
-    void midiSendQueueSize(int queueSizeIn) override { sentQueueSize = queueSizeIn; }
-    //void generalLogMessage(juce::String textMessage, HajuErrorVisualizerPlaceholder errorLevel) override {}
     void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage) override;
-
+    void midiSendQueueSize(int queueSizeIn) override { sentQueueSize = queueSizeIn; }
+    
+    void midiMessageSent(juce::MidiOutput*, const juce::MidiMessage&) override {}
 
 private:
 
     LumatoneFirmwareDriver*     midiDriver;
 
-    DetectConnectionMode    deviceConnectionMode   = DetectConnectionMode::noDeviceActivity;
+    DetectConnectionMode    deviceConnectionMode   = DetectConnectionMode::idle;
     bool                    deviceDetectInProgress = false;
     bool                    waitingForResponse = false;
 
+    int                     threadDelayMs = 50;
     int                     responseTimeoutMs = 600;
     int                     detectRoutineTimeoutMs = 1000;
-    int                     inactivityTimeoutMs  = 1500;
+    int                     inactivityTimeoutMs  = 3000;
 
-    juce::Array<int, juce::CriticalSection> testResponseDeviceIndices;
-    std::atomic<int>        readQueueSize;
-    const int               readBlockSize = 64;
     int                     sentQueueSize = 0;
 
-    int                     testOutputIndex = -1;
+    int                                 testOutputIndex = -1;
     juce::Array<juce::MidiDeviceInfo>   outputDevices;
     juce::Array<juce::MidiDeviceInfo>   inputDevices;
-    juce::Array<unsigned int>     outputPingIds;
+    juce::Array<unsigned int>           outputPingIds;
 
     int                     confirmedInputIndex = -1;
     int                     confirmedOutputIndex = -1;
