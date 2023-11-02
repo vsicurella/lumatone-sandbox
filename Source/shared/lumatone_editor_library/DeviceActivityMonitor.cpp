@@ -599,7 +599,10 @@ void DeviceActivityMonitor::establishConnection(int inputIndex, int outputIndex)
     else if (midiDriver->getHostMode() == LumatoneFirmwareDriver::HostMode::Driver)
     {
         midiDriver->setMidiInput(inputIndex);
+        confirmedInputIndex = inputIndex;
+
         midiDriver->setMidiOutput(outputIndex);
+        confirmedOutputIndex = outputIndex;
 
         DBG("\tInput: " + midiDriver->getMidiInputInfo().name);
         DBG("\tOutput: " + midiDriver->getMidiOutputInfo().name);
