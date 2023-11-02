@@ -74,7 +74,7 @@ void LumatoneApplicationMidiController::sendKeyNoteOn(int boardIndex, int keyInd
     ; if (useContext)
         key = 
     #else 
-        (useContext) ? 
+       = (useContext) ? 
     #endif
         (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex)
     #if JUCE_DEBUG
