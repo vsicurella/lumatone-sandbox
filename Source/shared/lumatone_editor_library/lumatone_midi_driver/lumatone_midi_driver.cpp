@@ -937,8 +937,9 @@ void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, 
             hasMsgWaitingForAck = false;
 
             // If there are more messages waiting in the queue: send the next one
-            timerType = TimerType::checkQueue;
-            startTimer(checkQueueTimerDelayInMilliseconds);
+            // timerType = TimerType::checkQueue;
+            // startTimer(checkQueueTimerDelayInMilliseconds);
+            sendOldestMessageInQueue();
         }
     }
 
