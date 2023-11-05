@@ -11,11 +11,9 @@
 #pragma once
 #include "../game_base.h"
 #include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
-
 class HexRings : public LumatoneSandboxGameBase
 {
 public:
-
     struct Frame
     {
         LumatoneKeyCoord origin;
@@ -38,7 +36,11 @@ public:
     void nextTick() override;
 
 protected:
-    LumatoneAction* renderFrame() override;
+    LumatoneAction* renderFrame() const override;
+
+private:
+
+    void advanceFrameQueue();
 
 public:
     juce::Colour getRandomColourVelocity(juce::uint8 velocity);
@@ -52,6 +54,9 @@ private:
     juce::Random random;
 
     juce::Array<HexRings::Frame> frameQueue;
+    juce::Array<HexRings::Frame> currentFrame;
+    int maxQueueFramesPerTick = 5;
+    int maxUpdatesPerFrame = 10;
 
     std::unique_ptr<LumatoneHexMap> hexMap;
 

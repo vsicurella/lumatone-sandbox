@@ -23,6 +23,13 @@ public:
         KeyColorConstrainer* keyColourConstrainer = nullptr;
     };
 
+    struct KeyState
+    {
+        int boardIndex = -1;
+        int keyIndex = -1;
+        juce::Colour colour;
+    };
+
 public:
 
     RandomColors(LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
@@ -37,7 +44,11 @@ public:
 
 private:
 
-    LumatoneAction* renderFrame() override;
+    LumatoneAction* renderFrame() const override;
+
+private:
+
+    void nextRandomKey();
 
 private:
 
@@ -49,4 +60,6 @@ private:
     int nextStepTicks = 60;
 
     KeyColorConstrainer* keyColorConstrainer;
+
+    RandomColors::KeyState nextKeyState;
 };

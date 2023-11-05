@@ -21,16 +21,16 @@ RandomColors::RandomColors(LumatoneController* controllerIn, RandomColors::Optio
 
 void RandomColors::reset(bool clearQueue)
 {
-    random.setSeedRandomly();
+    LumatoneSandboxGameBase::reset(clearQueue);
 
+    random.setSeedRandomly();
     ticks = 0;
 
     if (clearQueue)
     {
-        getIdentityLayout(true);
+        auto layout = getIdentityLayout(true);
+        queueLayout(layout);
     }
-
-    LumatoneSandboxGameBase::reset(clearQueue);
 }
 
 void RandomColors::nextTick()
@@ -40,26 +40,33 @@ void RandomColors::nextTick()
     if (ticks % nextStepTicks != 0)
         return;
 
+    nextRandomKey();
+
     ticks = 0;
     addToQueue(renderFrame());
 }
 
-LumatoneAction* RandomColors::renderFrame()
+LumatoneAction* RandomColors::renderFrame() const
 {
-    int boardIndex = random.nextInt(5);
-    int keyIndex = random.nextInt(56);
+    auto action = new LumatoneEditAction::SingleNoteAssignAction(controller, nextKeyState.boardIndex, nextKeyState.keyIndex, nextKeyState.colour);
+    return action;
+}
+
+void RandomColors::nextRandomKey()
+{
+    nextKeyState.boardIndex = random.nextInt(controller->getNumBoards());
+    nextKeyState.keyIndex = random.nextInt(controller->getOctaveBoardSize());
 
     auto colour = juce::Colour(
-        random.nextInt(255),
-        random.nextInt(255),
-        random.nextInt(255)
+        (juce::uint8)random.nextInt(255),
+        (juce::uint8)random.nextInt(255),
+        (juce::uint8)random.nextInt(255)
     );
 
     if (keyColorConstrainer != nullptr)
-        colour = keyColorConstrainer->validColour(colour, boardIndex, keyIndex);
+        colour = keyColorConstrainer->validColour(colour, nextKeyState.boardIndex, nextKeyState.keyIndex);
 
-    auto action = new LumatoneEditAction::SingleNoteAssignAction(controller, boardIndex, keyIndex, colour);
-    return action;
+    nextKeyState.colour = colour;
 }
 
 void RandomColors::setOptions(RandomColors::Options newOptions)

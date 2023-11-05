@@ -24,31 +24,56 @@ void HexRings::reset(bool clearQueue)
 {
     LumatoneSandboxGameBase::reset(clearQueue);
     auto layout = getIdentityLayout(true);
+    queueLayout(layout);
 }
 
 void HexRings::nextTick()
 {
-    while (frameQueue.size() > 0)
+    int limit = juce::jmin(frameQueue.size(), maxQueueFramesPerTick);
+    for (int i = 0; i < limit; i++)
     {
+        advanceFrameQueue();
         addToQueue(renderFrame());
     }
 }
 
-LumatoneAction* HexRings::renderFrame()
+LumatoneAction* HexRings::renderFrame() const
 {
-    if (frameQueue.size() > 0)
+    juce::Array<MappedLumatoneKey> keyUpdates;
+
+    int limit = juce::jmin(currentFrame.size(), maxUpdatesPerFrame);
+    for (int i = 0; i < limit; i++)
     {
-        auto frame = frameQueue.removeAndReturn(0);
+        const HexRings::Frame& frame = currentFrame.getReference(i);
         if (frame.isNoteOn)
         {
             if (frame.value > 0)
             {
-                return new LumatoneEditAction::SingleNoteAssignAction(controller, frame.origin.boardIndex, frame.origin.keyIndex, frame.colour);
+                auto key = static_cast<MappedLumatoneKey>(getKeyAt(frame.origin.boardIndex, frame.origin.keyIndex));
+                key.boardIndex = frame.origin.boardIndex;
+                key.keyIndex = frame.origin.keyIndex;
+                key.colour = frame.colour;
+
+                keyUpdates.add(key);
             }
         }
     }
 
+    if (keyUpdates.size() > 0)
+        return new LumatoneEditAction::MultiKeyAssignAction(controller,  keyUpdates, false, true, false);
+
     return nullptr;
+}
+
+void HexRings::advanceFrameQueue()
+{
+    currentFrame.clear();
+
+    int limit = juce::jmin(frameQueue.size(), maxUpdatesPerFrame);
+    for (int i = 0; i < limit; i++)
+    {
+        currentFrame.add(frameQueue.removeAndReturn(0));
+    }
 }
 
 juce::Colour HexRings::getRandomColourVelocity(juce::uint8 velocity)
