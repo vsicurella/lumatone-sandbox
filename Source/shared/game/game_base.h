@@ -68,6 +68,10 @@ public:
 
     const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
 
+protected:
+
+    LumatoneKeyContext getKeyAt(int boardIndex, int keyIndex) const;
+
 private:
 
     int getQueuePtr() const { return (queuePtr + queueSize - 1) % MAX_QUEUE_SIZE; }
@@ -77,7 +81,7 @@ protected:
     LumatoneLayout layoutBeforeStart;
 
     virtual void addToQueue(LumatoneAction* action);
-    virtual LumatoneAction* renderFrame() = 0;
+    virtual LumatoneAction* renderFrame() const = 0;
 
     //juce::OwnedArray<juce::UndoableAction, juce::CriticalSection> queuedActions;
 

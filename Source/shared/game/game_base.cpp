@@ -69,6 +69,11 @@ void LumatoneSandboxGameBase::end()
     queueLayout(layoutBeforeStart);
 }
 
+LumatoneKeyContext LumatoneSandboxGameBase::getKeyAt(int boardIndex, int keyIndex) const
+{
+    return controller->getKeyContext(boardIndex, keyIndex);
+}
+
 void LumatoneSandboxGameBase::addToQueue(LumatoneAction* action)
 {
     // jassert(action != nullptr);
