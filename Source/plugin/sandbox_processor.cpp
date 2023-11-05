@@ -8,6 +8,8 @@
 #include "../shared/lumatone_editor_library/LumatoneController.h"
 #include "../shared/SandboxMenu.h"
 
+#include "../shared/debug/LumatoneSandboxLogTableModel.h"
+
 //==============================================================================
 LumatoneSandboxProcessor::LumatoneSandboxProcessor()
      : AudioProcessor (BusesProperties()
@@ -22,11 +24,15 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
     treeState = juce::ValueTree(LumatoneStateProperty::StateTree);
     appState = std::make_unique<LumatoneApplicationState>("LumatoneSandboxProcessor", treeState);
 
+    logData = std::make_unique<LumatoneSandboxLogTableModel>();
+    juce::Logger::setCurrentLogger(logData.get());
+
     undoManager = std::make_unique<juce::UndoManager>();
 
     paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
 
     isStandalone = (juce::PluginHostType::getPluginLoadedAs() == AudioProcessor::wrapperType_Standalone);
+    // isStandalone = false;
 
     midiDriver = std::make_unique<LumatoneFirmwareDriver>(isStandalone
                ? LumatoneFirmwareDriver::HostMode::Driver
@@ -56,6 +62,9 @@ LumatoneSandboxProcessor::~LumatoneSandboxProcessor()
 
     commandManager = nullptr;
     undoManager = nullptr;
+
+    juce::Logger::setCurrentLogger(nullptr);
+    logData = nullptr;
 }
 
 //==============================================================================

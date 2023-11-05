@@ -6,7 +6,7 @@
 #include "../shared/SandboxMenu.h"
 
 class MainComponent;
-
+class LumatoneSandboxDebugWindow;
 
 //==============================================================================
 class LumatoneSandboxProcessorEditor  : public juce::AudioProcessorEditor
@@ -36,6 +36,8 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     LumatoneSandboxProcessor& processor;
+
+    std::unique_ptr<LumatoneSandboxDebugWindow> debugWindow;
 
     LumatoneController* controller;
     juce::UndoManager* undoManager;

@@ -9,6 +9,8 @@
 
 #include "../shared/MainComponent.h"
 
+#include "../shared/debug/LumatoneSandboxDebugWindow.h"
+
 //==============================================================================
 LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxProcessor& p)
     : AudioProcessorEditor (&p), processor (p)
@@ -19,6 +21,11 @@ LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxP
     , gameEngine(p.getGameEngine())
 {
     juce::ignoreUnused (processor);
+
+    debugWindow = std::make_unique<LumatoneSandboxDebugWindow>(processor.getLogData());
+    debugWindow->setSize(800, 500);
+    debugWindow->addToDesktop();
+    debugWindow->setVisible(true);
 
     mainComponent = std::make_unique<MainComponent>(controller);
     mainComponent->setGameEngine(gameEngine);
@@ -55,6 +62,8 @@ LumatoneSandboxProcessorEditor::~LumatoneSandboxProcessorEditor()
     menuBar = nullptr;
     menuModel = nullptr;
     mainComponent = nullptr;
+
+    debugWindow = nullptr;
 }
 
 //==============================================================================

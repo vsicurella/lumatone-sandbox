@@ -14,11 +14,14 @@
 
 #include "game_base.h"
 
+#include "../debug/LumatoneSandboxLogger.h"
+
 class LumatoneAction;
 class LumatoneController;
 
 class LumatoneSandboxGameEngine : private LumatoneEditor::MidiListener
                                 , private juce::Timer
+                                , private LumatoneSandboxLogger
 {
 public:
 

@@ -9,6 +9,8 @@ class LumatoneController;
 class LumatonePaletteLibrary;
 class LumatoneSandboxGameEngine;
 
+class LumatoneSandboxLogTableModel;
+
 //==============================================================================
 class LumatoneSandboxProcessor  : public juce::AudioProcessor
                                 , public juce::ApplicationCommandTarget
@@ -52,6 +54,8 @@ public:
 
     //==============================================================================
 
+    LumatoneSandboxLogTableModel*       getLogData() { return logData.get(); }
+
     juce::UndoManager*                  getUndoManager() { return undoManager.get(); }
     juce::ApplicationCommandManager*    getCommandManager() { return commandManager.get(); }
 
@@ -78,6 +82,8 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LumatoneSandboxProcessor)
 
     bool isStandalone = false;
+
+    std::unique_ptr<LumatoneSandboxLogTableModel> logData;
     
     std::unique_ptr<juce::UndoManager> undoManager;
     std::unique_ptr<juce::ApplicationCommandManager> commandManager;

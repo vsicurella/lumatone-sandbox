@@ -14,8 +14,10 @@
 LumatoneSandboxGameEngine::LumatoneSandboxGameEngine(LumatoneController* controllerIn, int fps)
     : controller(controllerIn)
     , runGameFps(fps)
+    , LumatoneSandboxLogger("GameEngine")
 {
     controller->addMidiListener(this);
+    logInfo("LumatoneSandboxGameEngine", "Game Engine initialized.");
 }
 
 LumatoneSandboxGameEngine::~LumatoneSandboxGameEngine()
@@ -32,6 +34,8 @@ const LumatoneSandboxGameBase* LumatoneSandboxGameEngine::getGameRunning() const
 {
     if (gameIsRunning || gameIsPaused)
         return game.get();
+
+    logWarning("getGameRunning", "No game is running.");
     return nullptr;
 }
 
@@ -49,6 +53,8 @@ void LumatoneSandboxGameEngine::setGame(LumatoneSandboxGameBase* newGameIn)
 {
     endGame();
     game.reset(newGameIn);
+
+    logInfo("setGame", "New game loaded: " + game->getName());
 }
 
 bool LumatoneSandboxGameEngine::startGame()
@@ -73,7 +79,7 @@ bool LumatoneSandboxGameEngine::startGame()
         game->reset(true);
         gameIsRunning = true;
 
-        DBG("LumatoneSandboxGameEngine: Starting game " + game->getName());
+        logInfo("startGame", "Starting game " + game->getName());
 
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameStarted);
     }
@@ -91,7 +97,7 @@ bool LumatoneSandboxGameEngine::startGame()
         runGameFps = fps;
     }
 
-    DBG("Running at " + juce::String(fps) + " fps | " + juce::String(getTimeIntervalMs()) + "ms.");
+    logInfo("startGame", "Running at " + juce::String(fps) + " fps / " + juce::String(getTimeIntervalMs()) + "ms.");
     
     startTimer(getTimeIntervalMs());
     return true;
@@ -114,6 +120,8 @@ void LumatoneSandboxGameEngine::pauseGame()
 
 bool LumatoneSandboxGameEngine::endGame()
 {
+    logInfo("endGame", "Stopping game.");
+
     stopTimer();
 
     gameIsRunning = false;
@@ -151,9 +159,14 @@ void LumatoneSandboxGameEngine::resetGame()
         controller->addMidiListener(game.get());
         game->reset(true);
 
-        DBG("LumatoneSandboxGameEngine: restarted " + game->getName());
+        // DBG("LumatoneSandboxGameEngine: restarted " + game->getName());
+        logInfo("resetGame", "Restarted game.");
 
         engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameStarted);
+    }
+    else
+    {
+        logWarning("resetGame", "Trying to reset with no game loaded.");
     }
 }
 
