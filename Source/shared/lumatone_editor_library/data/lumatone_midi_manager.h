@@ -78,7 +78,7 @@ private:
     LumatoneFirmwareDriver& firmwareDriver;
 
     LumatoneMidiState deviceMidiState;
-    LumatoneMidiState appMidiState;
+    LumatoneMidiState appMidiState; 
 };
 
 

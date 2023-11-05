@@ -55,7 +55,7 @@ public:
     const LumatoneContext* getContext() const { return contextIsSet ? layoutContext.get() : nullptr; }
     std::shared_ptr<LumatoneContext> shareContext() { return layoutContext; }
 
-    LumatoneKeyContext getKeyContext(int boardIndex, int keyIndex);
+    LumatoneKeyContext getKeyContext(int boardIndex, int keyIndex) const;
 
     virtual void setContext(const LumatoneContext& contextIn);
     virtual void clearContext();

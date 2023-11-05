@@ -230,7 +230,9 @@ void LumatoneKeyDisplay::endDrag()
 
 void LumatoneKeyDisplay::setLumatoneKey(const LumatoneKey& lumatoneKey, int boardIdx, int keyIdx)
 {
-    *(LumatoneKey*)this = lumatoneKey;
+    auto thisKey = static_cast<LumatoneKey*>(this);
+    *thisKey = lumatoneKey;
+
     boardIndex = boardIdx;
     keyIndex = keyIdx;
     // repaint();

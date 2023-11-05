@@ -127,7 +127,7 @@ void LumatoneApplicationState::handleStatePropertyChange(juce::ValueTree stateIn
     }
 }
 
-LumatoneKeyContext LumatoneApplicationState::getKeyContext(int boardIndex, int keyIndex)
+LumatoneKeyContext LumatoneApplicationState::getKeyContext(int boardIndex, int keyIndex) const
 {
     if (contextIsSet)
     {

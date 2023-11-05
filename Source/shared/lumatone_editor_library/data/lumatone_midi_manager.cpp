@@ -108,8 +108,19 @@ void LumatoneApplicationMidiController::sendKeyNoteOff(int boardIndex, int keyIn
 
 void LumatoneApplicationMidiController::allNotesOff(int midiChannel)
 {
-    auto msg = juce::MidiMessage::allNotesOff(midiChannel);
-    sendMidiMessage(msg);
+    // auto msg = juce::MidiMessage::allNotesOff(midiChannel);
+    // sendMidiMessage(msg);
+
+    for (int i = 0; i < 128; i++)
+    {
+        if (appMidiState.isNoteOn(midiChannel, i))
+        {
+            auto msg = juce::MidiMessage::noteOff(midiChannel, i);
+            sendMidiMessage(msg);
+        }
+        
+    }
+
 }
 
 void LumatoneApplicationMidiController::allNotesOff()

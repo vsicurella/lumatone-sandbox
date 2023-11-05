@@ -313,8 +313,6 @@ void LumatoneController::sendTableConfig(LumatoneConfigTable::TableType velocity
 // Send note, channel, cc, and fader polarity data
 void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const LumatoneKey& keyData, bool signalEditorListeners, bool bufferKeyUpdates)
 {
-    // firmwareDriver.sendKeyFunctionParameters(boardId, keyIndex, keyData.noteNumber, keyData.channelNumber, keyData.keyType, keyData.ccFaderDefault);
-
     if (bufferKeyUpdates)
         updateBuffer.sendKeyConfig(boardId, keyIndex, keyData);
     else
@@ -328,11 +326,6 @@ void LumatoneController::sendKeyConfig(int boardId, int keyIndex, const Lumatone
 
 void LumatoneController::sendKeyColourConfig(int boardId, int keyIndex, juce::Colour colour, bool signalEditorListeners, bool bufferKeyUpdates)
 {
-    // if (getLumatoneVersion() >= ReleaseVersion::VERSION_1_0_11)
-    //     firmwareDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
-    // else
-    //     firmwareDriver.sendKeyLightParameters_Version_1_0_0(boardId, keyIndex, colour.getRed() / 2, colour.getGreen() / 2, colour.getBlue() / 2);
-
     if (bufferKeyUpdates)
         updateBuffer.sendKeyColourConfig(boardId, keyIndex, colour);
     else
