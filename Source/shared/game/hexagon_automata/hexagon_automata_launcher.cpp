@@ -15,7 +15,7 @@ HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* ga
     : LumatoneSandboxGameComponent(gameEngineIn)
 {
     game = new HexagonAutomata::Game(gameEngine->getController());
-    registerGameWithEngine(game);
+    registerGameWithEngine(static_cast<LumatoneSandboxGameBase*>(game));
 
     addSeedButton = std::make_unique<juce::TextButton>("Add Seeds", "Add a cluster of cells with 50% per cell");
     addSeedButton->onClick = [&]
@@ -40,7 +40,7 @@ HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* ga
     genSpeedSlider->setValue(25, juce::NotificationType::dontSendNotification);
     genSpeedSlider->onValueChange = [&]
     {
-        game->setTicksPerGeneration(genSpeedSlider->getValue());
+        game->setTicksPerAsyncGeneration(genSpeedSlider->getValue());
     };
     addAndMakeVisible(*genSpeedSlider);
 
