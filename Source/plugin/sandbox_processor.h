@@ -13,7 +13,7 @@ class LumatoneSandboxLogTableModel;
 
 //==============================================================================
 class LumatoneSandboxProcessor  : public juce::AudioProcessor
-                                , public juce::ApplicationCommandTarget
+                                // , public juce::ApplicationCommandTarget
 {
 public:
     //==============================================================================
@@ -57,7 +57,7 @@ public:
     LumatoneSandboxLogTableModel*       getLogData() { return logData.get(); }
 
     juce::UndoManager*                  getUndoManager() { return undoManager.get(); }
-    juce::ApplicationCommandManager*    getCommandManager() { return commandManager.get(); }
+    // juce::ApplicationCommandManager*    getCommandManager() { return commandManager.get(); }
 
     LumatonePaletteLibrary*         getPaletteLibrary() { return paletteLibrary.get(); }
     
@@ -68,13 +68,13 @@ public:
 
     //==============================================================================
 
-    juce::ApplicationCommandTarget* getNextCommandTarget() override;
+    // juce::ApplicationCommandTarget* getNextCommandTarget() override;
 
-    void getAllCommands(juce::Array<juce::CommandID>& commands) override;
+    // void getAllCommands(juce::Array<juce::CommandID>& commands) override;
 
-    void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo &result) override;
+    // void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo &result) override;
 
-    bool perform(const juce::ApplicationCommandTarget::InvocationInfo &info) override;
+    // bool perform(const juce::ApplicationCommandTarget::InvocationInfo &info) override;
 
 
 private:
@@ -86,7 +86,7 @@ private:
     std::unique_ptr<LumatoneSandboxLogTableModel> logData;
     
     std::unique_ptr<juce::UndoManager> undoManager;
-    std::unique_ptr<juce::ApplicationCommandManager> commandManager;
+    // std::unique_ptr<juce::ApplicationCommandManager> commandManager;
 
     juce::ValueTree treeState;
     std::unique_ptr<LumatoneApplicationState> appState;

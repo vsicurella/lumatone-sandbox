@@ -41,7 +41,8 @@ private:
 
     LumatoneController* controller;
     juce::UndoManager* undoManager;
-    juce::ApplicationCommandManager* commandManager;
+    
+    std::unique_ptr<juce::ApplicationCommandManager> commandManager;
 
     LumatonePaletteLibrary* paletteLibrary;
     LumatoneSandboxGameEngine* gameEngine;

@@ -3,9 +3,9 @@
 
 #include "../shared/gui/adjust_colour_panel.h"
 
-#include "../shared/game/random_colors/random_colors_launcher.h"
-#include "../shared/game/hex_rings/hex_rings_launcher.h"
-#include "../shared/game/hexagon_automata/hexagon_automata_launcher.h"
+#include "../shared/games/random_colors/random_colors_launcher.h"
+#include "../shared/games/hex_rings/hex_rings_launcher.h"
+#include "../shared/games/hexagon_automata/hexagon_automata_launcher.h"
 
 #include "../shared/MainComponent.h"
 
@@ -16,7 +16,7 @@ LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxP
     : AudioProcessorEditor (&p), processor (p)
     , controller(p.getLumatoneController())
     , undoManager(p.getUndoManager())
-    , commandManager(p.getCommandManager())
+    // , commandManager(p.getCommandManager())
     , paletteLibrary(p.getPaletteLibrary())
     , gameEngine(p.getGameEngine())
 {
@@ -31,11 +31,12 @@ LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxP
     mainComponent->setGameEngine(gameEngine);
     addAndMakeVisible(*mainComponent);
 
+    commandManager = std::make_unique<juce::ApplicationCommandManager>();
     commandManager->registerAllCommandsForTarget(this);
     commandManager->registerAllCommandsForTarget(mainComponent.get());
     commandManager->setFirstCommandTarget(this);
 
-    menuModel = std::make_unique<LumatoneSandbox::Menu::Model>(commandManager);
+    menuModel = std::make_unique<LumatoneSandbox::Menu::Model>(commandManager.get());
 
     // if (showMenu())
     // {
@@ -63,6 +64,7 @@ LumatoneSandboxProcessorEditor::~LumatoneSandboxProcessorEditor()
     menuModel = nullptr;
     mainComponent = nullptr;
 
+    commandManager = nullptr;
     debugWindow = nullptr;
 }
 
@@ -110,6 +112,15 @@ void LumatoneSandboxProcessorEditor::getAllCommands(juce::Array <juce::CommandID
     commands.add(LumatoneSandbox::Menu::commandIDs::resetSysExMapping);
     commands.add(LumatoneSandbox::Menu::commandIDs::importSysExMapping);
 
+    commands.add(LumatoneSandbox::Menu::commandIDs::undo);
+    commands.add(LumatoneSandbox::Menu::commandIDs::redo);
+    commands.add(LumatoneSandbox::Menu::commandIDs::aboutSysEx);
+
+    commands.add(LumatoneSandbox::Menu::commandIDs::openRandomColorsGame);
+    commands.add(LumatoneSandbox::Menu::commandIDs::openHexRingsGame);
+    commands.add(LumatoneSandbox::Menu::commandIDs::openHexagonAutomata);
+
+
     // commands.add(LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard);
     // commands.add(LumatoneSandbox::Menu::commandIDs::copyOctaveBoard);
     // commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoard);
@@ -119,10 +130,8 @@ void LumatoneSandboxProcessorEditor::getAllCommands(juce::Array <juce::CommandID
     // commands.add(LumatoneSandbox::Menu::commandIDs::pasteOctaveBoardTypes);
 
     commands.add(LumatoneSandbox::Menu::commandIDs::adjustColour);
-    
-    commands.add(LumatoneSandbox::Menu::commandIDs::openRandomColorsGame);
-    commands.add(LumatoneSandbox::Menu::commandIDs::openHexRingsGame);
-    commands.add(LumatoneSandbox::Menu::commandIDs::openHexagonAutomata);
+
+    commands.add(juce::StandardApplicationCommandIDs::quit);
 }
 
 void LumatoneSandboxProcessorEditor::getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result)
@@ -155,7 +164,39 @@ void LumatoneSandboxProcessorEditor::getCommandInfo(juce::CommandID commandID, j
             result.setInfo("Import", "Get mapping from connected Lumatone", "File", 0);
             result.addDefaultKeypress('i', juce::ModifierKeys::currentModifiers);
             break;
+        case LumatoneSandbox::Menu::commandIDs::undo:
+            result.setInfo("Undo", "Undo latest edit", "Edit", 0);
+            result.addDefaultKeypress('z', juce::ModifierKeys::commandModifier);
+            result.setActive(undoManager->canUndo());
+            break;
 
+        case LumatoneSandbox::Menu::commandIDs::redo:
+            result.setInfo("Redo", "Redo latest edit", "Edit", 0);
+            result.addDefaultKeypress('y', juce::ModifierKeys::commandModifier);
+            result.addDefaultKeypress('z', juce::ModifierKeys::commandModifier + juce::ModifierKeys::shiftModifier);
+            result.setActive(undoManager->canRedo());
+            break;
+
+        case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
+            result.setInfo("Random Colors", "Open launcher for Random Colors game", "Game", 0);
+            result.setActive(true);
+            break;
+
+        case LumatoneSandbox::Menu::commandIDs::openHexRingsGame:
+            result.setInfo("Hex Rings", "Open launcher for Hex Rings game", "Game", 0);
+            break;
+
+        case LumatoneSandbox::Menu::commandIDs::openHexagonAutomata:
+            result.setInfo("Hexagon Automata", "Open launcher for hex game of life", "Game", 0);
+            break;
+
+        case LumatoneSandbox::Menu::commandIDs::aboutSysEx:
+            result.setInfo("About Lumatone Editor", "Shows version and copyright", "Help", 0);
+            break;
+
+        case juce::StandardApplicationCommandIDs::quit:
+            result.setInfo("Quit", "Close window and terminate application", "File", 0);
+            break;
         // case LumatoneSandbox::Menu::commandIDs::deleteOctaveBoard:
         //     result.setInfo("Delete", "Delete section data", "Edit", 0);
         //     result.addDefaultKeypress(juce::KeyPress::deleteKey, juce::ModifierKeys::noModifiers);
@@ -193,18 +234,6 @@ void LumatoneSandboxProcessorEditor::getCommandInfo(juce::CommandID commandID, j
 
         case LumatoneSandbox::Menu::commandIDs::adjustColour:
             result.setInfo("Adjust colours", "Apply adjustments to colours across the layout", "Edit", 0);
-            break;
-                
-        case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
-            result.setInfo("Random Colors", "Open launcher for Random Colors game", "Game", 0);
-            break;
-
-        case LumatoneSandbox::Menu::commandIDs::openHexRingsGame:
-            result.setInfo("Hex Rings", "Open launcher for Hex Rings game", "Game", 0);
-            break;
-
-        case LumatoneSandbox::Menu::commandIDs::openHexagonAutomata:
-            result.setInfo("Hexagon Automata", "Open launcher for hex game of life", "Game", 0);
             break;
 
         default:
@@ -271,23 +300,39 @@ bool LumatoneSandboxProcessorEditor::perform(const juce::ApplicationCommandTarge
         return true;
     }
 
+    case LumatoneSandbox::Menu::commandIDs::undo:
+        undoManager->undo();
+        return true;
+
+    case LumatoneSandbox::Menu::commandIDs::redo:
+        undoManager->redo();
+        return true;
+
     case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
     {
-        mainComponent->setGameComponent(new RandomColorsComponent(gameEngine));
+        auto gameId = LumatoneSandbox::GameNameToString(LumatoneSandbox::GameName::RandomColors);
+        gameEngine->loadGame(gameId);
         return true;
     }
     
     case LumatoneSandbox::Menu::commandIDs::openHexRingsGame:
     {
-        mainComponent->setGameComponent(new HexRingLauncher(gameEngine));
+        auto gameId = LumatoneSandbox::GameNameToString(LumatoneSandbox::GameName::HexRings);
+        gameEngine->loadGame(gameId);
         return true;
     }
 
     case LumatoneSandbox::Menu::commandIDs::openHexagonAutomata:
     {
-        mainComponent->setGameComponent(new HexagonAutomataComponent(gameEngine));
+        auto gameId = LumatoneSandbox::GameNameToString(LumatoneSandbox::GameName::HexagonAutomata);
+        gameEngine->loadGame(gameId);
         return true;
     }
+
+    case juce::StandardApplicationCommandIDs::quit:
+        juce::JUCEApplication::quit();
+        return true;
+
 
     default:
         return false;
