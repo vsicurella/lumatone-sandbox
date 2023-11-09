@@ -33,6 +33,26 @@ struct LumatoneSandboxLog
 class LumatoneSandboxLogger : public juce::Logger
 {
 public:
+    typedef enum
+    {
+        NONE = 0,
+        ERROR,
+        WARNING,
+        INFO,
+        VERBOSE
+    } LogLevel;
+
+    static LogLevel StatusToLogLevel(LumatoneSandboxLogStatus status)
+    {
+        int code = static_cast<int>(status);
+        if (code == 0)
+            return LogLevel::INFO;
+        if (code > 0)
+            return LogLevel::WARNING;
+        return LogLevel::ERROR;
+    }
+
+public:
 
     LumatoneSandboxLogger(juce::String className);
     virtual ~LumatoneSandboxLogger() override { }
@@ -60,6 +80,8 @@ private:
 protected:
 
     juce::String className = "undefined";
+
+    LogLevel logLevel = LogLevel::INFO;
 
     JUCE_DECLARE_NON_COPYABLE(LumatoneSandboxLogger)
 };

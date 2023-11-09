@@ -23,6 +23,13 @@ void LumatoneSandboxLogger::logMessage(const juce::String &message)
 
 void LumatoneSandboxLogger::log(LumatoneSandboxLogStatus status, juce::String method, juce::String message) const
 {
+    if (logLevel == LogLevel::NONE)
+        return;
+
+    LogLevel level = StatusToLogLevel(status);
+    if (level > logLevel)
+        return;
+
     LumatoneSandboxLog info = getLog(status, method, message);
     LumatoneSandboxLogger::Log(info);
 }
