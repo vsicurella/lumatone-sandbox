@@ -82,11 +82,11 @@ protected:
 
 protected:
 
-    virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn);
+    virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
 
-    virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property);
+    virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
     
-    virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property);
+    virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 public:
     static juce::Array<juce::Identifier> getLumatoneStateProperties();

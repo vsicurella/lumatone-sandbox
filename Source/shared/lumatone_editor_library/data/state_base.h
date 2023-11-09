@@ -1,11 +1,11 @@
 /*
-  ==============================================================================
+==============================================================================
 
     LumatoneStateBase.h
     Created: 4 Jun 2023 4:56:00pm
     Author:  Vincenzo
 
-  ==============================================================================
+==============================================================================
 */
 
 #pragma once
@@ -14,7 +14,6 @@
 class LumatoneStateBase : protected juce::ValueTree::Listener
 {
 public:
-
     LumatoneStateBase(juce::String nameIn) : name(nameIn) { }
     LumatoneStateBase(const LumatoneStateBase& stateIn) : state(stateIn.state) { }
 
@@ -24,13 +23,19 @@ public:
 
     virtual bool writeToPropertiesFile();
 
+// friend:
+//     juce::ValueTree getOrCreateChild(juce::Identifier childId);
+
 protected:
-
-    juce::ValueTree state;
-
-    juce::String name;
-
     void writeBoolProperty(const juce::Identifier key, bool value, juce::UndoManager* undo=nullptr);
     void writeIntProperty(const juce::Identifier key, int value, juce::UndoManager* undo=nullptr);
     void writeStringProperty(const juce::Identifier key, juce::String value, juce::UndoManager* undo=nullptr);
+
+protected:
+    virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) = 0;
+    virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) = 0;
+
+protected:
+    juce::ValueTree state;
+    juce::String name;
 };
