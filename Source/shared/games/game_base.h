@@ -13,6 +13,8 @@
 // #include "../lumatone_editor_library/LumatoneController.h"
 // #include "../lumatone_editor_library/actions/edit_actions.h"
 
+#include "../game_engine/game_engine_state.h"
+
 #include "../lumatone_editor_library/data/lumatone_context.h"
 #include "../lumatone_editor_library/listeners/midi_listener.h"
 #include "../lumatone_editor_library/listeners/editor_listener.h"
@@ -20,19 +22,18 @@
 class LumatoneAction;
 class LumatoneController;
 
+class LumatoneSandboxGameComponent;
+
 class KeyColorConstrainer
 {
 public:
-
     KeyColorConstrainer() {}
     virtual ~KeyColorConstrainer() {}
 
     virtual juce::Colour validColour(juce::Colour targetColour, int boardIndex, int keyIndex) 
     { 
         return targetColour; 
-    };
-
-
+    }
 };
 
 #define MAX_QUEUE_SIZE 280
@@ -43,7 +44,7 @@ class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener,
 {
 public:
 
-    LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String gameName);
+    LumatoneSandboxGameBase(juce::ValueTree engineStateIn, LumatoneController* controllerIn, juce::String gameName);
     virtual ~LumatoneSandboxGameBase()
     {
         reset(true);
@@ -68,8 +69,10 @@ public:
 
     const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
 
-protected:
+public:
+    virtual LumatoneSandboxGameComponent* createController() = 0;
 
+protected:
     LumatoneKeyContext getKeyAt(int boardIndex, int keyIndex) const;
 
 private:
@@ -77,6 +80,9 @@ private:
     int getQueuePtr() const { return (queuePtr + queueSize - 1) % MAX_QUEUE_SIZE; }
 
 protected:
+
+    juce::ValueTree engineStateTree;
+    LumatoneGameEngineState engineState;
 
     LumatoneLayout layoutBeforeStart;
 

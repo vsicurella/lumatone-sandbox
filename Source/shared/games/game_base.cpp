@@ -8,15 +8,16 @@
   ==============================================================================
 */
 
-#include "game_base.h"
+#include "./game_base.h"
 
 #include "../lumatone_editor_library/LumatoneController.h"
 #include "../lumatone_editor_library/actions/edit_actions.h"
 
-LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String actionName)
-    : controller(controllerIn)
-    // , controller(midiMgrIn)
-    , name(actionName)
+LumatoneSandboxGameBase::LumatoneSandboxGameBase(juce::ValueTree engineStateIn, LumatoneController* controllerIn, juce::String nameIn)
+    : engineStateTree(engineStateIn) 
+    , engineState(nameIn, engineStateIn, nullptr)
+    , controller(controllerIn)
+    , name(nameIn)
     , layoutBeforeStart(*controllerIn->getMappingData())
 {
     reset(true);

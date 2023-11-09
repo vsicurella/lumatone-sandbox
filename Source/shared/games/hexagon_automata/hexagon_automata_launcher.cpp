@@ -8,15 +8,14 @@
   ==============================================================================
 */
 
-#include "hexagon_automata_launcher.h"
+#include "./hexagon_automata_launcher.h"
+#include "./hexagon_automata.h"
 
 //==============================================================================
-HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* gameEngineIn)
-    : LumatoneSandboxGameComponent(gameEngineIn)
+HexagonAutomata::Component::Component(HexagonAutomata::Game* gameIn)
+    : LumatoneSandboxGameComponent(gameIn)
+    , game(gameIn)
 {
-    game = new HexagonAutomata::Game(gameEngine->getController());
-    registerGameWithEngine(static_cast<LumatoneSandboxGameBase*>(game));
-
     addSeedButton = std::make_unique<juce::TextButton>("Add Seeds", "Add a cluster of cells with 50% per cell");
     addSeedButton->onClick = [&]
     {
@@ -112,7 +111,7 @@ HexagonAutomataComponent::HexagonAutomataComponent(LumatoneSandboxGameEngine* ga
     addAndMakeVisible(*deadColourLabel);
 }
 
-HexagonAutomataComponent::~HexagonAutomataComponent()
+HexagonAutomata::Component::~Component()
 { 
     game = nullptr;
 
@@ -120,19 +119,19 @@ HexagonAutomataComponent::~HexagonAutomataComponent()
     addSeedButton = nullptr;
 }
 
-void HexagonAutomataComponent::resized()
+void HexagonAutomata::Component::resized()
 {
     LumatoneSandboxGameComponent::resized();
 
-    juce::Array<HexagonAutomataComponent::Parameter> layoutParams = 
+    juce::Array<HexagonAutomata::Component::Parameter> layoutParams = 
     {
-        HexagonAutomataComponent::Parameter::FramesPerGeneration, 
-        HexagonAutomataComponent::Parameter::AddSeed,
-        HexagonAutomataComponent::Parameter::BornRule,
-        HexagonAutomataComponent::Parameter::SurviveRule,
-        HexagonAutomataComponent::Parameter::NeighborDistance,
-        HexagonAutomataComponent::Parameter::AliveColour,
-        HexagonAutomataComponent::Parameter::DeadColour
+        HexagonAutomata::Component::Parameter::FramesPerGeneration, 
+        HexagonAutomata::Component::Parameter::AddSeed,
+        HexagonAutomata::Component::Parameter::BornRule,
+        HexagonAutomata::Component::Parameter::SurviveRule,
+        HexagonAutomata::Component::Parameter::NeighborDistance,
+        HexagonAutomata::Component::Parameter::AliveColour,
+        HexagonAutomata::Component::Parameter::DeadColour
     };
 
     juce::FlexBox box;
@@ -200,7 +199,7 @@ void HexagonAutomataComponent::resized()
 
         switch (param)
         {
-        case HexagonAutomataComponent::Parameter::FramesPerGeneration:
+        case HexagonAutomata::Component::Parameter::FramesPerGeneration:
             // item.margin.left = 0;
             // item.associatedComponent = genSpeedSlider.get();
             // item.maxWidth = controlsWidth;
@@ -209,7 +208,7 @@ void HexagonAutomataComponent::resized()
             gItem.associatedComponent = genSpeedSlider.get();
             gItem.maxWidth = controlsWidth;
             break;
-        case HexagonAutomataComponent::Parameter::AddSeed:
+        case HexagonAutomata::Component::Parameter::AddSeed:
             // item.margin.left = margin;
             // item.associatedFlexBox = &seedsBox;
             // item.associatedFlexBox->items.add(juce::FlexItem(*addSeedButton).withWidth(addLength).withHeight(buttonHeight));
@@ -221,7 +220,7 @@ void HexagonAutomataComponent::resized()
             gItem.width = addLength;
             gItem.associatedComponent = addSeedButton.get();
             break;
-        case HexagonAutomataComponent::Parameter::BornRule:
+        case HexagonAutomata::Component::Parameter::BornRule:
             // item.margin.left = bornRuleLabelWidth;
             // item.associatedComponent = bornRuleInput.get();
             // item.maxWidth = textLength;
@@ -230,7 +229,7 @@ void HexagonAutomataComponent::resized()
             gItem.width = textLength;
             gItem.maxWidth = textLength * 2;
             break;
-        case HexagonAutomataComponent::Parameter::SurviveRule:
+        case HexagonAutomata::Component::Parameter::SurviveRule:
             // item.margin.left = surviveRuleLabelWidth;
             // item.associatedComponent = suviveRuleInput.get();
             // item.maxWidth = textLength;
@@ -239,7 +238,7 @@ void HexagonAutomataComponent::resized()
             gItem.width = textLength;
             gItem.maxWidth = textLength * 2;
             break;
-        case HexagonAutomataComponent::Parameter::NeighborDistance:
+        case HexagonAutomata::Component::Parameter::NeighborDistance:
             // item.margin.left = distanceLabelWidth;
             // item.associatedComponent = distanceSlider.get();
             // item.maxWidth = textLength;
@@ -323,7 +322,7 @@ void HexagonAutomataComponent::resized()
     // deadColourSelector->setBounds(aliveColourSelector->getRight() + margin, deadColourLabel->getY() + margin,  selectorWidth, selectorHeight);
 }
 
-void HexagonAutomataComponent::colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour)
+void HexagonAutomata::Component::colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour)
 {
     if (source == aliveColourSelector.get())
         game->setAliveColour(newColour);
@@ -332,7 +331,7 @@ void HexagonAutomataComponent::colourChangedCallback(ColourSelectionBroadcaster*
         game->setDeadColour(newColour);
 }
 
-void HexagonAutomataComponent::onRulesChange()
+void HexagonAutomata::Component::onRulesChange()
 {
     game->setBornSurviveRules(bornRuleInput->getText(), suviveRuleInput->getText());
 }

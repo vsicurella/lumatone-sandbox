@@ -285,7 +285,7 @@ public:
 
         case LumatoneSandbox::Menu::commandIDs::openHexagonAutomata:
         {
-            mainComponent->setGameComponent(new HexagonAutomataComponent(gameEngine.get()));
+            mainComponent->setGameComponent(new HexagonAutomata::Component(gameEngine.get()));
             return true;
         }
 

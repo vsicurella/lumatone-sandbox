@@ -32,7 +32,7 @@ public:
 
 public:
 
-    RandomColors(LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
+    RandomColors(juce::ValueTree gameEngineState, LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
 
     void reset(bool clearQueue) override;
 
@@ -43,12 +43,12 @@ public:
     RandomColors::Options getOptions() const;
 
 private:
-
     LumatoneAction* renderFrame() const override;
 
-private:
-
     void nextRandomKey();
+
+public:
+    virtual LumatoneSandboxGameComponent* createController() override;
 
 private:
 

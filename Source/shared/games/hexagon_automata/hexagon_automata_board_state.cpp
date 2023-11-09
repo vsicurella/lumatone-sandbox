@@ -6,16 +6,16 @@
 
 */
 
-#include "./hexagon_automata_game_state.h"
+#include "./hexagon_automata_board_state.h"
 
-HexagonAutomata::GameState::GameState(std::shared_ptr<LumatoneLayout> layoutIn)
+HexagonAutomata::BoardState::BoardState(std::shared_ptr<LumatoneLayout> layoutIn)
     : layout(layoutIn)
     , hexMap(layoutIn) 
 {
     resetState();
 }
 
-HexagonAutomata::GameState::GameState(const HexagonAutomata::GameState& copy)
+HexagonAutomata::BoardState::BoardState(const HexagonAutomata::BoardState& copy)
     : layout(copy.layout)
     , hexMap(copy.layout)
     , numCells(copy.numCells)
@@ -24,7 +24,7 @@ HexagonAutomata::GameState::GameState(const HexagonAutomata::GameState& copy)
 
 }
 
-void HexagonAutomata::GameState::resetState()
+void HexagonAutomata::BoardState::resetState()
 {
     numCells = layout->getOctaveBoardSize() * layout->getNumBoards();
 
@@ -32,7 +32,7 @@ void HexagonAutomata::GameState::resetState()
     cells.fill(HexState());
 }
 
-HexagonAutomata::MappedHexState HexagonAutomata::GameState::getMappedCell(int cellNum)
+HexagonAutomata::MappedHexState HexagonAutomata::BoardState::getMappedCell(int cellNum)
 {
     auto hex = hexMap.keyNumToHex(cellNum);
     auto keyCoord = layout->keyNumToKeyCoord(cellNum);
@@ -41,7 +41,7 @@ HexagonAutomata::MappedHexState HexagonAutomata::GameState::getMappedCell(int ce
     return HexagonAutomata::MappedHexState(cells[cellNum], mappedKey, hex);
 }
 
-juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::GameState::getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const
+juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const
 {
     juce::Array<MappedHexState> mappedCells;
     for (auto point : vector)
@@ -60,7 +60,7 @@ juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::GameState::getNeig
     return mappedCells;
 }
 
-juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::GameState::getAliveNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const
+juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getAliveNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const
 {
     juce::Array<MappedHexState> mappedCells;
     for (auto point : vector)

@@ -9,12 +9,13 @@
 */
 
 #include "hex_rings.h"
+#include "hex_rings_launcher.h"
 
 #include "../../lumatone_editor_library/LumatoneController.h"
 #include "../../lumatone_editor_library/actions/edit_actions.h"
 
-HexRings::HexRings(LumatoneController* controller)
-    : LumatoneSandboxGameBase(controller, "Hex Rings")
+HexRings::HexRings(juce::ValueTree gameEngineState, LumatoneController* controller)
+    : LumatoneSandboxGameBase(gameEngineState, controller, "HexRings")
 {
     hexMap.reset(new LumatoneHexMap(controller->shareMappingData()));
     reset(true);
@@ -108,3 +109,9 @@ void HexRings::handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 veloci
         frameQueue.add({ coord, true, false, false, velocity, colour });
     }
 }
+
+LumatoneSandboxGameComponent* HexRings::createController()
+{
+    return new HexRingLauncher(this);
+}
+

@@ -11,6 +11,7 @@
 #pragma once
 #include "../game_base.h"
 #include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
+
 class HexRings : public LumatoneSandboxGameBase
 {
 public:
@@ -29,7 +30,7 @@ public:
 
 public:
 
-    HexRings(LumatoneController* controllerIn);
+    HexRings(juce::ValueTree gameEngineState, LumatoneController* controllerIn);
 
     void reset(bool clearQueue) override;
 
@@ -49,8 +50,10 @@ public:
 public:
     void handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
 
-private:
+public:
+    virtual LumatoneSandboxGameComponent* createController() override;
 
+private:
     juce::Random random;
 
     juce::Array<HexRings::Frame> frameQueue;

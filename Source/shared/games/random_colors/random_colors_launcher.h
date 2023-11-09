@@ -11,8 +11,10 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "./random_colors.h"
+
 #include "../game_component.h"
+
+class RandomColors;
 
 //==============================================================================
 /*
@@ -20,14 +22,13 @@
 class RandomColorsComponent  : public LumatoneSandboxGameComponent
 {
 public:
-    RandomColorsComponent(LumatoneSandboxGameEngine* gameEngine);
+    RandomColorsComponent(RandomColors* gameEngine);
     ~RandomColorsComponent() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-
     RandomColors* game;
 
     std::unique_ptr<juce::Slider> speedSlider;

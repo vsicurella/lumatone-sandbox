@@ -28,16 +28,6 @@ void HexagonAutomata::Renderer::setColour(juce::Colour aliveColourIn, juce::Colo
         oldColour, 1.0f, 1.0f, false);
 }
 
-juce::Colour HexagonAutomata::Renderer::getAliveColour() const 
-{ 
-    return aliveColour; 
-}
-
-juce::Colour HexagonAutomata::Renderer::getDeadColour() const
-{
-    return deadColour;
-}
-
 void HexagonAutomata::Renderer::setMaxAge(int ticks)
 {
     maxAge = ticks;

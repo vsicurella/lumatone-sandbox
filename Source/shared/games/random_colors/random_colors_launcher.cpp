@@ -7,19 +7,14 @@
 
   ==============================================================================
 */
-#pragma once
 
-#include <JuceHeader.h>
 #include "random_colors_launcher.h"
 #include "random_colors.h"
 
 //==============================================================================
-RandomColorsComponent::RandomColorsComponent(LumatoneSandboxGameEngine* gameEngineIn)
-    : LumatoneSandboxGameComponent(gameEngineIn)
+RandomColorsComponent::RandomColorsComponent(RandomColors* gameIn)
+    : LumatoneSandboxGameComponent(gameIn)
 {
-    game = new RandomColors(gameEngine->getController());
-    registerGameWithEngine(game);
-
     auto options = game->getOptions();
     speedSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::LinearHorizontal, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
     speedSlider->setRange(2, 60, 1);
@@ -31,14 +26,11 @@ RandomColorsComponent::RandomColorsComponent(LumatoneSandboxGameEngine* gameEngi
         game->setOptions(options);
     };
     addAndMakeVisible(*speedSlider);
-
-
 }
 
 RandomColorsComponent::~RandomColorsComponent()
 {
     game = nullptr;
-    gameEngine->endGame();
 }
 
 void RandomColorsComponent::paint (juce::Graphics& g)

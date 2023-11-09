@@ -8,20 +8,21 @@
   ==============================================================================
 */
 
-#include "hex_rings_launcher.h"
+#include "./hex_rings_launcher.h"
+#include "./hex_rings.h"
 
 //==============================================================================
-HexRingLauncher::HexRingLauncher(LumatoneSandboxGameEngine* gameEngineIn)
-    : LumatoneSandboxGameComponent(gameEngineIn)
+HexRingLauncher::HexRingLauncher(HexRings* gameIn)
+    : LumatoneSandboxGameComponent(gameIn)
+    , game(gameIn)
 {
-    game = new HexRings(gameEngine->getController());
-    registerGameWithEngine(game);
+    // game = new HexRings(gameEngine->getController());
+    // registerGameWithEngine(game);
 }
 
 HexRingLauncher::~HexRingLauncher()
 {
     game = nullptr;
-    gameEngine->endGame();
 }
 
 void HexRingLauncher::resized()

@@ -10,17 +10,22 @@
 
 #pragma once
 
-#include "./hexagon_automata.h"
 #include "../game_component.h"
+
 #include "../../lumatone_editor_library/palettes/ColourSelectionPanels.h"
+
+namespace HexagonAutomata
+{
+
+class Game;
 
 //==============================================================================
 /*
 */
-class HexagonAutomataComponent  : public LumatoneSandboxGameComponent
-                                , protected ColourSelectionListener
+class Component : public LumatoneSandboxGameComponent
+                , protected ColourSelectionListener
 {
-
+    
     enum class Parameter
     {
         FramesPerGeneration, 
@@ -30,31 +35,23 @@ class HexagonAutomataComponent  : public LumatoneSandboxGameComponent
         SurviveRule,
         NeighborDistance,
         AliveColour,
-        DeadColour
+        DeadColour,
+        GameMode,
+        GenerationMode
     };
 
 public:
-    HexagonAutomataComponent(LumatoneSandboxGameEngine* gameEngine);
-    ~HexagonAutomataComponent() override;
-
-    // void paint(juce::Graphics& g) override
-    // {
-    //     LumatoneSandboxGameComponent::paint(g);
-
-    //     g.setColour(juce::Colours::red);
-    //     g.drawRect(flexArea, 1.5f);
-    // }
+    Component(HexagonAutomata::Game* gameIn);
+    ~Component() override;
 
     void resized() override;
 
     void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) override;
 
 private:
-
     void onRulesChange();
 
 private:
-    
     HexagonAutomata::Game* game;
 
     std::unique_ptr<juce::Slider> genSpeedSlider;
@@ -83,5 +80,7 @@ private:
 
     juce::Rectangle<int> flexArea;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HexagonAutomataComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Component)
 };
+
+}

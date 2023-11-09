@@ -6,8 +6,8 @@
 
 */
 
-#ifndef LUMATONE_HEX_AUTOMATA_GAME_STATE_H
-#define LUMATONE_HEX_AUTOMATA_GAME_STATE_H
+#ifndef LUMATONE_HEX_AUTOMATA_BOARD_STATE_H
+#define LUMATONE_HEX_AUTOMATA_BOARD_STATE_H
 
 #include "./hexagon_automata_cell_state.h"
 
@@ -16,7 +16,7 @@
 
 namespace HexagonAutomata
 {
-struct GameState
+struct BoardState
 {
     std::shared_ptr<LumatoneLayout> layout;
     LumatoneHexMap hexMap;
@@ -25,8 +25,8 @@ struct GameState
 
     juce::Array<HexState> cells;
 
-    GameState(std::shared_ptr<LumatoneLayout> layoutIn);
-    GameState(const GameState& copy);
+    BoardState(std::shared_ptr<LumatoneLayout> layoutIn);
+    BoardState(const BoardState& copy);
 
     virtual void resetState();
 
@@ -38,4 +38,4 @@ struct GameState
     
 }
 
-#endif // LUMATONE_HEX_AUTOMATA_GAME_STATE_H
+#endif // LUMATONE_HEX_AUTOMATA_BOARD_STATE_H

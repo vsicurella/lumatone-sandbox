@@ -2,22 +2,24 @@
 
 #include <JuceHeader.h>
 
-#include "lumatone_editor_library/LumatoneController.h"
-#include "lumatone_editor_library/LumatoneKeyboardComponent.h"
 #include "lumatone_editor_library/color/adjust_layout_colour.h"
+#include "./game_engine/game_engine.h"
 
-#include "gui/connection_status.h"
-
-#include "game/game_engine_component.h"
+class LumatoneController;
+class LumatoneKeyboardComponent;
+class ConnectionStatus;
+class LumatoneSandboxGameEngineComponent;
+class LumatoneSandboxGameBase;
 
 //==============================================================================
 /*
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent  : public juce::Component,
-                       public LumatoneEditor::StatusListener,
-                       public juce::ApplicationCommandTarget
+class MainComponent  : public juce::Component
+                     , public LumatoneEditor::StatusListener
+                     , public LumatoneSandboxGameEngine::Listener
+                     , public juce::ApplicationCommandTarget
 {
 public:
     //==============================================================================
@@ -31,19 +33,21 @@ public:
     LumatoneKeyboardComponent* getLumatoneKeyboardComponent() { return lumatoneComponent.get(); }
 
     void setGameEngine(LumatoneSandboxGameEngine* engineIn);
-    void setGameComponent(LumatoneSandboxGameComponent* gameIn);
+    // void setGameComponent(LumatoneSandboxGameComponent* gameIn);
     
-    void gameLoadedCallback();
-
     bool getShowGameControl() const { return showGameControl; }
     void setShowGameControl(bool showControl);
 
 protected:
-
     juce::ApplicationCommandTarget* getNextCommandTarget () override { return nullptr; }
     void getAllCommands(juce::Array <juce::CommandID>& commands) override;
 	void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo& result) override;
 	bool perform(const juce::ApplicationCommandTarget::InvocationInfo& info) override;
+
+private:
+    void gameStatusChanged(LumatoneSandboxGameBase* game, LumatoneGameEngineState::GameStatus status) override;
+
+    void gameLoadedCallback(LumatoneSandboxGameBase* game);
 
 private:
     //==============================================================================

@@ -1,6 +1,13 @@
 #include "MainComponent.h"
 #include "SandboxMenu.h"
 
+#include "lumatone_editor_library/LumatoneController.h"
+#include "lumatone_editor_library/LumatoneKeyboardComponent.h"
+#include "gui/connection_status.h"
+
+#include "./game_engine/game_engine_component.h"
+#include "./games/game_base.h"
+
 //==============================================================================
 MainComponent::MainComponent(LumatoneController* controllerIn)
     : controller(controllerIn)
@@ -19,11 +26,15 @@ MainComponent::~MainComponent()
 {
     controller->removeStatusListener(connectionStatus.get());
 
+    if (gameEngineComponent != nullptr && gameEngineComponent->getGameEngine() != nullptr)
+    {
+        gameEngineComponent->getGameEngine()->removeEngineListener(this);
+    }
+
     gameEngineComponent = nullptr;
     lumatoneComponent = nullptr;
     connectionStatus = nullptr;
 
-    // midiManager = nullptr;
     controller = nullptr;
 }
 
@@ -60,6 +71,8 @@ void MainComponent::resized()
 
 void MainComponent::setGameEngine(LumatoneSandboxGameEngine* engineIn)
 {
+    engineIn->addEngineListener(this);
+
     jassert(gameEngineComponent.get() == nullptr);
     gameEngineComponent = std::make_unique<LumatoneSandboxGameEngineComponent>(engineIn);
 
@@ -71,15 +84,13 @@ void MainComponent::setGameEngine(LumatoneSandboxGameEngine* engineIn)
     resized();
 }
 
-void MainComponent::setGameComponent(LumatoneSandboxGameComponent *gameIn)
-{
-    gameEngineComponent->setGameComponent(gameIn);
-    gameLoadedCallback();
-}
 
-void MainComponent::gameLoadedCallback()
+void MainComponent::gameLoadedCallback(LumatoneSandboxGameBase* game)
 {
     jassert(gameEngineComponent != nullptr);
+
+    gameEngineComponent->setGameComponent(game->createController());
+
     if (showGameControl)
         gameEngineComponent->resized();
 }
@@ -128,6 +139,18 @@ bool MainComponent::perform(const juce::ApplicationCommandTarget::InvocationInfo
         lumatoneComponent->setRenderMode(LumatoneComponentRenderMode::MaxRes);
         return true;
     }
+    }
+}
+
+void MainComponent::gameStatusChanged(LumatoneSandboxGameBase* game, LumatoneGameEngineState::GameStatus status)
+{
+    switch (status)
+    {
+    case LumatoneGameEngineState::GameStatus::Loaded:
+        gameLoadedCallback(game);
+        break;
+    default: 
+        return;
     }
 }
 

@@ -1,5 +1,5 @@
-#include "game_engine_component.h"
-#include "game_component.h"
+#include "./game_engine_component.h"
+#include "../games/game_component.h"
 
 //==============================================================================
 LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneSandboxGameEngine* gameEngineIn)
