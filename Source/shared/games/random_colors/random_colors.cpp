@@ -15,7 +15,7 @@
 #include "../../lumatone_editor_library/actions/edit_actions.h"
 
 RandomColors::RandomColors(juce::ValueTree gameEngineState, LumatoneController* controllerIn, RandomColors::Options options)
-    : LumatoneSandboxGameBase(gameEngineState, controllerIn, "Random Colors")
+    : LumatoneSandboxGameBase(controllerIn, "Random Colors")
 {
     setOptions(options);
 }

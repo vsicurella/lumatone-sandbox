@@ -44,14 +44,14 @@ class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener,
 {
 public:
 
-    LumatoneSandboxGameBase(juce::ValueTree engineStateIn, LumatoneController* controllerIn, juce::String gameName);
+    LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String gameName);
     virtual ~LumatoneSandboxGameBase()
     {
         reset(true);
     }
 
     void queueLayout(const LumatoneLayout& layout);
-    LumatoneLayout getIdentityLayout(bool resetColors);
+    LumatoneLayout getIdentityLayout(bool resetColors=true, juce::Colour boardColour={});
     LumatoneContext getIdentityWithLayoutContext(bool resetColors);
 
     virtual void reset(bool clearActionQueue);
@@ -80,10 +80,6 @@ private:
     int getQueuePtr() const { return (queuePtr + queueSize - 1) % MAX_QUEUE_SIZE; }
 
 protected:
-
-    juce::ValueTree engineStateTree;
-    LumatoneGameEngineState engineState;
-
     LumatoneLayout layoutBeforeStart;
 
     virtual void addToQueue(LumatoneAction* action);

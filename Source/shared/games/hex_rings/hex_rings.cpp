@@ -15,7 +15,7 @@
 #include "../../lumatone_editor_library/actions/edit_actions.h"
 
 HexRings::HexRings(juce::ValueTree gameEngineState, LumatoneController* controller)
-    : LumatoneSandboxGameBase(gameEngineState, controller, "HexRings")
+    : LumatoneSandboxGameBase(controller, "HexRings")
 {
     hexMap.reset(new LumatoneHexMap(controller->shareMappingData()));
     reset(true);

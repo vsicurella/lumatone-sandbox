@@ -13,12 +13,10 @@
 #include "../lumatone_editor_library/LumatoneController.h"
 #include "../lumatone_editor_library/actions/edit_actions.h"
 
-LumatoneSandboxGameBase::LumatoneSandboxGameBase(juce::ValueTree engineStateIn, LumatoneController* controllerIn, juce::String nameIn)
-    : engineStateTree(engineStateIn) 
-    , engineState(nameIn, engineStateIn, nullptr)
-    , controller(controllerIn)
-    , name(nameIn)
+LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String nameIn)
+    : controller(controllerIn)
     , layoutBeforeStart(*controllerIn->getMappingData())
+    , name(nameIn)
 {
     reset(true);
 }
@@ -100,18 +98,22 @@ void LumatoneSandboxGameBase::queueLayout(const LumatoneLayout& layout)
     }
 }
 
-LumatoneLayout LumatoneSandboxGameBase::getIdentityLayout(bool resetColors)
+LumatoneLayout LumatoneSandboxGameBase::getIdentityLayout(bool resetColors, juce::Colour boardColour)
 {
     LumatoneLayout identity = LumatoneLayout::IdentityMapping(controller->getNumBoards(), controller->getOctaveBoardSize());
 
-    if (resetColors == false)
+    for (int b = 0; b < layoutBeforeStart.getNumBoards(); b++)
     {
-        for (int b = 0; b < layoutBeforeStart.getNumBoards(); b++)
+        for (int k = 0; k < layoutBeforeStart.getOctaveBoardSize(); k++)
         {
-            for (int k = 0; k < layoutBeforeStart.getOctaveBoardSize(); k++)
+            auto idKey = identity.getKey(b, k);
+            if (resetColors)
+            {
+                idKey->colour = boardColour;
+            }
+            else
             {
                 auto layoutKey = layoutBeforeStart.readKey(b, k);
-                auto idKey = identity.getKey(b, k);
                 idKey->colour = layoutKey->colour;
             }
         }
