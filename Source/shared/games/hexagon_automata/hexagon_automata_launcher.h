@@ -25,20 +25,6 @@ class Game;
 class Component : public LumatoneSandboxGameComponent
                 , protected ColourSelectionListener
 {
-    
-    enum class Parameter
-    {
-        FramesPerGeneration, 
-        AddSeed,
-        NumAddSeeds,
-        BornRule,
-        SurviveRule,
-        NeighborDistance,
-        AliveColour,
-        DeadColour,
-        GameMode,
-        GenerationMode
-    };
 
 public:
     Component(HexagonAutomata::Game* gameIn);
@@ -49,10 +35,33 @@ public:
     void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) override;
 
 private:
+    void onGameModeChange();
+    void onGenerationModeChange();
     void onRulesChange();
+
+    void updateSpeedSlider();
+
+    void speedSliderCallback();
+
+private:
+
+    inline static const juce::String modeColumnId = juce::String("ModeColumn");
+    inline static const juce::String rulesColumnId = juce::String("RulesColumn");
+    inline static const juce::String controlsColumnId = juce::String("ControlsColumn");
+
+    inline int getModeColumnWidth(juce::Font font) const;
 
 private:
     HexagonAutomata::Game* game;
+
+    std::unique_ptr<juce::ComboBox> gameModeSelector;
+    std::unique_ptr<juce::Label> gameModeLabel;
+
+    std::unique_ptr<juce::ComboBox> generationModeSelector;
+    std::unique_ptr<juce::Label> generationModeLabel;
+
+    std::unique_ptr<juce::ComboBox> rulesModeSelector;
+    std::unique_ptr<juce::Label> rulesModeLabel;
 
     std::unique_ptr<juce::Slider> genSpeedSlider;
     std::unique_ptr<juce::Label> genSpeedLabel;
@@ -64,7 +73,7 @@ private:
     std::unique_ptr<juce::TextEditor> bornRuleInput;
     std::unique_ptr<juce::Label> bornRuleLabel;
 
-    std::unique_ptr<juce::TextEditor> suviveRuleInput;
+    std::unique_ptr<juce::TextEditor> surviveRuleInput;
     std::unique_ptr<juce::Label> surviveRuleLabel;
 
     std::unique_ptr<juce::Slider> distanceSlider;
