@@ -64,12 +64,12 @@ void LumatoneFirmwareDriver::sendMessageNow(const juce::MidiMessage &msg)
         HajuMidiDriver::sendMessageNow(msg);
         break;
     case HostMode::Plugin:
-    {
-        juce::ScopedLock l(hostLock);
-        hostQueue.addEvent(msg, hostQueueSize++);
+    default:
+        break;
     }
-    break;
-    }
+
+    juce::ScopedLock l(hostLock);
+    hostQueue.addEvent(msg, hostQueueSize++);
 }
 
 void LumatoneFirmwareDriver::notifyMessageReceived(juce::MidiInput* source, const juce::MidiMessage& midiMessage)
@@ -857,10 +857,7 @@ void LumatoneFirmwareDriver::sendOldestMessageInQueue()
     hasMsgWaitingForAck = true;
     receivedAnswer = false;
 
-    {
-        juce::ScopedLock l(sysexQueue.getLock());
-        sysexQueue.remove(0);                        // remove from buffer
-    }
+    sysexQueue.remove(0);                        // remove from buffer
     
     notifySendQueueSize();
     sendCurrentMessage();
@@ -932,6 +929,7 @@ void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, 
         }
         else
         {
+            juce::ScopedLock l(sysexQueue.getLock());
             // In case of error, NACK: ?
             // For now: Remove from buffer in any case
             hasMsgWaitingForAck = false;
