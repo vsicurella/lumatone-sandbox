@@ -41,10 +41,12 @@ HexagonAutomata::MappedHexState HexagonAutomata::BoardState::getMappedCell(int c
     return HexagonAutomata::MappedHexState(cells[cellNum], mappedKey, hex);
 }
 
-juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const
+juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point, juce::CriticalSection>& vector) const
 {
+    juce::ScopedLock l(vector.getLock());
+
     juce::Array<MappedHexState> mappedCells;
-    for (auto point : vector)
+    for (const Hex::Point& point : vector)
     {
         auto neighbor = cellCoord + point;
         auto keyCoord = hexMap.hexToKeyCoords(neighbor);
@@ -60,10 +62,12 @@ juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getNei
     return mappedCells;
 }
 
-juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getAliveNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const
+juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getAliveNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point, juce::CriticalSection>& vector) const
 {
+    juce::ScopedLock l(vector.getLock());
+
     juce::Array<MappedHexState> mappedCells;
-    for (auto point : vector)
+    for (const Hex::Point& point : vector)
     {
         auto neighbor = cellCoord + point;
         auto keyCoord = hexMap.hexToKeyCoords(neighbor);

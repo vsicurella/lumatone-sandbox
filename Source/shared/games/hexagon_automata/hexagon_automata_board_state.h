@@ -23,7 +23,7 @@ struct BoardState
 
     int numCells = 0;
 
-    juce::Array<HexState> cells;
+    juce::Array<HexState, juce::CriticalSection> cells;
 
     BoardState(std::shared_ptr<LumatoneLayout> layoutIn);
     BoardState(const BoardState& copy);
@@ -32,8 +32,8 @@ struct BoardState
 
     MappedHexState getMappedCell(int cellNum);
 
-    virtual juce::Array<MappedHexState> getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const;
-    virtual juce::Array<MappedHexState> getAliveNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point>& vector) const;
+    virtual juce::Array<MappedHexState> getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point, juce::CriticalSection>& vector) const;
+    virtual juce::Array<MappedHexState> getAliveNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point, juce::CriticalSection>& vector) const;
 };
     
 }
