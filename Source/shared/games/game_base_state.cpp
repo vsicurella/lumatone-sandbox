@@ -47,12 +47,5 @@ juce::ValueTree LumatoneGameBaseState::loadStateProperties(juce::ValueTree state
 
 void LumatoneGameBaseState::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
 {
-    if (property == LumatoneGameEngineState::ID::RequestedFps)
-    {
 
-    }
-    else if (property == LumatoneGameEngineState::ID::GameStatus)
-    {
-
-    }
 }

@@ -6,10 +6,9 @@
 
 */
 
-#include "./game_engine_state.h"
+#include "game_engine_state.h"
 
 #include "../debug/LumatoneSandboxLogger.h"
-#include "game_engine_state.h"
 
 juce::Array<juce::Identifier> LumatoneGameEngineState::GetGameEngineProperties()
 {
@@ -27,7 +26,16 @@ juce::Array<juce::Identifier> LumatoneGameEngineState::GetGameEngineProperties()
 LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager *undoManager)
     : LumatoneStateBase(nameIn)
 {
-    state = stateIn.getOrCreateChildWithName(LumatoneGameEngineState::ID::GameEngineStateId, undoManager);
+    if (stateIn.hasType(LumatoneGameEngineState::ID::GameEngineStateId))
+    {
+        state = stateIn;
+        state.addListener(this);
+    }
+    else
+    {
+        state = stateIn.getOrCreateChildWithName(LumatoneGameEngineState::ID::GameEngineStateId, undoManager);
+    }
+
     loadStateProperties(state);
 }
 
@@ -36,7 +44,7 @@ void LumatoneGameEngineState::updateTimeIntervalMs()
     timeIntervalMs = 1000.0 / runGameFps;
 }
 
-double LumatoneGameEngineState::getTimeIntervalMs() const
+float LumatoneGameEngineState::getTimeIntervalMs() const
 {
     return timeIntervalMs;
 }
@@ -49,17 +57,8 @@ double LumatoneGameEngineState::getFps() const
 void LumatoneGameEngineState::forceFps(double fps)
 {
     runGameFps = fps;
+    writeStringProperty(LumatoneGameEngineState::ID::RequestedFps, juce::String(runGameFps), nullptr);
     updateTimeIntervalMs();
-}
-
-int LumatoneGameEngineState::msecToTicks(double msec) const
-{
-    return juce::roundToInt(msec / getTimeIntervalMs());
-}
-
-double LumatoneGameEngineState::ticksToMsec(int ticks) const
-{
-    return getTimeIntervalMs() * ticks;
 }
 
 void LumatoneGameEngineState::setGameStatus(LumatoneGameEngineState::GameStatus newState)
@@ -105,8 +104,8 @@ void LumatoneGameEngineState::handleStatePropertyChange(juce::ValueTree stateIn,
     }
     else if (property == LumatoneGameEngineState::ID::RequestedFps)
     {
-        float readFps = static_cast<float>(stateIn.getProperty(property));
-        forceFps(readFps);
+        runGameFps = stateIn.getProperty(property).toString().getFloatValue();
+        updateTimeIntervalMs();
     }
     else if (property == LumatoneGameEngineState::ID::GameName)
     {

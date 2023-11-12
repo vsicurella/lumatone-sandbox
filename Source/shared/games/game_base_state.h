@@ -28,13 +28,6 @@ public:
 public:
     LumatoneGameBaseState(LumatoneSandbox::GameName name, juce::Identifier gameId, juce::ValueTree engineStateIn);
 
-    double getTimeIntervalMs() const { return engineState.getTimeIntervalMs(); }
-    double getFps() const { return engineState.getFps(); }
-
-protected:
-    int msecToTicks(double msec) const { return engineState.msecToTicks(msec); }
-    double tickToMsec(int ticks) const { return engineState.ticksToMsec(ticks); }
-
 protected:
     virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;    
     

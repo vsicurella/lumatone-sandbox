@@ -13,7 +13,6 @@
 #include "../lumatone_editor_library/data/state_base.h"
 
 class LumatoneGameEngineState : protected LumatoneStateBase
-                              , protected juce::ValueTree::Listener
 {
 public:
     struct ID
@@ -81,17 +80,24 @@ public:
 
     virtual ~LumatoneGameEngineState() {}
 
-    double getTimeIntervalMs() const;
+    float getTimeIntervalMs() const;
     double getFps() const;
 
     virtual void forceFps(double fps);
 
-    int msecToTicks(double msec) const;
-    double ticksToMsec(int ticks) const;
-
     bool isGameLoaded() const { return gameStatus >= GameStatus::NoGame; }
     bool isGameRunning() const { return gameStatus == GameStatus::Running; }
     bool isGamePaused() const { return gameStatus == GameStatus::Paused; }
+
+public:
+    static float bpmToMsec(float bpmValue) { return 6.0e4f / bpmValue; }
+    static float msecToBpm(float msValue) { return 6.0e4f / msValue; }
+
+    float msecToTicks(float msec) const { return msec / static_cast<float>(getTimeIntervalMs()); }
+    float ticksToMsec(float ticks) const { return getTimeIntervalMs() * ticks; }
+
+    float bpmToGameTicks(float bpmValue) const { return msecToTicks(bpmToMsec(bpmValue)); }
+    float ticksToBpm(float ticksValue) const { return msecToBpm(ticksToMsec(ticksValue)); }
 
 protected:
     void updateTimeIntervalMs();

@@ -249,9 +249,11 @@ void LumatoneSandboxGameEngine::timerCallback()
 {
     stopTimer();
 
-    if (isGameRunning() || isGamePaused())
+    if (isGameLoaded())
     {
-        advanceFrame();
+        if (isGameRunning() || isGamePaused())
+            advanceFrame();
+            
         processGameActionQueue();
 
         startTimer(getTimeIntervalMs());
