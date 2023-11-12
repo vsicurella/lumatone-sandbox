@@ -50,7 +50,7 @@ public:
 
 private:
     juce::Colour aliveColour;
-    juce::Colour deadColour;
+    juce::Colour deadColour  = juce::Colours::black;
     juce::Colour emptyColour = juce::Colours::black;
 
     juce::Colour oldColour;

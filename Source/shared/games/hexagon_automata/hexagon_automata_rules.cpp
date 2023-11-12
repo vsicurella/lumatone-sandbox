@@ -8,10 +8,9 @@
   ==============================================================================
 */
 
-#include "./hexagon_automata_rules.h"
+#include "hexagon_automata_rules.h"
 
 #include "./hexagon_automata_cell_state.h"
-
 
 static juce::Array<int> ParseListArgument(juce::String numberList)
 {
@@ -38,13 +37,20 @@ static juce::Array<int> ParseListArgument(juce::String numberList)
 }
 
 
-juce::Array<Hex::Point> HexagonAutomata::NeighborFunction::getNeighborsVector(int distance) const 
+juce::Array<Hex::Point, juce::CriticalSection> HexagonAutomata::NeighborFunction::getNeighborsVector(int distance) const 
 { 
-    return Hex::Point().neighbors(distance); 
+    juce::ScopedLock l(lock);
+
+    auto neighbors = Hex::Point().neighbors(distance);
+    juce::Array<Hex::Point, juce::CriticalSection> neighborsOut;
+    neighborsOut.addArray(neighbors);
+    return neighborsOut;
 }
 
 float HexagonAutomata::DefaultNeighborFunction::getLifeFactor(const HexagonAutomata::MappedHexState& origin, const HexagonAutomata::MappedHexState* neighbors, int numNeighbors) const
 {
+    juce::ScopedLock l(lock);
+
     if (numNeighbors < 2 || numNeighbors > 3)
         return 0.0f;
     return 1.0f;
@@ -52,6 +58,8 @@ float HexagonAutomata::DefaultNeighborFunction::getLifeFactor(const HexagonAutom
 
 bool HexagonAutomata::DefaultNeighborFunction::generateNewLife(const HexagonAutomata::MappedHexState& origin, const HexagonAutomata::MappedHexState* neighbors, int numNeighbors) const
 {
+    juce::ScopedLock l(lock);
+
     if (numNeighbors == 3)
         return true;
     return false;
@@ -60,8 +68,11 @@ bool HexagonAutomata::DefaultNeighborFunction::generateNewLife(const HexagonAuto
 HexagonAutomata::BornSurviveRule::BornSurviveRule(int numBorn, int surviveLower, int surviveUpper)
 {
     numsBorn.add(numBorn);
-    numsSurvive.add(surviveLower);
-    numsSurvive.add(surviveUpper);
+
+    for (int i = surviveLower; i <= surviveUpper; i++)
+    {
+        numsSurvive.add(i);    
+    }
 }
 
 HexagonAutomata::BornSurviveRule::BornSurviveRule(juce::Array<int> bornNums, juce::Array<int> surviveNums)
@@ -78,6 +89,8 @@ HexagonAutomata::BornSurviveRule::BornSurviveRule(juce::String bornString, juce:
 
 float HexagonAutomata::BornSurviveRule::getLifeFactor(const HexagonAutomata::MappedHexState& origin, const HexagonAutomata::MappedHexState* neighbors, int numNeighbors) const
 {
+    juce::ScopedLock l(lock);
+
     if (numsSurvive.contains(numNeighbors))
         return 1.0f;
     return 0.0f;
@@ -85,8 +98,49 @@ float HexagonAutomata::BornSurviveRule::getLifeFactor(const HexagonAutomata::Map
 
 bool HexagonAutomata::BornSurviveRule::generateNewLife(const HexagonAutomata::MappedHexState& origin, const HexagonAutomata::MappedHexState* neighbors, int numNeighbors) const
 {
+    juce::ScopedLock l(lock);
+
     if (numsBorn.contains(numNeighbors))
         return true;
     return false;
 }
 
+// HexagonAutomata::BornMiddleSurviveRule::BornMiddleSurviveRule(int numForBorn, int maxBorn, int surviveLower, int surviveUpper)
+// {
+//     numsForBorn.add(numForBorn);
+//     maxNumsBorn.add(maxBorn);
+//     for (int i = surviveLower; i <= surviveUpper; i++)
+//         numsSurvive.add(i);
+// }
+
+// HexagonAutomata::BornMiddleSurviveRule::BornMiddleSurviveRule(juce::Array<int> numForBornIn, juce::Array<int> bornMaxes, juce::Array<int> surviveNums)
+//     : numsForBorn(numsForBornIn)
+//     , maxNumsForBorn(bornMaxes)
+//     , numsSurvive(surviveNums)
+// {
+// }
+
+// HexagonAutomata::BornMiddleSurviveRule::BornMiddleSurviveRule(juce::String numForBorn, juce::String bornMaxes, juce::String survieNums)
+// {
+//     numsForBorn = ParseListArgument(numForBorn);
+//     maxNumsBorn = ParseListArgument(bornMaxes);
+//     numsSurvive = ParseListArgument(survieNums);
+// }
+
+// juce::Array<Hex::Point> HexagonAutomata::BornMidNearSurviveRule::getNewCells(const MappedHexState &parentCell, const MappedHexState *neighbors, int numNeighbors)
+// {
+//     juce::Array<Hex::Point> newCells;
+
+//     juce::Array<Hex::Point> aliveNeighbors;
+//     for (int i = 0; i < numNeighbors; i++)
+//     {
+
+//     }
+
+//     return newCells;
+// }
+
+// juce::Array<Hex::Point> HexagonAutomata::BornMidFarSurviveRule::getNewCells(const MappedHexState &parentCell, const MappedHexState *neighbors, int numNeighbors)
+// {
+//     return juce::Array<Hex::Point>();
+// }

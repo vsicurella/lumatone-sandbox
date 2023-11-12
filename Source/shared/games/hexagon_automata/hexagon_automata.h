@@ -3,6 +3,7 @@
 #include "./hexagon_automata_game_state.h"
 
 #include "../game_base.h"
+#include "../../debug/LumatoneSandboxLogger.h"
 
 namespace HexagonAutomata
 {
@@ -11,6 +12,7 @@ struct NeighborFunction;
 
 class Game : public LumatoneSandboxGameBase
            , public HexagonAutomata::State
+           , private LumatoneSandboxLogger
 {
 public:
 
@@ -32,6 +34,15 @@ public:
     void clearCell(Hex::Point coord, bool triggerMidi=true);
     void clearCell(MappedHexState& cell, bool triggerMidi=true);
     void clearAllCells(bool triggerMidi=true);
+
+public:
+    void setGameMode(GameMode modeIn) override;
+    void setGenerationMode(GenerationMode newMode) override;
+    void setAliveColour(juce::Colour newColour) override;
+    void setDeadColour(juce::Colour newColour) override;
+    void setBornSurviveRules(juce::String bornInput, juce::String surviveInput) override;
+    // void setNeighborDistance(int distance) override;
+
         
 private:
     void updateNewCells();
@@ -57,25 +68,27 @@ private:
     void resetState() override;
 
     void initialize();
-    void redoCensus();
 
     void initializeLayoutContext();
 
 protected:
-    virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
+    juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override; // kludge?
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 public:
     virtual LumatoneSandboxGameComponent* createController() override;
 
 private:
+    // juce::CriticalSection cellsLock;
+    // juce::CriticalSection rulesLock;
+
+    juce::Array<Hex::Point, juce::CriticalSection> neighborsVector;
 
     std::unique_ptr<HexagonAutomata::NeighborFunction> rules;
-    
     std::unique_ptr<HexagonAutomata::Renderer> render;
 
-    juce::Array<MappedHexState> currentFrameCells;
-    juce::Array<MappedHexState> newCells;
+    juce::Array<MappedHexState, juce::CriticalSection> currentFrameCells;
+    juce::Array<MappedHexState, juce::CriticalSection> newCells;
 
     juce::Random random;
 };
