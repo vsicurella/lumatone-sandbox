@@ -14,6 +14,7 @@
 #include "lumatone_midi_driver.h"
 #include "./firmware_sysex.h"
 #include "./firmware_driver_listener.h"
+// #include "./firmware_support.h"
 
 // There are different race-condition issues between macOS and Windows. 
 // This Driver may need to be redesigned, but for now this define is
@@ -24,6 +25,7 @@
 LumatoneFirmwareDriver::LumatoneFirmwareDriver(HostMode hostModeIn, int numBoardsIn)
     : hostMode(hostModeIn)
     , numBoards(numBoardsIn)
+    // , LumatoneSandboxLogger("LumatoneFirmwareDriver")
 {
 }     
 
@@ -58,6 +60,9 @@ void LumatoneFirmwareDriver::readNextBuffer(juce::MidiBuffer &nextBuffer)
 
 void LumatoneFirmwareDriver::sendMessageNow(const juce::MidiMessage &msg)
 {
+    // if (msg.isSysEx())
+    //     logInfo("sendMessageNow", FirmwareSupport::getCommandDescription(msg));
+
     switch (hostMode)
     {
     case HostMode::Driver:
@@ -899,7 +904,19 @@ void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, 
         else
             DBG("RCVD: " + message.getDescription() + "; called by processor");
     }
+    else
+    {
+        if (source)
+            DBG("RCVD: " + message.getDescription() + "; from " + source->getName());
+        else
+            DBG("RCVD: " + message.getDescription() + "; called by processor");
+    }
 #endif
+
+    if (hostMode == HostMode::Driver && !message.isSysEx() && testIsIncomplete())
+    {
+        return; // ignore note messages before connection is confirmed
+    }
 
     juce::MessageManager::callAsync([=]() { notifyMessageReceived(source, message); });
 

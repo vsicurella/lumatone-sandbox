@@ -19,6 +19,8 @@
 #include "./data/application_state.h"
 #include "./data/lumatone_midi_manager.h"
 
+// #include "../debug/LumatoneSandboxLogger.h"
+
 class LumatoneEventManager;
 class LumatoneAction;
 
@@ -32,6 +34,7 @@ class LumatoneController :  public LumatoneApplicationState
                          ,  public LumatoneEditor::StatusEmitter
                          ,  public LumatoneEditor::EditorEmitter
                          ,  protected LumatoneEditor::FirmwareListener
+                        //  , private LumatoneSandboxLogger
 {
 public:
 

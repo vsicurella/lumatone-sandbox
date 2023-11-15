@@ -14,11 +14,12 @@
 #include "./actions/lumatone_action.h"
 #include "./lumatone_midi_driver/lumatone_midi_driver.h"
 
-LumatoneController::LumatoneController(LumatoneApplicationState state, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager)
-    : LumatoneApplicationState("LumatoneController", state, undoManager)
-    , LumatoneApplicationMidiController((LumatoneApplicationState)*this, firmwareDriverIn)
+LumatoneController::LumatoneController(LumatoneApplicationState stateIn, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager)
+    : LumatoneApplicationState("LumatoneController", stateIn, undoManager)
+    , LumatoneApplicationMidiController(*static_cast<LumatoneApplicationState*>(this), firmwareDriverIn)
     , firmwareDriver(firmwareDriverIn)
-    , updateBuffer(firmwareDriverIn, state)
+    , updateBuffer(firmwareDriverIn, stateIn)
+    // , LumatoneSandboxLogger("LumatoneController")
 {
     firmwareDriver.addDriverListener(this);
     
@@ -747,68 +748,6 @@ void LumatoneController::keyTypeConfigReceived(int boardId, const int* keyTypeDa
 
     editorListeners.call(&LumatoneEditor::EditorListener::boardChanged, *getBoard(boardId - 1));
 }
-
-//FirmwareSupport::Error LumatoneController::handlePingResponse(const juce::MidiMessage& midiMessage)
-//{
-//    unsigned int value = 0;
-//    auto errorCode = firmwareDriver.unpackPingResponse(midiMessage, value);
-//    
-//    if (errorCode != FirmwareSupport::Error::noError)
-//        return errorCode;
-//
-//    firmwareListeners.call(&LumatoneEditor::FirmwareListener::pingResponseReceived, lastTestDeviceResponded, value);
-//
-//    if (firmwareDriver.hasDevicesDefined() && !currentDevicePairConfirmed)
-//    {
-//        onConnectionConfirm(true);
-//    }
-//    
-//    return errorCode;
-//}
-
-//
-//void LumatoneController::changeListenerCallback(juce::ChangeBroadcaster* source)
-//{
-//    if (source == deviceMonitor.get())
-//    {
-//        int newInput = deviceMonitor->getConfirmedInputIndex();
-//        int newOutput = deviceMonitor->getConfirmedOutputIndex();
-//
-//        if (newInput >= 0 && newOutput >= 0)
-//        {
-//            currentDevicePairConfirmed = false;
-//            firmwareDriver.setMidiInput(newInput);
-//            firmwareDriver.setMidiOutput(newOutput);
-//
-//            // if (editingMode == sysExSendingMode::firmwareUpdate)
-//            // {
-//                confirmAutoConnection();
-//                return;
-//            // }
-//
-//            // if (connectedSerialNumber.isEmpty())
-//            //     sendGetSerialIdentityRequest();
-//
-//            // return;
-//        }
-//        
-//        if (currentDevicePairConfirmed)
-// 
-//        {
-//            // This should not get triggered if we are already disconnected
-//            jassert(firmwareDriver.hasDevicesDefined());
-//            onDisconnection();
-//        }
-//        else
-//        {
-//            // Something went wrong, but just try to continue connecting
-//            DBG("Connection was tripped");
-//            // Kludge - device monitor should be able to do this on it's own
-//            if (deviceMonitor->willDetectDeviceIfDisconnected())
-//                deviceMonitor->startDeviceDetection();
-//        }
-//    }
-//}
 
 //void LumatoneController::loadRandomMapping(int testTimeoutMs,  int maxIterations, int i)
 //{

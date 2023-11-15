@@ -32,6 +32,8 @@
 #include "./midi_driver.h"
 #include "./firmware_driver_listener.h"
 
+// #include "../../debug/LumatoneSandboxLogger.h"
+
 #define DEFAULT_NUM_BOARDS 5
 
 //[/Headers]
@@ -41,7 +43,9 @@
 Connection to midi, sending SysEx parameters to keyboard
 ==============================================================================
 */
-class LumatoneFirmwareDriver : public HajuMidiDriver, public juce::Timer
+class LumatoneFirmwareDriver : public HajuMidiDriver
+							, public juce::Timer
+							// , private LumatoneSandboxLogger
 {
 public:
 	enum class HostMode

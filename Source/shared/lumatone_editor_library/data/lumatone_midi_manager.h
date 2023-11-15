@@ -20,6 +20,8 @@
 #include "../lumatone_midi_driver/firmware_driver_listener.h"
 #include "./lumatone_context.h"
 
+// #include "../../debug/LumatoneSandboxLogger.h"
+
 class LumatoneFirmwareDriver;
 
 namespace LumatoneEditor
@@ -29,6 +31,7 @@ namespace LumatoneEditor
 
 class LumatoneApplicationMidiController : public LumatoneMidiState::Listener
                                         , protected LumatoneFirmwareDriverListener
+                                        // , private LumatoneSandboxLogger
 {
 public:
 

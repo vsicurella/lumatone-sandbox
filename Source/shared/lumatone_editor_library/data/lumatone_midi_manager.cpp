@@ -7,6 +7,7 @@
 LumatoneApplicationMidiController::LumatoneApplicationMidiController(LumatoneApplicationState stateIn, LumatoneFirmwareDriver& firmwareDriverIn)
     : appState("LumatoneApplicationMidiController", stateIn)
     , firmwareDriver(firmwareDriverIn)
+    // , LumatoneSandboxLogger("LumatoneApplicationMidiController")
 {
     firmwareDriver.addDriverListener(this);
 }
@@ -19,6 +20,7 @@ LumatoneApplicationMidiController::~LumatoneApplicationMidiController()
 
 void LumatoneApplicationMidiController::sendMidiMessage(const juce::MidiMessage msg)
 {
+    // logInfo("sendMidiMessage", msg.getDescription());
     firmwareDriver.sendMessageNow(msg);
 }
 
