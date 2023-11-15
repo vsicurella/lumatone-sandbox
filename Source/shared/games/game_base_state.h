@@ -28,6 +28,8 @@ public:
 public:
     LumatoneGameBaseState(LumatoneSandbox::GameName name, juce::Identifier gameId, juce::ValueTree engineStateIn);
 
+    int getNumTicks() const { return ticks; }
+
 protected:
     virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;    
     

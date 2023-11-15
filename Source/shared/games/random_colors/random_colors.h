@@ -34,9 +34,9 @@ public:
 
     RandomColors(juce::ValueTree gameEngineState, LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
 
-    void reset(bool clearQueue) override;
+    bool reset(bool clearQueue) override;
 
-    void nextTick() override;
+    bool nextTick() override;
 
     void setOptions(RandomColors::Options newOptions);
 

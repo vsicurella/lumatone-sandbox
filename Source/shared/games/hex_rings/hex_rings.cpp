@@ -21,14 +21,14 @@ HexRings::HexRings(juce::ValueTree gameEngineState, LumatoneController* controll
     reset(true);
 }
 
-void HexRings::reset(bool clearQueue)
+bool HexRings::reset(bool clearQueue)
 {
     LumatoneSandboxGameBase::reset(clearQueue);
     auto layout = getIdentityLayout(true);
     queueLayout(layout);
 }
 
-void HexRings::nextTick()
+bool HexRings::nextTick()
 {
     int limit = juce::jmin(frameQueue.size(), maxQueueFramesPerTick);
     for (int i = 0; i < limit; i++)

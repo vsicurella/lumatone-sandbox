@@ -87,11 +87,17 @@ bool LumatoneSandboxGameEngine::startGame()
         }
         else if (game != nullptr)
         {
-            controller->addMidiListener(game.get());
-            controller->addEditorListener(game.get());
+            if (isGamePaused())
+                logInfo("startGame", "Starting game " + game->getName());
+                
+            else
+            {
+                controller->addMidiListener(game.get());
+                controller->addEditorListener(game.get());
 
-            game->reset(true);
-            logInfo("startGame", "Starting game " + game->getName());
+                game->reset(true);
+                logInfo("startGame", "Starting game " + game->getName());
+            }
         }
         else
         {
@@ -196,16 +202,28 @@ void LumatoneSandboxGameEngine::advanceFrame()
 {
     if (isGamePaused())
     {
-        game->pauseTick();
+        if (game->pauseTick())
+            return;
     }
     else if (isGameRunning())
     {
-        game->nextTick();
+        if (game->nextTick())
+            return;
     }
     else
     {
         logError("advanceFrame", "Trying to advance frame when game is not paused or running!");
+        return;
     }
+
+    if (game != nullptr)
+    {
+        logInfo("advanceFrame", "Game requested stop.");
+        endGame();
+        return;
+    }
+
+    logError("advanceFrame", "Unknown state error!");
 }
 
 void LumatoneSandboxGameEngine::processGameActionQueue()

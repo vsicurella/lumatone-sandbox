@@ -32,9 +32,9 @@ public:
 
     HexRings(juce::ValueTree gameEngineState, LumatoneController* controllerIn);
 
-    void reset(bool clearQueue) override;
+    bool reset(bool clearQueue) override;
 
-    void nextTick() override;
+    bool nextTick() override;
 
 protected:
     LumatoneAction* renderFrame() const override;

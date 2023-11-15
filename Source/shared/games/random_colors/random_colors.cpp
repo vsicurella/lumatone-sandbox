@@ -20,7 +20,7 @@ RandomColors::RandomColors(juce::ValueTree gameEngineState, LumatoneController* 
     setOptions(options);
 }
 
-void RandomColors::reset(bool clearQueue)
+bool RandomColors::reset(bool clearQueue)
 {
     LumatoneSandboxGameBase::reset(clearQueue);
 
@@ -32,19 +32,23 @@ void RandomColors::reset(bool clearQueue)
         auto layout = getIdentityLayout(true);
         queueLayout(layout);
     }
+
+    return true;
 }
 
-void RandomColors::nextTick()
+bool RandomColors::nextTick()
 {
     ticks++;
 
     if (ticks % nextStepTicks != 0)
-        return;
+        return true;
 
     nextRandomKey();
 
     ticks = 0;
     addToQueue(renderFrame());
+
+    return true;
 }
 
 LumatoneAction* RandomColors::renderFrame() const

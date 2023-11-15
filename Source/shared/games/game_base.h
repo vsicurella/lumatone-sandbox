@@ -54,13 +54,14 @@ public:
     LumatoneLayout getIdentityLayout(bool resetColors=true, juce::Colour boardColour={});
     LumatoneContext getIdentityWithLayoutContext(bool resetColors);
 
-    virtual void reset(bool clearActionQueue);
-    virtual void nextTick() = 0;
-    virtual void pauseTick() { }
+    virtual bool reset(bool clearActionQueue);
+    virtual bool nextTick() = 0;
+    virtual bool pauseTick() { return true; }
 
     virtual void clearQueue();
     void readQueue(LumatoneAction** buffer, int& numActions);
 
+    virtual void requestQuit() { quitGame = true; }
     virtual void end();
 
     virtual double getLockedFps() const { return 0; }
@@ -75,9 +76,13 @@ public:
 protected:
     LumatoneKeyContext getKeyAt(int boardIndex, int keyIndex) const;
 
-private:
+    virtual void quit() { quitGame = false; }
 
+private:
     int getQueuePtr() const { return (queuePtr + queueSize - 1) % MAX_QUEUE_SIZE; }
+
+protected:
+    void completeMappingLoaded(LumatoneLayout layout) override;
 
 protected:
     LumatoneLayout layoutBeforeStart;
@@ -85,13 +90,13 @@ protected:
     virtual void addToQueue(LumatoneAction* action);
     virtual LumatoneAction* renderFrame() const = 0;
 
-    //juce::OwnedArray<juce::UndoableAction, juce::CriticalSection> queuedActions;
-
     LumatoneAction* queuedActions[MAX_QUEUE_SIZE];
     int queueSize = 0;
     int queuePtr = 0;
 
     LumatoneController* controller;
+
+    bool quitGame;
 
 private:
     juce::String name;

@@ -21,12 +21,15 @@ LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerI
     reset(true);
 }
 
-void LumatoneSandboxGameBase::reset(bool clearActionQueue)
+bool LumatoneSandboxGameBase::reset(bool clearActionQueue)
 {
     if (clearActionQueue)
     {
         clearQueue();
     }
+
+    quitGame = false;
+    return true;
 }
 
 void LumatoneSandboxGameBase::clearQueue()
@@ -145,4 +148,13 @@ LumatoneContext LumatoneSandboxGameBase::getIdentityWithLayoutContext(bool reset
     context.setMappedMidiNotes(midiNoteContextMap);
 
     return context;
+}
+
+void LumatoneSandboxGameBase::completeMappingLoaded(LumatoneLayout layout)
+{
+    // this is fine because we update via section update actions
+    // so this should only be triggered by loading a new layout
+
+    layoutBeforeStart = layout;
+    // reset(true);
 }
