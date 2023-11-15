@@ -33,12 +33,12 @@ void HexagonAutomata::Renderer::setMaxAge(int ticks)
     maxAge = ticks;
 }
 
-juce::Colour HexagonAutomata::Renderer::renderAliveColour(const MappedHexState& state)
+juce::Colour HexagonAutomata::Renderer::getCellColour(const MappedHexState& state)
 {
     if (static_cast<const HexagonAutomata::HexState&>(state).isEmpty())
         return emptyColour;
     if (state.isAlive())
-        return state.HexagonAutomata::HexState::colour;
+        return aliveColour;
     return deadColour;
 }
 
@@ -63,15 +63,15 @@ juce::Colour HexagonAutomata::Renderer::renderGradientColour(const MappedHexStat
     return healthGradient.getColourAtPosition(state.health);
 }
 
-juce::Colour HexagonAutomata::Renderer::renderCellColour(const MappedHexState& state)
+void HexagonAutomata::Renderer::renderCellColour(MappedHexState& state)
 {
-    return renderAliveColour(state);
+    state.HexagonAutomata::HexState::colour = getCellColour(state);
 }
 
 MappedLumatoneKey HexagonAutomata::Renderer::renderCellKey(const MappedHexState& state)
 {
     auto key = static_cast<const MappedLumatoneKey&>(state);
-    key.colour = renderCellColour(state);
+    key.colour = getCellColour(state);
     return key;
 }
 

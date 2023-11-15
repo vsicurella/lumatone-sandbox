@@ -106,7 +106,7 @@ void HexagonAutomata::State::setOptions(GameOptions options)
 // }
 void HexagonAutomata::State::updateGenerationTickRate()
 {
-    ticksPerSyncGeneration = juce::roundToInt(engineState.msecToTicks(syncGenerationMs));
+    ticksPerGeneration = juce::roundToInt(engineState.msecToTicks(syncGenerationMs));
 }
 
 void HexagonAutomata::State::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)

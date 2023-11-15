@@ -12,9 +12,13 @@
 HexagonAutomata::Game::Game(juce::ValueTree engineStateIn, LumatoneController* controller)
     : LumatoneSandboxGameBase(controller, "Hexagon Automata")
     , HexagonAutomata::State(controller->shareMappingData(), engineStateIn)
-    , LumatoneSandboxLogger("Hexagon Automata")
 {
     initialize();
+}
+
+HexagonAutomata::Game::~Game()
+{
+    clearAllCells(true);
 }
 
 void HexagonAutomata::Game::initialize()
@@ -28,15 +32,13 @@ void HexagonAutomata::Game::initialize()
     
     cells.resize(numCells);
 
-    neighborsVector = rules->getNeighborsVector(1);
-
     if (render.get() == nullptr)
     {
         render.reset(new Renderer);
     }
 }
 
-void HexagonAutomata::Game::reset(bool clearQueue)
+bool HexagonAutomata::Game::reset(bool clearQueue)
 {
     loadStateProperties(state);
 
@@ -46,7 +48,6 @@ void HexagonAutomata::Game::reset(bool clearQueue)
     random.setSeedRandomly();
 
     ticks = 0;
-    ticksToNextCellUpdate = 0;
 
     switch (gameMode)
     {
@@ -73,7 +74,10 @@ void HexagonAutomata::Game::reset(bool clearQueue)
     case GameMode::None:
     default:
         jassertfalse;
+        return false;
     }
+
+    return true;
 }
 
 void HexagonAutomata::Game::resetState()
@@ -81,34 +85,31 @@ void HexagonAutomata::Game::resetState()
     clearAllCells();
 
     ticks = 0;
-    ticksToNextSyncCellUpdate = 0;
-    ticksToNextCellUpdate = 0;
-    
-    populatedCells.clear();
-    newCells.clear();
+
+    {
+        juce::ScopedLock il(inputLock);
+        newCells.clear();
+    }
 
     HexagonAutomata::BoardState::resetState();    
 }
 
-void HexagonAutomata::Game::nextTick()
+bool HexagonAutomata::Game::nextTick()
 {
-    juce::ScopedTryLock l(currentFrameCells.getLock());
-
-    if (!l.isLocked())
+    if (quitGame)
     {
-        return;
+        quit();
+        return false;
     }
 
-    // if (ticksToNextCellUpdate >= ticksPerCellUpdate)
-    // {       
-        // ticksToNextCellUpdate = 0;
-        // DBG("Update cell states on tick: " + juce::String(ticks));
-        updateCellStates();
-    // }
-    // else
-    // {
-    //     ticksToNextCellUpdate++; 
-    // }
+    juce::ScopedTryLock fl(frameLock);
+    if (!fl.isLocked())
+    {
+        logSkippedFrame("nextFrame");
+        return true;
+    }
+
+    updateCellStates();
 
     if (currentFrameCells.size() > 0)
     {
@@ -118,26 +119,57 @@ void HexagonAutomata::Game::nextTick()
     }
 
     ticks++;
+    return true;
 }
 
-void HexagonAutomata::Game::pauseTick()
+bool HexagonAutomata::Game::pauseTick()
 {
-    juce::ScopedTryLock l(currentFrameCells.getLock());
-    if (!l.isLocked())
-        return;
+    if (quitGame)
+    {
+        quit();
+        return false;
+    }
 
-    updateNewCells();
-    addToQueue(renderFrame());
+    juce::ScopedTryLock fl(frameLock);
+    if (!fl.isLocked())
+    {
+        logInfo("pauseTick", "Skipping frame, failed to acquire lock.");
+        return true;
+    }
+
+    updateUserInputCells();
+
+    if (currentFrameCells.size() > 0)
+    {
+        addToQueue(renderFrame());
+        currentFrameCells.removeRange(0, maxUpdatesPerFrame);
+    }
+
+    return true;
 }
 
 bool HexagonAutomata::Game::applyUpdatedCell(const HexagonAutomata::MappedHexState& cell)
 {
+    juce::ScopedLock sl(stateLock);
+    
     auto cellNum = layout->keyCoordToKeyNum(cell.getKeyCoord());
     if (cellNum >= 0)
     {
+        // juce::String cellNumStr;
+        // if (cell.isDead())
+        //     cellNumStr = "d";
+        // cellNumStr += juce::String(cellNum);
+
+        // if (cell.health != cells[cellNum].health)
+        //     logInfo("applyUpdatedCell", "Updated cell: " + cellNumStr + " (" + cell.toString() + ")");
+
         cells.set(cellNum, cell);
         if (cell.isDead() || cell.isAlive())
             return true;
+    }
+    else
+    {
+        logWarning("applyUpdatedCell", "Ignoring cell update: " + cell.toString());
     }
 
     return false;
@@ -163,30 +195,39 @@ bool HexagonAutomata::Game::triggerCellMidi(const MappedHexState& cell)
 
 LumatoneAction* HexagonAutomata::Game::renderFrame() const
 {
-    juce::ScopedTryLock l(currentFrameCells.getLock());
-    if (!l.isLocked())
+    juce::ScopedTryLock fl(frameLock);
+    if (!fl.isLocked())
+    {
+        logSkippedFrame("renderFrame");
         return nullptr;
+    }
 
     juce::Array<MappedLumatoneKey> keyUpdates;
     int limit = juce::jmin(maxUpdatesPerFrame, currentFrameCells.size());
 
     for (int i = 0; i < limit; i++)
     {
-        const MappedHexState& update = currentFrameCells.getReference(i);
+        MappedHexState update = currentFrameCells.getReference(i);
+        MappedLumatoneKey renderedKey;
 
         switch (gameMode)
         {
         case GameMode::Classic:
-            keyUpdates.add(render->renderCellKey(update));
+            renderedKey = render->renderCellKey(update);
             break;
 
         case GameMode::Sequencer:
-            keyUpdates.add(render->renderSequencerKey(update, layoutBeforeStart));
+            renderedKey = render->renderSequencerKey(update, layoutBeforeStart);
             break;
 
         case GameMode::None:
         default:
             jassertfalse;
+        }
+
+        if (!renderedKey.isEmpty())
+        {
+            keyUpdates.add(renderedKey);
         }
     }
 
@@ -206,20 +247,21 @@ void HexagonAutomata::Game::addSeed(Hex::Point point, bool triggerMidi)
         point
     );
 
-    if (gameMode == GameMode::Classic)
-        newCell.HexState::colour = aliveColour;
-
     if (triggerMidi && gameMode == GameMode::Sequencer)
     {
+        // logInfo("addSeed", "triggerCellMidi");
         triggerCellMidi(newCell);
     }
 
-    newCells.add(newCell);
+    {
+        juce::ScopedLock il(inputLock);
+        newCells.add(newCell);
+    }
 }
 
 void HexagonAutomata::Game::addSeeds(juce::Array<Hex::Point> seedCoords, bool triggerMidi)
 {
-	juce::ScopedLock l(newCells.getLock());
+	juce::ScopedLock l(inputLock);
 
     for (auto point : seedCoords)
     {
@@ -231,14 +273,13 @@ void HexagonAutomata::Game::addSeeds(int numSeeds, bool triggerMidi)
 {
     juce::Array<Hex::Point> neighborVecCopy;
     {
-        juce::ScopedLock l(neighborsVector.getLock());
-        neighborVecCopy.addArray(neighborsVector);
+        juce::ScopedLock fl(frameLock);
+        neighborVecCopy = rules->getNeighborsShape();
     }
 
-	juce::ScopedLock l(newCells.getLock());
+    juce::ScopedLock il(inputLock);
 
     float probablity = 0.5f;
-
     for (int i = 0; i < numSeeds; i++)
     {
         int keyNum = random.nextInt(numCells);
@@ -265,49 +306,35 @@ void HexagonAutomata::Game::addSeeds(int numSeeds, bool triggerMidi)
     }
 }
 
-void HexagonAutomata::Game::clearCell(Hex::Point coord, bool triggerMidi)
+void HexagonAutomata::Game::clearCell(const MappedHexState &cell, bool triggerMidi)
 {
-    auto cellNum = hexMap.hexToKeyNum(coord);
-    auto cell = getMappedCell(cellNum);
-    clearCell(cell, triggerMidi);
-}
+    juce::ScopedLock il(inputLock);
 
-void HexagonAutomata::Game::clearCell(MappedHexState &cell, bool triggerMidi)
-{
-    cell.setDead();
-    applyUpdatedCell(cell);
-    triggerCellMidi(cell);
+    auto deadCell = cell;
+    deadCell.setDead();
+    clearedCells.add(deadCell);
 
-    juce::ScopedLock l(populatedCells.getLock());
-
-    for (int i = 0; i < populatedCells.size(); i++)
+    if (triggerMidi)
     {
-        if (static_cast<Hex::Point>(populatedCells[i]) == static_cast<Hex::Point>(cell))
-        {
-            populatedCells.remove(i);
-            break;
-        }
+        // logInfo("clearCell", "triggerCellMidi");
+        triggerCellMidi(deadCell);
     }
-
-    currentFrameCells.add(cell);
 }
 
 void HexagonAutomata::Game::clearAllCells(bool triggerMidi)
 {
-    juce::ScopedLock cellLock(populatedCells.getLock());
-    juce::ScopedLock frameLock(currentFrameCells.getLock());
-
-    for (int i = 0; i < populatedCells.size(); i++)
+    juce::ScopedLock il(inputLock);
+    for (const MappedHexState& cell : populatedCells)
     {
-        auto cell = populatedCells.removeAndReturn(0);
-        cell.setDead();
+        auto deadCell = cell;
+        deadCell.setDead();
+        clearedCells.add(deadCell);
 
-        applyUpdatedCell(cell);
-        
         if (triggerMidi)
-            triggerCellMidi(cell);
-        
-        currentFrameCells.add(cell);
+        {
+            // logInfo("clearAllCells", "triggerCellMidi");
+            triggerCellMidi(deadCell);
+        }
     }
 }
 
@@ -317,7 +344,7 @@ void HexagonAutomata::Game::setGameMode(GameMode modeIn)
         return;
 
     HexagonAutomata::State::setGameMode(modeIn);
-    reset(true);
+    quitGame = true;
 }
 
 void HexagonAutomata::Game::setGenerationMode(GenerationMode newMode)
@@ -326,11 +353,6 @@ void HexagonAutomata::Game::setGenerationMode(GenerationMode newMode)
         return;
 
     HexagonAutomata::State::setGenerationMode(newMode);
-
-    if (newMode == HexagonAutomata::GenerationMode::Synchronous)
-    {
-        ticksToNextSyncCellUpdate = 0;
-    }
 }
 
 void HexagonAutomata::Game::setAliveColour(juce::Colour newColour)
@@ -359,10 +381,27 @@ void HexagonAutomata::Game::setBornSurviveRules(juce::String bornInput, juce::St
     rules = std::make_unique<BornSurviveRule>(bornRules, surviveRules);
 }
 
-// void HexagonAutomata::Game::setNeighborDistance(int distance)
-// {
-//     HexagonAutomata::State::setNeighborDistance(distance);
-// }
+void HexagonAutomata::Game::logSkippedFrame(juce::String method) const
+{
+    logWarning(method, "Skipping frame, failed to acquire lock.");
+}
+
+void HexagonAutomata::Game::logCellState(juce::String method, juce::String message, const MappedCellStates &states) const
+{
+    juce::String stateString = message + ": ";
+    for (const MappedHexState& cell : states)
+    {
+        auto cellNum = hexMap.hexToKeyNum(cell);
+        juce::String cellStr;
+        if (cell.isDead())
+            cellStr = "d";
+        cellStr = juce::String(cellNum);
+
+        stateString += cellStr + ",";
+    }
+
+    logInfo(method, stateString);
+}
 
 juce::ValueTree HexagonAutomata::Game::loadStateProperties(juce::ValueTree stateIn)
 {
@@ -392,14 +431,14 @@ void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, c
     {
         setGenerationMode(generationMode);
     }
-    else if (property == HexagonAutomata::ID::SyncGenTime)
-    {
-        render->setMaxAge(ticksPerSyncGeneration * 6);
-    }
-    else if (property == HexagonAutomata::ID::AsyncGenTime)
-    {
-        render->setMaxAge(ticksPerSyncGeneration * 6);
-    }
+    // else if (property == HexagonAutomata::ID::SyncGenTime)
+    // {
+    //     render->setMaxAge(ticksPerSyncGeneration * 6);
+    // }
+    // else if (property == HexagonAutomata::ID::AsyncGenTime)
+    // {
+    //     render->setMaxAge(ticksPerSyncGeneration * 6);
+    // }
     else if (property == HexagonAutomata::ID::AliveColour)
     {
         render->setColour(aliveColour, deadColour);
@@ -410,12 +449,12 @@ void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, c
     }
     else if (property == HexagonAutomata::ID::BornRule)
     {
-        juce::ScopedLock l(rules->getLock());
+        juce::ScopedLock l(frameLock);
         rules.reset(new BornSurviveRule(bornRules, surviveRules));
     }
     else if (property == HexagonAutomata::ID::SurviveRule)
     {
-        juce::ScopedLock l(rules->getLock());
+        juce::ScopedLock l(frameLock);
         rules.reset(new BornSurviveRule(bornRules, surviveRules));
     }
     else if (property == HexagonAutomata::ID::NeighborShape)
@@ -424,191 +463,151 @@ void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, c
     }
 }
 
-void HexagonAutomata::Game::updateNewCells()
+void HexagonAutomata::Game::addToPopulation(MappedHexState &cell, MappedCellStates& population)
 {
-    for (int i = 0; i < newCells.size(); i++)
+    render->renderCellColour(cell);
+    population.add(cell);
+}
+
+bool HexagonAutomata::Game::removeFromPopulation(MappedHexState& cell, MappedCellStates& population)
+{
+    for (int i = 0; i < population.size(); i++)
     {
-        const MappedHexState& cell = newCells.getReference(i); 
-        populatedCells.add(cell);
-        currentFrameCells.add(cell);
+        const MappedHexState& compare = population.getReference(i);
+        if (compare.boardIndex == cell.boardIndex
+         && compare.keyIndex == cell.keyIndex
+            )
+        {
+            render->renderCellColour(cell);
+            population.remove(i);
+            return true;
+        }
     }
-    newCells.clear();
+
+    return false;
+}
+
+void HexagonAutomata::Game::updateUserInputCells()
+{
+    juce::ScopedTryLock il(inputLock);
+    if (!il.isLocked())
+        return;
+
+    int numNewCells = newCells.size();
+    for (int i = 0; i < numNewCells; i++)
+    {
+        MappedHexState& cell = newCells.getReference(i); 
+        addToPopulation(cell, populatedCells);
+        applyUpdatedCell(cell);
+        currentFrameCells.add(cell);
+
+    }
+    newCells.removeRange(0, numCells);
+
+    int numClearedCells = clearedCells.size();
+    for (int i = 0; i < numClearedCells; i++)
+    {
+        auto cell = clearedCells.getReference(i);
+        if (removeFromPopulation(cell, populatedCells))
+        {
+            applyUpdatedCell(cell);
+            currentFrameCells.add(cell);
+        }
+    }
+    clearedCells.removeRange(0, numClearedCells);
 }
 
 void HexagonAutomata::Game::updateCellStates()
 {
-    updateNewCells();
+    nextPopulation.clearQuick();
+
+    {
+        juce::ScopedLock sl(stateLock);
+        for (MappedHexState& cell : populatedCells)
+        {
+            cell.age++;
+            // applyUpdatedCell(cell);
+        }
+    }
+
+    updateUserInputCells();
 
     juce::ScopedLock l(rules->getLock());
 
-    juce::Array<MappedHexState> cellsToUpdate;
-
-    // First, make references to populated cells and empty cells
-
-    // Keep track of cells so we don't add duplicates
-    juce::Array<MappedHexState> emptyCells;
-    juce::HashMap<juce::String, MappedHexState> emptyNeighbors;
-
-    for (int c = 0; c < populatedCells.size(); c++)
+    auto bornCells = rules->getNewCells(*static_cast<State*>(this), populatedCells);
+    for (MappedHexState& newCell : bornCells)
     {
-        MappedHexState& cell = populatedCells.getReference(c);
-
-        // Check cell status
-        auto neighbors = getNeighbors(cell, neighborsVector);
-        juce::Array<MappedHexState> livingNeighbors;
-        for (int n = 0; n < neighbors.size(); n++)
-        {
-            if (neighbors[n].isAlive())
-                livingNeighbors.add(neighbors[n]);
-            else
-            {
-                auto cellHash = neighbors[n].toString();
-                if (emptyNeighbors[cellHash].boardIndex < 0)
-                {
-                    emptyCells.add(neighbors[n]);
-                    emptyNeighbors.set(cellHash, neighbors[n]);
-                }
-            }
-        }
-
-        // Also advance age of populated cells
-        // In Asynchronous mode we will later mark ones past maxAge as dead
-        // Can also be used for render effects
-        cell.age++;
-        applyUpdatedCell(cell);
-    }
-
-    // Synchronous mode will ignore cell ages and perform
-    // logic on the cell states altogether 
-    if (generationMode == GenerationMode::Synchronous)
-    {
-        if (ticksToNextSyncCellUpdate >= ticksPerSyncGeneration)
-        {
-            ticksToNextSyncCellUpdate = 0;    
-        }
-        else
-        {
-            ticksToNextSyncCellUpdate++;
-            return;
-        }
-
-        // Determine cells that should be born
-        for (auto cell : emptyCells)
-        {
-            auto neighbors = getAliveNeighbors(cell, neighborsVector);
-            if (rules->generateNewLife(cell, neighbors.getRawDataPointer(), neighbors.size()))
-            {
-                cell.setBorn();
-                cell.HexState::colour = render->renderNewbornColour(neighbors);
-                cellsToUpdate.add(cell);
-            }
-        }
-    }
-
-    juce::Array<MappedHexState> nextGenCells; // For Async mode
-
-    // Now check for surviving cells
-    float healthMult;
-    for (auto cell : populatedCells)
-    {
-        if (generationMode == GenerationMode::Asynchronous)
-        {
-            if (cell.age < ticksPerSyncGeneration)
-                continue;
-
-            else if (cell.age % ticksPerSyncGeneration == 0)
-            {
-                nextGenCells.add(cell);
-            }
-            else
-                continue;
-        }
-
-        auto neighbors = getAliveNeighbors(cell, neighborsVector);
-
-        healthMult = rules->getLifeFactor(cell, neighbors.getRawDataPointer(), neighbors.size());
-        if (healthMult == 0.0f)
-        {
-            cell.setDead();
-            cellsToUpdate.add(cell);
-        }
-        else
-        {
-            cell.applyFactor(healthMult);
-        }
-    }
-
-    if (generationMode == GenerationMode::Asynchronous)
-    {
-        // Keep track of cells so we don't add duplicates
-        juce::HashMap<juce::String, MappedHexState> bornNeighbors;
-
-        for (auto genCell : nextGenCells)
-        {
-            // Find neighbors that can be born
-            for (auto emptyCell : emptyCells)
-            {
-                auto cellHash = emptyCell.toString();
-                if (bornNeighbors[cellHash].boardIndex >= 0)
-                    continue;
-
-                if (genCell.distanceTo(emptyCell) == 1)
-                {
-                    auto neighbors = getAliveNeighbors(emptyCell, neighborsVector);
-                    if (rules->generateNewLife(emptyCell, neighbors.getRawDataPointer(), neighbors.size()))
-                    {
-                        emptyCell.setBorn();
-                        emptyCell.HexState::colour = render->renderNewbornColour(neighbors);
-                        cellsToUpdate.add(emptyCell);
-                        bornNeighbors.set(cellHash, emptyCell);
-                    }
-                }
-            }
-        }
-    }
-
-    for (auto cell : cellsToUpdate)
-    {
-        applyUpdatedCell(cell);
-
-        // Add born cells to population cache
-        if (cell.isAlive() && cell.age == 0)
-            populatedCells.add(cell);
-
-        // Remove dead cells from population cache
-        else if (cell.isDead()) for (int i = 0; i < populatedCells.size(); i++)
-        {
-            const MappedHexState& compare = populatedCells.getReference(i);
-            if (compare.boardIndex == cell.boardIndex
-             && compare.keyIndex == cell.keyIndex
-            //  && compare.colourIsEqual(static_cast<LumatoneKey>(cell))
-            )
-            {
-                populatedCells.remove(i);
-                break;
-            }
-        }
-
         if (gameMode == GameMode::Sequencer)
         {
-            triggerCellMidi(cell);
+            // logInfo("updateCellStates (bornCells)", "triggerCellMidi");
+            triggerCellMidi(newCell);
+        }
+
+        addToPopulation(newCell, nextPopulation);
+        currentFrameCells.add(newCell);
+    }
+    // if (bornCells.size())
+    // {
+    //     logCellState("updateCellStates", "Added born cells", bornCells);
+    // }
+
+    auto updatedCells = rules->getUpdatedCells(*static_cast<State*>(this), populatedCells);
+    for (MappedHexState& cell : updatedCells)
+    {
+        if (cell.isAlive())
+        {
+            addToPopulation(cell, nextPopulation);
+        }
+        else
+        {
+            if (gameMode == GameMode::Sequencer)
+            {
+                // logInfo("updateCellStates (updatedCells)", "triggerCellMidi");
+                triggerCellMidi(cell);
+            }
+
+            // move these below this scope for render effects
+            render->renderCellColour(cell);
+            currentFrameCells.add(cell);
+            applyUpdatedCell(cell);
         }
     }
+    // if (updatedCells.size())
+    // {
+    //     logCellState("updateCellStates", "Updated cells",  updatedCells);
+    // }
 
-    currentFrameCells.addArray(cellsToUpdate);
+    juce::ScopedLock sl(stateLock);
+
+    // Apply updated states
+    for (MappedHexState& cell : nextPopulation)
+    {
+        applyUpdatedCell(cell);
+    }
+
+    populatedCells.swapWith(nextPopulation);
 }
 
 void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
 {
     auto hexCoord = hexMap.keyCoordsToHex(midiChannel - 1, midiNote);
     int cellNum = hexMap.hexToKeyNum(hexCoord);
-    auto cell = getMappedCell(cellNum);
+
+    juce::ScopedLock sl(stateLock);
+    MappedHexState cell = getMappedCell(cellNum);
+
+    logInfo("handleAnyNoteOn", "Note on " + juce::String(midiChannel) + "," + juce::String(midiNote) + " triggering cell " + juce::String(cellNum));
 
     if (cell.isAlive())
     {
         // clearCell(cell);
         cell.setBorn();
-        triggerCellMidi(cell);
+
+        if (gameMode == HexagonAutomata::GameMode::Sequencer)
+        {
+            triggerCellMidi(cell);
+        }
+        
         applyUpdatedCell(cell);
     }
     else
@@ -617,11 +616,8 @@ void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce:
 
 void HexagonAutomata::Game::completeMappingLoaded(LumatoneLayout layout)
 {
-    // this is fine because we update via section update actions
-    // so this should only be triggered by loading a new layout
-
-    layoutBeforeStart = layout;
-    reset(true);
+    LumatoneSandboxGameBase::completeMappingLoaded(layout);
+    quitGame = true;
 }
 
 LumatoneSandboxGameComponent* HexagonAutomata::Game::createController()

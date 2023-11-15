@@ -13,47 +13,59 @@
 
 #include <JuceHeader.h>
 
+#include "./hexagon_automata_cell_state.h"
 #include "../../lumatone_editor_library/hex/hex_field.h"
 
 namespace HexagonAutomata
 {
 
-struct MappedHexState;
+class State;
+
+using NeighborsShape = Hex::Matrix<juce::CriticalSection>;
+using NeighborsShapeTemp = Hex::Matrix<juce::DummyCriticalSection>;
 
 // TODO: Redo "newCells" part of algorithm 
 // Have rule defining what cells should be born or eligible to be born
-
-struct NeighborFunction
+class Rules
 {
-    virtual ~NeighborFunction() { }
-    virtual juce::Array<Hex::Point, juce::CriticalSection> getNeighborsVector(int distance=1) const;
+public:
+    Rules();
+    Rules(juce::String neighborsShapeIn);
+    Rules(NeighborsShapeTemp neighborsShapeIn);
+    Rules(const HexagonAutomata::State& gameStateIn);
 
-    virtual float getLifeFactor(const MappedHexState& origin, const MappedHexState* neighbors, int numNeighbors) const = 0;
-    virtual bool generateNewLife(const MappedHexState& origin, const MappedHexState* neighbors, int numNeighbors) const = 0;
+    virtual ~Rules() { }
+
+    void setNeighborsShape(juce::String shapeInputIn);
+    void setNeighborsShape(const NeighborsShape& shapeIn);
+    virtual NeighborsShapeTemp getNeighborsShape() const;
+    virtual NeighborsShapeTemp getDefaultNeighborsShape() const;
+
+    // Return array of cells that are alive
+    // virtual MappedCellStates getPopulation(const HexagonAutomata::State& gameState) const; 
+    // Return Array of cells to run born rules on
+    virtual MappedCellStates getEmptyNeighbors(const HexagonAutomata::State& gameState, const MappedCellStates& population) const;
+
+    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) const = 0;
+    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) const = 0;
+    
+    // virtual juce::Array<MappedHexState> getNeighboringCells(const CellStates& population, const NeighborsShape& neighborShape) const = 0;
 
     const juce::CriticalSection& getLock() const { return lock; }
 
 protected:
+    virtual Hex::Matrix<juce::CriticalSection> createNeighborsShape(int distance=1) const;
+
+    virtual float getLifeFactor(const MappedHexState& origin, const MappedCellStates& neighbors) const = 0;
+    virtual bool generateNewLife(const MappedHexState& origin, const MappedCellStates& neighbors) const = 0;
+
+protected:
     juce::CriticalSection lock;
+
+    NeighborsShape neighborsShape;
 };
 
-struct BornArrayFunction : public NeighborFunction
-{
-    virtual ~BornArrayFunction() { }
-
-    // Inefficent - either ignore or reimplement. It just uses getNewCells and returns the array size
-    virtual bool generateNewLife(const MappedHexState& origin, const MappedHexState* neighbors, int numNeighbors);
-
-    virtual juce::Array<Hex::Point> getNewCells(const MappedHexState& parentCell, const MappedHexState* neighbors, int numNeighbors) const = 0;
-};
-
-struct DefaultNeighborFunction : public NeighborFunction
-{
-    float getLifeFactor(const MappedHexState&, const MappedHexState*, int) const override;
-    bool generateNewLife(const MappedHexState&, const MappedHexState*, int) const override;
-};
-
-struct BornSurviveRule : public NeighborFunction
+struct BornSurviveRule : public Rules
 {
     BornSurviveRule(int numBorn, int surviveLower, int surviveUpper);
     BornSurviveRule(juce::Array<int> bornNums, juce::Array<int> surviveNums);
@@ -61,8 +73,11 @@ struct BornSurviveRule : public NeighborFunction
 
     virtual ~BornSurviveRule() override { }
 
-    virtual float getLifeFactor(const MappedHexState& origin, const MappedHexState* neighbors, int numNeighbors) const override;
-    virtual bool generateNewLife(const MappedHexState& origin, const MappedHexState* neighbors, int numNeighbors) const override;
+    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) const override;
+    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) const override;
+
+    virtual float getLifeFactor(const MappedHexState& origin, const MappedCellStates& neighbors) const override;
+    virtual bool generateNewLife(const MappedHexState& origin, const MappedCellStates& neighbors) const override;
 
     juce::Array<int> numsBorn;
     juce::Array<int> numsSurvive;
@@ -103,6 +118,5 @@ struct BornSurviveRule : public NeighborFunction
 //     juce::Array<Hex::Point> getNewCells(const MappedHexState& parentCell, const MappedHexState* neighbors, int numNeighbors)  constoverride;
 // };
 }
-
 
 #endif // LUMATONE_HEXAGON_AUTOMATA_RULES_H

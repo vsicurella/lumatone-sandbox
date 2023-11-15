@@ -12,8 +12,7 @@
 #include <JuceHeader.h>
 
 #include "../../lumatone_editor_library/hex/hex_field.h"
-#include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
-
+#include "../../lumatone_editor_library/data/lumatone_key.h"
 namespace HexagonAutomata
 {
 struct HexState
@@ -31,6 +30,8 @@ struct HexState
     void applyFactor(float lifeFactor) { health *= lifeFactor; }
     
     bool isAlive() const { return health > 0.0f; }
+
+    bool isNewBorn() const { return health == 1.0f && age == 0; }
 
     bool isDead() const { return health <= 0.0f && age > 0; }
     
@@ -59,7 +60,11 @@ struct MappedHexState   : public HexState
         , MappedLumatoneKey(key)
         , Hex::Point(hexCoord) {}
 
+
 };
+
+using CellStates = juce::Array<HexState>;
+using MappedCellStates = juce::Array<MappedHexState>;
 
 }
 

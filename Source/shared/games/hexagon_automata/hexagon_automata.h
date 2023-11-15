@@ -8,21 +8,21 @@
 namespace HexagonAutomata
 {
 class Renderer;
-struct NeighborFunction;
+struct Rules;
 
 class Game : public LumatoneSandboxGameBase
            , public HexagonAutomata::State
-           , private LumatoneSandboxLogger
 {
 public:
 
     Game(juce::ValueTree engineStateIn, LumatoneController* controller);
     // Game(LumatoneController* controller, const HexagonAutomata::BoardState& stateIn);
+    ~Game() override;
     
-    void reset(bool clearQueue) override;
+    bool reset(bool clearQueue) override;
 
-    void nextTick() override;
-    void pauseTick() override;
+    bool nextTick() override;
+    bool pauseTick() override;
 
     LumatoneAction* renderFrame() const override;
 
@@ -31,8 +31,7 @@ public:
     void addSeeds(juce::Array<Hex::Point> seedCoords, bool triggerMidi=true);
     void addSeeds(int numSeeds, bool triggerMidi=true);
 
-    void clearCell(Hex::Point coord, bool triggerMidi=true);
-    void clearCell(MappedHexState& cell, bool triggerMidi=true);
+    void clearCell(const MappedHexState& cell, bool triggerMidi=true);
     void clearAllCells(bool triggerMidi=true);
 
 public:
@@ -41,11 +40,14 @@ public:
     void setAliveColour(juce::Colour newColour) override;
     void setDeadColour(juce::Colour newColour) override;
     void setBornSurviveRules(juce::String bornInput, juce::String surviveInput) override;
-    // void setNeighborDistance(int distance) override;
 
         
 private:
-    void updateNewCells();
+    // void addToPopulationNow(MappedHexState& cell);
+    void addToPopulation(MappedHexState& cell, MappedCellStates& population);
+    bool removeFromPopulation(MappedHexState& cell, MappedCellStates& population);
+
+    void updateUserInputCells();
     void updateCellStates();
 
 private:
@@ -71,6 +73,11 @@ private:
 
     void initializeLayoutContext();
 
+private:
+
+    void logSkippedFrame(juce::String method) const;
+    void logCellState(juce::String method, juce::String message, const MappedCellStates& states) const;
+
 protected:
     juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override; // kludge?
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
@@ -79,16 +86,22 @@ public:
     virtual LumatoneSandboxGameComponent* createController() override;
 
 private:
-    // juce::CriticalSection cellsLock;
-    // juce::CriticalSection rulesLock;
 
-    juce::Array<Hex::Point, juce::CriticalSection> neighborsVector;
+    juce::CriticalSection frameLock;
+    juce::CriticalSection inputLock;
+    juce::CriticalSection stateLock;
 
-    std::unique_ptr<HexagonAutomata::NeighborFunction> rules;
+    // Thread safety - only manipulate in game engine calls or use above locks
+    MappedCellStates populatedCells;
+    MappedCellStates nextPopulation;
+
+    std::unique_ptr<HexagonAutomata::Rules> rules;
     std::unique_ptr<HexagonAutomata::Renderer> render;
 
-    juce::Array<MappedHexState, juce::CriticalSection> currentFrameCells;
-    juce::Array<MappedHexState, juce::CriticalSection> newCells;
+    juce::Array<MappedHexState> currentFrameCells;
+    
+    juce::Array<MappedHexState> newCells;
+    juce::Array<MappedHexState> clearedCells;
 
     juce::Random random;
 };

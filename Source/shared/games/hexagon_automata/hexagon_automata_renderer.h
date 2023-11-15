@@ -9,8 +9,9 @@
 #ifndef LUMATONE_HEXAGON_AUTOMATA_RENDERER_H
 #define LUMATONE_HEXAGON_AUTOMATA_RENDERER_H
 
-#include "hexagon_automata_cell_state.h"
+#include "./hexagon_automata_cell_state.h"
 
+class LumatoneLayout;
 namespace HexagonAutomata
 {
 
@@ -21,21 +22,17 @@ public:
     Renderer(juce::Colour aliveColourIn=juce::Colours::white, juce::Colour deadColourIn=juce::Colours::grey);
 
     void setColour(juce::Colour aliveColourIn, juce::Colour deadColourIn=juce::Colours::transparentBlack);
-    juce::Colour getAliveColour() const;
-    juce::Colour getDeadColour() const;
 
-    virtual void setMaxAge(int ticks);
-
-    virtual juce::Colour renderAliveColour(const MappedHexState& state);
-
-    virtual juce::Colour renderGradientColour(const MappedHexState& state);
-
-    virtual juce::Colour renderCellColour(const MappedHexState& state);
+    virtual juce::Colour getCellColour(const MappedHexState& state);
+    virtual void renderCellColour(MappedHexState& state);
 
     virtual MappedLumatoneKey renderCellKey(const MappedHexState& state);
-
     virtual MappedLumatoneKey renderSequencerKey(const MappedHexState& cell, const LumatoneLayout& noteLayout);
 
+private:
+    // TODO other colour modes
+    virtual void setMaxAge(int ticks);
+    virtual juce::Colour renderGradientColour(const MappedHexState& state);
     virtual juce::Colour renderNewbornColour(const juce::Array<MappedHexState>& parents);
 
 private:

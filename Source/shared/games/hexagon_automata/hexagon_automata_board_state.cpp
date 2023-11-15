@@ -32,7 +32,7 @@ void HexagonAutomata::BoardState::resetState()
     cells.fill(HexState());
 }
 
-HexagonAutomata::MappedHexState HexagonAutomata::BoardState::getMappedCell(int cellNum)
+HexagonAutomata::MappedHexState HexagonAutomata::BoardState::getMappedCell(int cellNum) const
 {
     auto hex = hexMap.keyNumToHex(cellNum);
     auto keyCoord = layout->keyNumToKeyCoord(cellNum);
@@ -75,10 +75,11 @@ juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getAli
         if (cellNum < 0)
             continue;
         
-        if (cells[cellNum].isAlive())
+        const HexState& cell = cells[cellNum];
+        if (cell.isAlive())
         {
             auto mappedKey = MappedLumatoneKey(*layout->readKey(keyCoord.boardIndex, keyCoord.keyIndex), keyCoord.boardIndex, keyCoord.keyIndex);
-            auto mappedCell = MappedHexState(cells[cellNum], mappedKey, point);
+            auto mappedCell = MappedHexState(cell, mappedKey, point);
             mappedCells.add(mappedCell);
         }
     }
