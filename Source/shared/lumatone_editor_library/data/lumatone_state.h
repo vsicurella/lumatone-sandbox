@@ -41,7 +41,7 @@ public:
     LumatoneState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManager=nullptr);
     LumatoneState(juce::String nameIn, const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn=nullptr);
 
-    virtual ~LumatoneState();
+    virtual ~LumatoneState() override;
 
     LumatoneFirmware::ReleaseVersion getLumatoneVersion() const;
     LumatoneFirmware::Version getFirmwareVersion() const;
