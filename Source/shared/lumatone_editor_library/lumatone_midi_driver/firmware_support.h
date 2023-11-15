@@ -186,6 +186,348 @@ struct FirmwareSupport
         return juce::String::toHexString(serialBytes, 6);
     }
 
+	static juce::String getCommandDescription(const juce::MidiMessage& msg)
+	{
+		// TODO unpack values?
+		juce::String name;
+		juce::String description;
+
+		const juce::uint8* data = msg.getRawData();
+		juce::uint8 board = static_cast<juce::uint8>(data[BOARD_IND]);
+
+		switch (getCommandNumber(msg))
+		{
+		case CHANGE_KEY_NOTE:
+			name = "Set Key Params";
+			description = "Board " + juce::String(board) + " Key " + juce::String(data[5]);
+			break;
+		case SET_KEY_COLOUR:
+			name = "Set Key Color";
+			description = "Board " + juce::String(board) + " Key " + juce::String(data[5]);
+			for (int i = 6; i < msg.getRawDataSize(); i++)
+				description += juce::String(data[i]) + "|";
+			break;
+		case SAVE_PROGRAM:
+			name = "SAVE_PROGRAM";
+			description = "";
+			break;
+		case SET_FOOT_CONTROLLER_SENSITIVITY:
+			name = "SET_FOOT_CONTROLLER_SENSITIVITY";
+			description = "";
+			break;
+		case INVERT_FOOT_CONTROLLER:
+			name = "INVERT_FOOT_CONTROLLER";
+			description = "";
+			break;
+		case MACROBUTTON_COLOUR_ON:
+			name = "MACROBUTTON_COLOUR_ON";
+			description = "";
+			break;
+		case MACROBUTTON_COLOUR_OFF:
+			name = "MACROBUTTON_COLOUR_OFF";
+			description = "";
+			break;
+		case SET_LIGHT_ON_KEYSTROKES:
+			name = "SET_LIGHT_ON_KEYSTROKES";
+			description = "";
+			break;
+		case SET_VELOCITY_CONFIG:
+			name = "SET_VELOCITY_CONFIG";
+			description = "";
+			break;
+		case SAVE_VELOCITY_CONFIG:
+			name = "SAVE_VELOCITY_CONFIG";
+			description = "";
+			break;
+		case RESET_VELOCITY_CONFIG:
+			name = "RESET_VELOCITY_CONFIG";
+			description = "";
+			break;
+		case SET_FADER_CONFIG:
+			name = "SET_FADER_CONFIG";
+			description = "";
+			break;
+		case SAVE_FADER_CONFIG:
+			name = "SAVE_FADER_CONFIG";
+			description = "";
+			break;
+		case RESET_FADER_CONFIG:
+			name = "RESET_FADER_CONFIG";
+			description = "";
+			break;
+		case SET_AFTERTOUCH_FLAG:
+			name = "SET_AFTERTOUCH_FLAG";
+			description = "";
+			break;
+		case CALIBRATE_AFTERTOUCH:
+			name = "CALIBRATE_AFTERTOUCH";
+			description = "";
+			break;
+		case SET_AFTERTOUCH_CONFIG:
+			name = "SET_AFTERTOUCH_CONFIG";
+			description = "";
+			break;
+		case SAVE_AFTERTOUCH_CONFIG:
+			name = "SAVE_AFTERTOUCH_CONFIG";
+			description = "";
+			break;
+		case RESET_AFTERTOUCH_CONFIG:
+			name = "RESET_AFTERTOUCH_CONFIG";
+			description = "";
+			break;
+		case GET_RED_LED_CONFIG:
+			name = "GET_RED_LED_CONFIG";
+			description = "";
+			break;
+		case GET_GREEN_LED_CONFIG:
+			name = "GET_GREEN_LED_CONFIG";
+			description = "";
+			break;
+		case GET_BLUE_LED_CONFIG:
+			name = "GET_BLUE_LED_CONFIG";
+			description = "";
+			break;
+		case GET_CHANNEL_CONFIG:
+			name = "GET_CHANNEL_CONFIG";
+			description = "";
+			break;
+		case GET_NOTE_CONFIG:
+			name = "GET_NOTE_CONFIG";
+			description = "";
+			break;
+		case GET_KEYTYPE_CONFIG:
+			name = "GET_KEYTYPE_CONFIG";
+			description = "";
+			break;
+		case GET_MAX_THRESHOLD:
+			name = "GET_MAX_THRESHOLD";
+			description = "";
+			break;
+		case GET_MIN_THRESHOLD:
+			name = "GET_MIN_THRESHOLD";
+			description = "";
+			break;
+		case GET_AFTERTOUCH_MAX:
+			name = "GET_AFTERTOUCH_MAX";
+			description = "";
+			break;
+		case GET_KEY_VALIDITY:
+			name = "GET_KEY_VALIDITY";
+			description = "";
+			break;
+		case GET_VELOCITY_CONFIG:
+			name = "GET_VELOCITY_CONFIG";
+			description = "";
+			break;
+		case GET_FADER_CONFIG:
+			name = "GET_FADER_CONFIG";
+			description = "";
+			break;
+		case GET_AFTERTOUCH_CONFIG:
+			name = "GET_AFTERTOUCH_CONFIG";
+			description = "";
+			break;
+		case SET_VELOCITY_INTERVALS:
+			name = "SET_VELOCITY_INTERVALS";
+			description = "";
+			break;
+		case GET_VELOCITY_INTERVALS:
+			name = "GET_VELOCITY_INTERVALS";
+			description = "";
+			break;
+		case GET_FADER_TYPE_CONFIGURATION:
+			name = "GET_FADER_TYPE_CONFIGURATION";
+			description = "";
+			break;
+		case GET_SERIAL_IDENTITY:
+			name = "GET_SERIAL_IDENTITY";
+			description = "";
+			break;
+		case CALIBRATE_KEYS:
+			name = "CALIBRATE_KEYS";
+			description = "";
+			break;
+		case DEMO_MODE:
+			name = "DEMO_MODE";
+			description = "";
+			break;
+		case CALIBRATE_PITCH_MOD_WHEEL:
+			name = "CALIBRATE_PITCH_MOD_WHEEL";
+			description = "";
+			break;
+		case SET_MOD_WHEEL_SENSITIVITY:
+			name = "SET_MOD_WHEEL_SENSITIVITY";
+			description = "";
+			break;
+		case SET_PITCH_WHEEL_SENSITIVITY:
+			name = "SET_PITCH_WHEEL_SENSITIVITY";
+			description = "";
+			break;
+		case SET_KEY_MAX_THRESHOLD:
+			name = "SET_KEY_MAX_THRESHOLD";
+			description = "";
+			break;
+		case SET_KEY_MIN_THRESHOLD:
+			name = "SET_KEY_MIN_THRESHOLD";
+			description = "";
+			break;
+		case SET_KEY_FADER_SENSITIVITY:
+			name = "SET_KEY_FADER_SENSITIVITY";
+			description = "";
+			break;
+		case SET_KEY_AFTERTOUCH_SENSITIVITY:
+			name = "SET_KEY_AFTERTOUCH_SENSITIVITY";
+			description = "";
+			break;
+		case SET_LUMATOUCH_CONFIG:
+			name = "SET_LUMATOUCH_CONFIG";
+			description = "";
+			break;
+		case SAVE_LUMATOUCH_CONFIG:
+			name = "SAVE_LUMATOUCH_CONFIG";
+			description = "";
+			break;
+		case RESET_LUMATOUCH_CONFIG:
+			name = "RESET_LUMATOUCH_CONFIG";
+			description = "";
+			break;
+		case GET_LUMATOUCH_CONFIG:
+			name = "GET_LUMATOUCH_CONFIG";
+			description = "";
+			break;
+		case GET_FIRMWARE_REVISION:
+			name = "GET_FIRMWARE_REVISION";
+			description = "";
+			break;
+		case SET_CC_ACTIVE_THRESHOLD:
+			name = "SET_CC_ACTIVE_THRESHOLD";
+			description = "";
+			break;
+		case LUMA_PING:
+			name = "LUMA_PING";
+			description = "";
+			break;
+		case RESET_BOARD_THRESHOLDS:
+			name = "RESET_BOARD_THRESHOLDS";
+			description = "";
+			break;
+		case SET_KEY_SAMPLING:
+			name = "SET_KEY_SAMPLING";
+			description = "";
+			break;
+		case RESET_WHEELS_THRESHOLD:
+			name = "RESET_WHEELS_THRESHOLD";
+			description = "";
+			break;
+		case SET_PITCH_WHEEL_CENTER_THRESHOLD:
+			name = "SET_PITCH_WHEEL_CENTER_THRESHOLD";
+			description = "";
+			break;
+		case CALLIBRATE_EXPRESSION_PEDAL:
+			name = "CALLIBRATE_EXPRESSION_PEDAL";
+			description = "";
+			break;
+		case RESET_EXPRESSION_PEDAL_BOUNDS:
+			name = "RESET_EXPRESSION_PEDAL_BOUNDS";
+			description = "";
+			break;
+		case GET_BOARD_THRESHOLD_VALUES:
+			name = "GET_BOARD_THRESHOLD_VALUES";
+			description = "";
+			break;
+		case GET_BOARD_SENSITIVITY_VALUES:
+			name = "GET_BOARD_SENSITIVITY_VALUES";
+			description = "";
+			break;
+		case SET_PERIPHERAL_CHANNELS:
+			name = "SET_PERIPHERAL_CHANNELS";
+			description = "";
+			break;
+		case GET_PERIPHERAL_CHANNELS:
+			name = "GET_PERIPHERAL_CHANNELS";
+			description = "";
+			break;
+		case PERIPHERAL_CALBRATION_DATA:
+			name = "PERIPHERAL_CALBRATION_DATA";
+			description = "";
+			break;
+		case SET_AFTERTOUCH_TRIGGER_DELAY:
+			name = "SET_AFTERTOUCH_TRIGGER_DELAY";
+			description = "";
+			break;
+		case GET_AFTERTOUCH_TRIGGER_DELAY:
+			name = "GET_AFTERTOUCH_TRIGGER_DELAY";
+			description = "";
+			break;
+		case SET_LUMATOUCH_NOTE_OFF_DELAY:
+			name = "SET_LUMATOUCH_NOTE_OFF_DELAY";
+			description = "";
+			break;
+		case GET_LUMATOUCH_NOTE_OFF_DELAY:
+			name = "GET_LUMATOUCH_NOTE_OFF_DELAY";
+			description = "";
+			break;
+		case SET_EXPRESSION_PEDAL_THRESHOLD:
+			name = "SET_EXPRESSION_PEDAL_THRESHOLD";
+			description = "";
+			break;
+		case GET_EXPRESSION_PEDAL_THRESHOLD:
+			name = "GET_EXPRESSION_PEDAL_THRESHOLD";
+			description = "";
+			break;
+		case INVERT_SUSTAIN_PEDAL:
+			name = "INVERT_SUSTAIN_PEDAL";
+			description = "";
+			break;
+		case RESET_DEFAULT_PRESETS:
+			name = "RESET_DEFAULT_PRESETS";
+			description = "";
+			break;
+		case GET_PRESET_FLAGS:
+			name = "GET_PRESET_FLAGS";
+			description = "";
+			break;
+		case GET_EXPRESSION_PEDAL_SENSITIVIY:
+			name = "GET_EXPRESSION_PEDAL_SENSITIVIY";
+			description = "";
+			break;
+		case GET_MACRO_LIGHT_INTENSITY:
+			name = "GET_MACRO_LIGHT_INTENSITY";
+			description = "";
+			break;
+		case RESET_MACRO_LIGHT_INTENSITY:
+			name = "RESET_MACRO_LIGHT_INTENSITY";
+			description = "";
+			break;
+		case RESET_BOARD_KEYS:
+			name = "RESET_BOARD_KEYS";
+			description = "";
+			break;
+		case RESET_AFTERTOUCH_TRIGGER_DELAY:
+			name = "RESET_AFTERTOUCH_TRIGGER_DELAY";
+			description = "";
+			break;
+		case RESET_LUMATOUCH_NOTE_OFF_DELAY:
+			name = "RESET_LUMATOUCH_NOTE_OFF_DELAY";
+			description = "";
+			break;
+		case GET_PITCH_AND_MOD_BOUNDS:
+			name = "GET_PITCH_AND_MOD_BOUNDS";
+			description = "";
+			break;
+		case GET_EXPRESSION_PEDAL_BOUNDS:
+			name = "GET_EXPRESSION_PEDAL_BOUNDS";
+			description = "";
+			break;
+		default:
+			name = "ERROR_UNKNOWN_COMMAND";
+			jassertfalse;
+			break;
+		}
+
+		return name + ": " + description;
+	}
+
 };
 
 #endif
