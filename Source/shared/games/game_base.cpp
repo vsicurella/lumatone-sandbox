@@ -8,7 +8,7 @@
   ==============================================================================
 */
 
-#include "./game_base.h"
+#include "game_base.h"
 
 #include "../lumatone_editor_library/LumatoneController.h"
 #include "../lumatone_editor_library/actions/edit_actions.h"
@@ -17,6 +17,7 @@ LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerI
     : controller(controllerIn)
     , layoutBeforeStart(*controllerIn->getMappingData())
     , name(nameIn)
+    , LumatoneSandboxLogger(nameIn)
 {
     reset(true);
 }
@@ -69,6 +70,11 @@ void LumatoneSandboxGameBase::end()
 {
     reset(true);
     queueLayout(layoutBeforeStart);
+}
+
+void LumatoneSandboxGameBase::updateSavedLayout()
+{
+    layoutBeforeStart = *controller->getMappingData();
 }
 
 LumatoneKeyContext LumatoneSandboxGameBase::getKeyAt(int boardIndex, int keyIndex) const
@@ -155,6 +161,6 @@ void LumatoneSandboxGameBase::completeMappingLoaded(LumatoneLayout layout)
     // this is fine because we update via section update actions
     // so this should only be triggered by loading a new layout
 
-    layoutBeforeStart = layout;
-    // reset(true);
+    logInfo("completeMappingLoaded", "Backing up current layout.");
+    updateSavedLayout();
 }

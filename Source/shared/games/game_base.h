@@ -19,6 +19,8 @@
 #include "../lumatone_editor_library/listeners/midi_listener.h"
 #include "../lumatone_editor_library/listeners/editor_listener.h"
 
+#include "../debug/LumatoneSandboxLogger.h"
+
 class LumatoneAction;
 class LumatoneController;
 
@@ -39,8 +41,9 @@ public:
 #define MAX_QUEUE_SIZE 280
 
 
-class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener,
-                                public LumatoneEditor::EditorListener
+class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener
+                              , public LumatoneEditor::EditorListener
+                              , protected LumatoneSandboxLogger
 {
 public:
 
@@ -69,6 +72,7 @@ public:
     juce::String getName() const { return name; }
 
     const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
+    void updateSavedLayout();
 
 public:
     virtual LumatoneSandboxGameComponent* createController() = 0;
