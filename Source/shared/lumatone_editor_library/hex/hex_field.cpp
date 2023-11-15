@@ -56,6 +56,16 @@ Hex::Point::Point(float hex_q, float hex_r)
 
 Hex::Point::Point(Hex::Cube cube) : q(cube.q), r(cube.r) { }
 
+Hex::Point Hex::Point::FromString(juce::StringRef pointStr)
+{
+    auto tks = juce::StringArray::fromTokens(pointStr, juce::String(","), juce::String());
+    if (tks.size() == 0)
+        return Point();
+    if (tks.size() == 1)
+        return Point(tks[0].getIntValue(), 0);
+    return Point(tks[0].getIntValue(), tks[1].getIntValue());
+}
+
 float Hex::Point::line(int a, int b, float t)
 {
     return a + (b - a) * t;

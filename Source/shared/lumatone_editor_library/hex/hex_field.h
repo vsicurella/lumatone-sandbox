@@ -34,7 +34,6 @@ namespace Hex
         float r = 0;
 
     private:
-
         static float line(int a, int b, float t);
 
     public:
@@ -56,6 +55,7 @@ namespace Hex
         Point(float hex_q, float hex_r);
         Point(Hex::Cube cube);
 
+        static Point FromString(juce::StringRef pointStr);
         juce::String toString() const { return juce::String(q) + "," + juce::String(r); }
 
         bool operator==(const Hex::Point& compare) const;
@@ -96,4 +96,7 @@ namespace Hex
 
         juce::Array<Hex::Point> lineTo(Hex::Point endPoint);
     };
+
+    template <class JuceCriticalSectionType>
+    using Matrix = juce::Array<Hex::Point, JuceCriticalSectionType>;
 }
