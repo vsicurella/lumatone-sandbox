@@ -73,7 +73,8 @@ enum class RulesMode
     None = 0,
     BornSurvive,
     BornMidNearSurvive,
-    BornMidFarSurvive
+    BornMidFarSurvive,
+    SpiralRule
 };
 
 static juce::String RulesModeToString(HexagonAutomata::RulesMode mode)
@@ -89,6 +90,8 @@ static juce::String RulesModeToString(HexagonAutomata::RulesMode mode)
         return juce::String("BornMidNearSurvive");
     case HexagonAutomata::RulesMode::BornMidFarSurvive:
         return juce::String("BornMidFarSurvive");
+    case HexagonAutomata::RulesMode::SpiralRule:
+        return juce::String("SpiralRule");
     }
 }
 
@@ -100,6 +103,8 @@ static HexagonAutomata::RulesMode RulesModeFromString(juce::String mode)
         return HexagonAutomata::RulesMode::BornMidNearSurvive;
     if (mode == "BornMidFarSurvive")
         return HexagonAutomata::RulesMode::BornMidNearSurvive;
+    if (mode == "SpiralRule")
+        return HexagonAutomata::RulesMode::SpiralRule;
     
     return HexagonAutomata::RulesMode::None;
 }

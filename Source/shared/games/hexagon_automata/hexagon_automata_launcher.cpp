@@ -50,6 +50,7 @@ HexagonAutomata::Component::Component(HexagonAutomata::Game* gameIn)
 
     rulesModeSelector = std::make_unique<juce::ComboBox>("Rules Mode Selector");
     rulesModeSelector->addItem("Born/Survive", static_cast<int>(HexagonAutomata::RulesMode::BornSurvive));
+    rulesModeSelector->addItem("Spiral", static_cast<int>(HexagonAutomata::RulesMode::SpiralRule));
     rulesModeSelector->setSelectedId(static_cast<int>(game->getRulesMode()));
     rulesModeSelector->onChange = [&]
     {
