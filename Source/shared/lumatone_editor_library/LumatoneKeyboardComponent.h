@@ -95,7 +95,7 @@ private:
 private:
     // Private implementations of other methods
 
-    void keyDownInternal(int boardIndex, int keyIndex);
+    void keyDownInternal(int boardIndex, int keyIndex, juce::uint8 velocity);
     void keyUpInternal(int boardIndex, int keyIndex);
 
     void noteOnInternal(int midiChannel, int midiNote, juce::uint8 velocity);

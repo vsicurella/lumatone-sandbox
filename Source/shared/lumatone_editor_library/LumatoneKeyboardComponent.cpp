@@ -24,6 +24,7 @@ LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneController* control
 
     addMouseListener(this, this);
     addKeyListener(this);
+    setWantsKeyboardFocus(true);
 
     controller->addEditorListener(this);
     controller->addMidiListener(this);
@@ -340,7 +341,11 @@ void LumatoneKeyboardComponent::lumatoneKeyDown(int boardIndex, int keyIndex)
     auto coord = LumatoneKeyCoord(boardIndex, keyIndex);
     if (getMappingData()->isKeyCoordValid(coord))
     {
-        keyDownInternal(boardIndex, keyIndex);
+        juce::uint8 velocity = 0x70;
+        if (ctrlHeld)
+            velocity = 0x30;
+
+        keyDownInternal(boardIndex, keyIndex, velocity);
     }
 }
 
@@ -467,7 +472,11 @@ void LumatoneKeyboardComponent::mouseDrag(const juce::MouseEvent& e)
         keysDownPerMouse.set(mouseIndex, keyCoord);
         keysOverPerMouse.set(mouseIndex, keyCoord);
 
-        keyDownInternal(keyCoord.boardIndex, keyCoord.keyIndex);
+        juce::uint8 velocity = 0x70;
+        if (ctrlHeld)
+            velocity = 0x30;
+
+        keyDownInternal(keyCoord.boardIndex, keyCoord.keyIndex, velocity);
 
         lastMouseKeyOver = key;
         lastMouseKeyDown = key;
@@ -566,18 +575,18 @@ void LumatoneKeyboardComponent::modifierKeysChanged(const juce::ModifierKeys& mo
     //    altHeld = false;
     //}
 
-    //if (!ctrlHeld && modifiers.isCtrlDown())
-    //{
-    //    ctrlHeld = true;
-    //}
+    if (!ctrlHeld && modifiers.isCtrlDown())
+    {
+       ctrlHeld = true;
+    }
 
-    //else if (ctrlHeld && !modifiers.isCtrlDown())
-    //{
-    //    ctrlHeld = false;
-    //}
+    else if (ctrlHeld && !modifiers.isCtrlDown())
+    {
+       ctrlHeld = false;
+    }
 }
 
-void LumatoneKeyboardComponent::keyDownInternal(int boardIndex, int keyIndex)
+void LumatoneKeyboardComponent::keyDownInternal(int boardIndex, int keyIndex, juce::uint8 velocity)
 {
     auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
     jassert(key != nullptr);
@@ -586,7 +595,6 @@ void LumatoneKeyboardComponent::keyDownInternal(int boardIndex, int keyIndex)
     {
     case LumatoneKeyType::noteOnNoteOff:
     {
-        juce::uint8 velocity = 0x70;
         controller->sendKeyNoteOn(boardIndex, keyIndex, velocity);
 
         noteOn(key->channelNumber, key->noteNumber, velocity);
