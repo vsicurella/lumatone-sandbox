@@ -237,7 +237,7 @@ LumatoneAction* HexagonAutomata::Game::renderFrame() const
     return nullptr;
 }
 
-void HexagonAutomata::Game::addSeed(Hex::Point point, bool triggerMidi)
+void HexagonAutomata::Game::addSeed(Hex::Point point, float healthIn, bool triggerMidi)
 {
     auto keyCoord = hexMap.hexToKeyCoords(point);
     HexState state(1.0f);
@@ -246,6 +246,8 @@ void HexagonAutomata::Game::addSeed(Hex::Point point, bool triggerMidi)
         layout->getMappedKey(keyCoord.boardIndex, keyCoord.keyIndex),
         point
     );
+
+    newCell.health = healthIn;
 
     if (triggerMidi && gameMode == GameMode::Sequencer)
     {
@@ -265,7 +267,7 @@ void HexagonAutomata::Game::addSeeds(juce::Array<Hex::Point> seedCoords, bool tr
 
     for (auto point : seedCoords)
     {
-        addSeed(point, triggerMidi);
+        addSeed(point, 1.0f, triggerMidi);
     }
 }
 
@@ -300,7 +302,8 @@ void HexagonAutomata::Game::addSeeds(int numSeeds, bool triggerMidi)
             float chance = random.nextFloat();
             if (chance <= probablity)
             {
-                addSeed(seed, triggerMidi);
+                float health = random.nextFloat();
+                addSeed(seed, health, triggerMidi);
             }
         }
     }
@@ -355,6 +358,20 @@ void HexagonAutomata::Game::setGenerationMode(GenerationMode newMode)
     HexagonAutomata::State::setGenerationMode(newMode);
 }
 
+void HexagonAutomata::Game::setRulesMode(RulesMode modeIn)
+{
+    switch (modeIn)
+    {
+    default:
+    case HexagonAutomata::RulesMode::BornSurvive:
+        setBornSurviveRules(bornRules, surviveRules);
+        break;
+    case HexagonAutomata::RulesMode::SpiralRule:
+        setSpiralRule();
+        break;
+    }
+}
+
 void HexagonAutomata::Game::setAliveColour(juce::Colour newColour)
 {
     HexagonAutomata::State::setAliveColour(newColour);
@@ -371,14 +388,31 @@ void HexagonAutomata::Game::setBornSurviveRules(juce::String bornInput, juce::St
 {
     HexagonAutomata::State::setBornSurviveRules(bornInput, surviveInput);
 
-    if (rules != nullptr)
-        {
-        juce::ScopedLock l(rules->getLock());
-        rules.reset(new HexagonAutomata::BornSurviveRule(bornRules, surviveRules));
-        return;
-        }
+    if (rulesMode == HexagonAutomata::RulesMode::BornSurvive)
+    {
+        if (rules != nullptr && (bornInput != bornRules || surviveInput != surviveRules))
+            {
+            juce::ScopedLock l(rules->getLock());
+            rules.reset(new HexagonAutomata::BornSurviveRule(bornRules, surviveRules));
+            return;
+            }
 
-    rules = std::make_unique<BornSurviveRule>(bornRules, surviveRules);
+        rules = std::make_unique<BornSurviveRule>(bornRules, surviveRules);
+    }
+}
+
+void HexagonAutomata::Game::setSpiralRule()
+{
+    logInfo("setSpiralRule", "");
+    
+    if (rules != nullptr)
+    {
+        juce::ScopedLock l(rules->getLock());
+        rules.reset(new HexagonAutomata::SpiralRule());
+        return;
+    }
+
+    rules = std::make_unique<HexagonAutomata::SpiralRule>();
 }
 
 void HexagonAutomata::Game::logSkippedFrame(juce::String method) const
@@ -449,17 +483,23 @@ void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, c
     }
     else if (property == HexagonAutomata::ID::BornRule)
     {
-        juce::ScopedLock l(frameLock);
-        rules.reset(new BornSurviveRule(bornRules, surviveRules));
+        setBornSurviveRules(bornRules, surviveRules);
     }
     else if (property == HexagonAutomata::ID::SurviveRule)
     {
-        juce::ScopedLock l(frameLock);
-        rules.reset(new BornSurviveRule(bornRules, surviveRules));
+        setBornSurviveRules(bornRules, surviveRules);
+    }
+    else if (property == HexagonAutomata::ID::RulesMode)
+    {
+
     }
     else if (property == HexagonAutomata::ID::NeighborShape)
     {
         
+    }
+    else if (property == HexagonAutomata::ID::RulesMode)
+    {
+
     }
 }
 
@@ -598,10 +638,12 @@ void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce:
 
     logInfo("handleAnyNoteOn", "Note on " + juce::String(midiChannel) + "," + juce::String(midiNote) + " triggering cell " + juce::String(cellNum));
 
+    float velocityFloat = (float)velocity / 127.0f;
+
     if (cell.isAlive())
     {
         // clearCell(cell);
-        cell.setBorn();
+        cell.setBorn(velocity);
 
         if (gameMode == HexagonAutomata::GameMode::Sequencer)
         {
@@ -611,7 +653,7 @@ void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce:
         applyUpdatedCell(cell);
     }
     else
-        addSeed(hexCoord, true);
+        addSeed(hexCoord, velocityFloat, true);
 }
 
 void HexagonAutomata::Game::completeMappingLoaded(LumatoneLayout layout)

@@ -27,7 +27,7 @@ public:
     LumatoneAction* renderFrame() const override;
 
 public:
-    void addSeed(Hex::Point coord, bool triggerMidi=true);
+    void addSeed(Hex::Point coord, float healthIn=1.0f, bool triggerMidi=true);
     void addSeeds(juce::Array<Hex::Point> seedCoords, bool triggerMidi=true);
     void addSeeds(int numSeeds, bool triggerMidi=true);
 
@@ -37,10 +37,13 @@ public:
 public:
     void setGameMode(GameMode modeIn) override;
     void setGenerationMode(GenerationMode newMode) override;
+    void setRulesMode(RulesMode modeIn) override;
+
     void setAliveColour(juce::Colour newColour) override;
     void setDeadColour(juce::Colour newColour) override;
-    void setBornSurviveRules(juce::String bornInput, juce::String surviveInput) override;
 
+    void setBornSurviveRules(juce::String bornInput, juce::String surviveInput) override;
+    void setSpiralRule();
         
 private:
     // void addToPopulationNow(MappedHexState& cell);

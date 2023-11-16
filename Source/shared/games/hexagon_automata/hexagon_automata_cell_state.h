@@ -37,7 +37,7 @@ struct HexState
     
     bool isEmpty() const { return health <= 0.0f && age == 0; }
 
-    void setBorn() { health = 1.0f; age = 0; }
+    void setBorn(float healthIn=1.0f) { health = healthIn; age = 0; }
 
     void setDead() { health = 0.0f; }
 

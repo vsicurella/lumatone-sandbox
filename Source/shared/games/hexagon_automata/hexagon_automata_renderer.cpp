@@ -38,7 +38,9 @@ juce::Colour HexagonAutomata::Renderer::getCellColour(const MappedHexState& stat
     if (static_cast<const HexagonAutomata::HexState&>(state).isEmpty())
         return emptyColour;
     if (state.isAlive())
-        return aliveColour;
+    {
+        return aliveColour.interpolatedWith(deadColour, 1.0f - state.health);
+    }
     return deadColour;
 }
 
@@ -83,7 +85,12 @@ MappedLumatoneKey HexagonAutomata::Renderer::renderSequencerKey(const MappedHexS
     key.colour = noteKey->colour;
 
     if (cell.isAlive())
-        AdjustLayoutColour::multiplyBrightness(aliveScalar, key);
+    {
+        float range = aliveScalar - emptyScalar;
+        float scalarOut = aliveScalar - range * (1.0f - cell.health);
+        
+        AdjustLayoutColour::multiplyBrightness(scalarOut, key);
+    }
     // else if (cell.isDead())
     //     AdjustLayoutColour::multiplyBrightness(deadScalar, key);
     else
