@@ -57,7 +57,10 @@ public:
     LumatoneLayout getIdentityLayout(bool resetColors=true, juce::Colour boardColour={});
     LumatoneContext getIdentityWithLayoutContext(bool resetColors);
 
+    // currently unused return statement
     virtual bool reset(bool clearActionQueue);
+
+    // Return whether game should continue running or not
     virtual bool nextTick() = 0;
     virtual bool pauseTick() { return true; }
 

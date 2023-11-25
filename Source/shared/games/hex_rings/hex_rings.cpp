@@ -36,6 +36,8 @@ bool HexRings::nextTick()
         advanceFrameQueue();
         addToQueue(renderFrame());
     }
+
+    return true;
 }
 
 LumatoneAction* HexRings::renderFrame() const
