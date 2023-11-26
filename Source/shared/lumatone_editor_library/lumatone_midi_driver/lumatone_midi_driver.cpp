@@ -904,7 +904,7 @@ void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, 
         else
             DBG("RCVD: " + message.getDescription() + "; called by processor");
     }
-    else
+    if (!message.isSysEx() && !message.isMidiClock())
     {
         if (source)
             DBG("RCVD: " + message.getDescription() + "; from " + source->getName());
