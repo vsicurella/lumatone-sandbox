@@ -169,7 +169,15 @@ void LumatoneApplicationMidiController::midiMessageReceived(juce::MidiInput *sou
     deviceMidiState.processNextMidiEvent(message);
     appMidiState.processNextMidiEvent(message);
 
-    if (message.isNoteOn())
+    if (message.isMidiClock())
+    {
+        if (++clockInterval == maxClockInterval)
+        {
+            clockInterval = 0;
+            listeners.call(&LumatoneEditor::MidiListener::handleMidiClock);
+        }
+    }
+    else if (message.isNoteOn())
     {
         listeners.call(&LumatoneEditor::MidiListener::handleAnyNoteOn, message.getChannel(), message.getNoteNumber(), message.getVelocity());
         listeners.call(&LumatoneEditor::MidiListener::handleDeviceNoteOn, message.getChannel(), message.getNoteNumber(), message.getVelocity());
@@ -188,5 +196,10 @@ void LumatoneApplicationMidiController::midiMessageReceived(juce::MidiInput *sou
     {
         listeners.call(&LumatoneEditor::MidiListener::handleAnyController, message.getChannel(), message.getControllerNumber(), (juce::uint8) message.getControllerValue());
         listeners.call(&LumatoneEditor::MidiListener::handleDeviceController, message.getChannel(), message.getControllerNumber(), (juce::uint8) message.getControllerValue());
+    }
+    else if (message.isSustainPedalOn() || message.isSoftPedalOff())
+    {
+        bool isToggled = message.isSustainPedalOn();
+        listeners.call(&LumatoneEditor::MidiListener::handleSustain, isToggled);
     }
 }

@@ -76,6 +76,16 @@ public:
         Callback for app MIDI controller updates.
     */
     virtual void handleAppController(int midiChannel, int ccNum, juce::uint8 value) {}
+
+    /*
+        Callback for components that use a MIDI Clock
+    */
+    virtual void handleMidiClock() {}
+
+    /*
+        Callback for sustain pedal messages
+    */
+    virtual void handleSustain(bool toggled) {}
 };
 
 }

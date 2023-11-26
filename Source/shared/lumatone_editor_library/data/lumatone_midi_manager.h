@@ -74,7 +74,6 @@ protected:
     void midiSendQueueSize(int size) override {}
     void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& message) override {}
 
-
 private:
 
     LumatoneApplicationState appState;
@@ -82,6 +81,9 @@ private:
 
     LumatoneMidiState deviceMidiState;
     LumatoneMidiState appMidiState; 
+
+    unsigned int clockInterval = 0;
+    unsigned int maxClockInterval = 48;
 };
 
 
