@@ -12,8 +12,8 @@ void LumatoneSandboxLogger::Log(LumatoneSandboxLog info)
     juce::String logMessage = info.toFullString();
     juce::Logger::writeToLog(logMessage);
 
-    juce::String simpleMsg = info.toShortString();
-    juce::Logger::outputDebugString(simpleMsg);
+    // juce::String simpleMsg = info.toShortString();
+    // juce::Logger::outputDebugString(simpleMsg);
 }
 
 void LumatoneSandboxLogger::logMessage(const juce::String &message)
@@ -100,7 +100,7 @@ juce::String LumatoneSandboxLog::toFullString() const
         tokens.add(infoPacked);
     }
 
-    juce::String logMsg = tokens.joinIntoString("|");
+    juce::String logMsg = tokens.size() == 1 ? tokens[0] : tokens.joinIntoString("|");
     return logMsg;
 }
 
