@@ -416,7 +416,7 @@ void HexagonAutomata::Component::handleStatePropertyChange(juce::ValueTree state
     {
         onGenerationModeChange();
     }
-    else if (property == HexagonAutomata::ID::SyncGenTime)
+    else if (property == HexagonAutomata::ID::GenerationMs)
     {
         updateSpeedSlider();
     }

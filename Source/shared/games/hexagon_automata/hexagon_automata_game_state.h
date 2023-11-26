@@ -23,8 +23,7 @@ static juce::Array<juce::Identifier> GetStateProperties()
     properties.add(HexagonAutomata::ID::GameMode);
     properties.add(HexagonAutomata::ID::GenerationMode);
     properties.add(HexagonAutomata::ID::RulesMode);
-    properties.add(HexagonAutomata::ID::SyncGenTime);
-    properties.add(HexagonAutomata::ID::AsyncGenTime);
+    properties.add(HexagonAutomata::ID::GenerationMs);
     properties.add(HexagonAutomata::ID::BornRule);
     properties.add(HexagonAutomata::ID::SurviveRule);
     properties.add(HexagonAutomata::ID::NeighborShape);
@@ -42,8 +41,10 @@ struct GameOptions
     GenerationMode  generationMode  = GenerationMode::Synchronous;
     RulesMode       rulesMode       = RulesMode::BornSurvive;
 
-    int syncGenerationMs    = 1000;
-    // int asyncGenerationMs   = 1200;
+    ClockMode       clockMode       = ClockMode::Engine;
+    bool noSustainPassThrough       = false;
+
+    int generationMs    = 1000;
 
     float bpm = 100;
 
@@ -66,7 +67,7 @@ struct State : public LumatoneGameBaseState
              , public HexagonAutomata::GameOptions
 {
     State(std::shared_ptr<LumatoneLayout> layoutIn, juce::ValueTree engineStateIn);
-    // State(const State& copy, juce::ValueTree engineStateIn);
+    State(const State& copy, juce::ValueTree engineStateIn);
 
     GameMode getGameMode() const { return gameMode; }
     virtual void setGameMode(GameMode modeIn);
@@ -76,6 +77,12 @@ struct State : public LumatoneGameBaseState
 
     RulesMode getRulesMode() const { return rulesMode; }
     virtual void setRulesMode(RulesMode newMode);
+
+    ClockMode getClockMode() const { return clockMode; }
+    virtual void setClockMode(ClockMode newMode);
+
+    bool isNoSustainPassthroughOn() const { return noSustainPassThrough; }
+    virtual void setNoSustainPassthrough(bool passThroughWithNoSustain);
 
     juce::Colour getAliveColour() const { return aliveColour; }
     virtual void setAliveColour(juce::Colour newColour);
@@ -91,8 +98,8 @@ struct State : public LumatoneGameBaseState
     juce::String getNeighborShape() const { return neighborsShape; }
     virtual void setNeighborDistance(int distance);
 
-    float getGenerationMs() const { return syncGenerationMs; }
-    float getGenerationBpm() const { return engineState.msecToBpm(syncGenerationMs); }
+    float getGenerationMs() const { return generationMs; }
+    float getGenerationBpm() const { return engineState.msecToBpm(generationMs); }
     virtual void setGenerationMs(float msecValue);
     virtual void setGenerationBpm(float bpmValue);
 

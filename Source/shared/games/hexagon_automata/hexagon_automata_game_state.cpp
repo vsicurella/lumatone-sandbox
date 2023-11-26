@@ -7,6 +7,13 @@ HexagonAutomata::State::State(std::shared_ptr<LumatoneLayout> layoutIn, juce::Va
 
 }
 
+HexagonAutomata::State::State(const State& copy, juce::ValueTree engineStateIn)
+    : LumatoneGameBaseState(LumatoneSandbox::GameName::HexagonAutomata, HexagonAutomata::ID::GameId, engineStateIn)
+    , HexagonAutomata::BoardState(static_cast<const State&>(copy))
+{
+
+}
+
 void HexagonAutomata::State::setGameMode(GameMode modeIn)
 {
     gameMode = modeIn;
@@ -23,6 +30,18 @@ void HexagonAutomata::State::setRulesMode(RulesMode newMode)
 {
     rulesMode = newMode;
     writeStringProperty(HexagonAutomata::ID::RulesMode, RulesModeToString(rulesMode));
+}
+
+void HexagonAutomata::State::setClockMode(ClockMode newMode)
+{
+    clockMode = newMode;
+    writeStringProperty(HexagonAutomata::ID::ClockMode, ClockModeToString(clockMode));
+}
+
+void HexagonAutomata::State::setNoSustainPassthrough(bool passThroughWithNoSustain)
+{
+    noSustainPassThrough = passThroughWithNoSustain;
+    writeBoolProperty(HexagonAutomata::ID::NoSustainPassThrough, noSustainPassThrough);
 }
 
 void HexagonAutomata::State::setAliveColour(juce::Colour newColour)
@@ -55,9 +74,9 @@ void HexagonAutomata::State::setNeighborDistance(int distance)
 
 void HexagonAutomata::State::setGenerationMs(float msecValue)
 {
-    syncGenerationMs = msecValue;
+    generationMs = msecValue;
     updateGenerationTickRate();
-    writeStringProperty(HexagonAutomata::ID::SyncGenTime, juce::String(syncGenerationMs));
+    writeStringProperty(HexagonAutomata::ID::GenerationMs, juce::String(generationMs));
 }
 
 void HexagonAutomata::State::setGenerationBpm(float bpmValue)
@@ -67,17 +86,6 @@ void HexagonAutomata::State::setGenerationBpm(float bpmValue)
     setGenerationMs(ms);
 }
 
-// void HexagonAutomata::State::setTicksPerSyncGeneration(int ticks)
-// {
-//     ticksPerSyncGeneration = ticks;
-//     writeIntProperty(HexagonAutomata::ID::SyncGenTime, ticksPerSyncGeneration);
-// }
-
-// void HexagonAutomata::State::setTicksPerAsyncGeneration(int ticks)
-// {
-//     ticksPerSyncGeneration = ticks;
-//     writeIntProperty(HexagonAutomata::ID::AsyncGenTime, ticksPerAsyncGeneration);
-// }
 
 void HexagonAutomata::State::setOptions(GameOptions options)
 {
@@ -87,26 +95,12 @@ void HexagonAutomata::State::setOptions(GameOptions options)
     setDeadColour(options.deadColour);
     setBornSurviveRules(options.bornRules, options.surviveRules);
     setNeighborDistance(options.neighborsShape.getIntValue());
-    setGenerationMs(options.syncGenerationMs);
+    setGenerationMs(options.generationMs);
 }
 
-// Not sure why there's an EXC_BREAKPOINT here
-// juce::ValueTree HexagonAutomata::State::loadStateProperties(juce::ValueTree stateIn)
-// {
-//     juce::ValueTree newState = (stateIn.hasType(gameId)) 
-//                              ? stateIn
-//                              : juce::ValueTree(gameId);
-
-//     LumatoneGameBaseState::loadStateProperties(newState);
-
-//     for (auto property : GetStateProperties())
-//     {
-//         handleStatePropertyChange(newState, property);
-//     }
-// }
 void HexagonAutomata::State::updateGenerationTickRate()
 {
-    ticksPerGeneration = juce::roundToInt(engineState.msecToTicks(syncGenerationMs));
+    ticksPerGeneration = juce::roundToInt(engineState.msecToTicks(generationMs));
 }
 
 void HexagonAutomata::State::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)

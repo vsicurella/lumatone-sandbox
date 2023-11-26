@@ -109,6 +109,37 @@ static HexagonAutomata::RulesMode RulesModeFromString(juce::String mode)
     return HexagonAutomata::RulesMode::None;
 }
 
+enum class ClockMode
+{
+    None = 0,
+    Engine,
+    MidiClockClient
+};
+
+static juce::String ClockModeToString(HexagonAutomata::ClockMode mode)
+{
+    switch (mode)
+    {
+    default:
+    case HexagonAutomata::ClockMode::None:
+        return juce::String("None");
+    case HexagonAutomata::ClockMode::Engine:
+        return juce::String("Engine");
+    case HexagonAutomata::ClockMode::MidiClockClient:
+        return juce::String("MidiClockClient");
+    }
+}
+
+static HexagonAutomata::ClockMode ClockModeFromString(juce::String mode)
+{
+    if (mode == "Engine")
+        return HexagonAutomata::ClockMode::Engine;
+    if (mode == "MidiClockClient")
+        return HexagonAutomata::ClockMode::MidiClockClient;
+    
+    return ClockMode::None;
+}
+
 struct ID
 {
     inline static const juce::Identifier GameId = juce::Identifier("HexagonAutomataGame");
@@ -117,10 +148,11 @@ struct ID
 
     inline static const juce::Identifier GameMode = juce::Identifier("GameMode");                   // Classic, Sequencer
     inline static const juce::Identifier GenerationMode = juce::Identifier("GenerationMode");       // Sync, Async
-    inline static const juce::Identifier RulesMode = juce::Identifier("RulesMode");            // BornSurvive, LifeArray
+    inline static const juce::Identifier RulesMode = juce::Identifier("RulesMode");                 // BornSurvive, SpiralRule
+    inline static const juce::Identifier ClockMode = juce::Identifier("ClockMode");                 // Engine, Midi Clock
+    inline static const juce::Identifier NoSustainPassThrough = juce::Identifier("NoSustainPassThrough");
 
-    inline static const juce::Identifier SyncGenTime = juce::Identifier("SyncGenTime");             // Ms per sync. generation
-    inline static const juce::Identifier AsyncGenTime = juce::Identifier("AsyncGenTime");           // Ms per async. generation
+    inline static const juce::Identifier GenerationMs = juce::Identifier("GenerationMs");           // Ms per generation
     
     inline static const juce::Identifier BornRule = juce::Identifier("BornRule");                   // number string
     inline static const juce::Identifier SurviveRule = juce::Identifier("SurviveRule");             // number string
