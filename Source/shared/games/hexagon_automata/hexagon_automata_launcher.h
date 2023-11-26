@@ -14,6 +14,7 @@
 
 #include "../../lumatone_editor_library/palettes/ColourSelectionPanels.h"
 
+#include "./hexagon_automata_game_state.h"
 namespace HexagonAutomata
 {
 
@@ -24,6 +25,7 @@ class Game;
 */
 class Component : public LumatoneSandboxGameComponent
                 , protected ColourSelectionListener
+                , private HexagonAutomata::State
 {
 
 public:
@@ -50,6 +52,9 @@ private:
     inline static const juce::String controlsColumnId = juce::String("ControlsColumn");
 
     inline int getModeColumnWidth(juce::Font font) const;
+
+private:
+    void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 private:
     HexagonAutomata::Game* game;

@@ -15,6 +15,7 @@
 HexagonAutomata::Component::Component(HexagonAutomata::Game* gameIn)
     : LumatoneSandboxGameComponent(gameIn)
     , game(gameIn)
+    , HexagonAutomata::State(*gameIn)
 {
     gameModeSelector = std::make_unique<juce::ComboBox>("Game Mode Selector");
     gameModeSelector->addItem("Classic", static_cast<int>(HexagonAutomata::GameMode::Classic));
@@ -152,6 +153,8 @@ HexagonAutomata::Component::Component(HexagonAutomata::Game* gameIn)
     deadColourLabel->setJustificationType(juce::Justification::centredLeft);
     deadColourLabel->attachToComponent(deadColourSelector.get(), false);
     addAndMakeVisible(*deadColourLabel);
+
+    game->setRulesMode(HexagonAutomata::RulesMode::SpiralRule);
 }
 
 HexagonAutomata::Component::~Component()
@@ -358,11 +361,12 @@ void HexagonAutomata::Component::colourChangedCallback(ColourSelectionBroadcaste
 
 void HexagonAutomata::Component::onGenerationModeChange()
 {
-    updateSpeedSlider();
 }
 
 void HexagonAutomata::Component::onGameModeChange()
 {
+    gameModeSelector->setSelectedId(static_cast<int>(game->getGameMode()), juce::NotificationType::dontSendNotification);
+
     bool showClassic = game->getGameMode() == HexagonAutomata::GameMode::Classic;
     bool showSequencer = game->getGameMode() == HexagonAutomata::GameMode::Sequencer;
 
@@ -372,11 +376,22 @@ void HexagonAutomata::Component::onGameModeChange()
 
 void HexagonAutomata::Component::onRulesChange()
 {
-    auto bornInputCleaned = bornRuleInput->getText().trimCharactersAtStart(", \t").trimCharactersAtEnd(", \t");
-    auto surviveInputCleaned = surviveRuleInput->getText().trimCharactersAtStart(", \t").trimCharactersAtEnd(", \t");
+    switch (game->getRulesMode())
+    {
+    default:
+    case HexagonAutomata::RulesMode::BornSurvive:
+    {
+        auto bornInputCleaned = bornRuleInput->getText().trimCharactersAtStart(", \t").trimCharactersAtEnd(", \t");
+        auto surviveInputCleaned = surviveRuleInput->getText().trimCharactersAtStart(", \t").trimCharactersAtEnd(", \t");
 
-    if (bornInputCleaned != game->getBornRules() || surviveInputCleaned != game->getSurviveRules())
-        game->setBornSurviveRules(bornRuleInput->getText(), surviveRuleInput->getText());
+        if (bornInputCleaned != game->getBornRules() || surviveInputCleaned != game->getSurviveRules())
+            game->setBornSurviveRules(bornRuleInput->getText(), surviveRuleInput->getText());
+    }
+    break;
+
+    case HexagonAutomata::RulesMode::SpiralRule:
+        break;
+    }
 }
 
 void HexagonAutomata::Component::updateSpeedSlider()
@@ -388,4 +403,45 @@ void HexagonAutomata::Component::speedSliderCallback()
 {
     int bpm = genSpeedSlider->getValue();
     game->setGenerationBpm(bpm);
+}
+
+
+void HexagonAutomata::Component::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
+{
+    if (property == HexagonAutomata::ID::GameMode)
+    {
+        onGameModeChange();
+    }
+    else if (property == HexagonAutomata::ID::GenerationMode)
+    {
+        onGenerationModeChange();
+    }
+    else if (property == HexagonAutomata::ID::SyncGenTime)
+    {
+        updateSpeedSlider();
+    }
+    else if (property == HexagonAutomata::ID::RulesMode)
+    {
+        onRulesChange();
+    }
+    else if (property == HexagonAutomata::ID::AliveColour)
+    {
+        // render->setColour(aliveColour, deadColour);
+    }
+    else if (property == HexagonAutomata::ID::DeadColour)
+    {
+        // render->setColour(aliveColour, deadColour);
+    }
+    else if (property == HexagonAutomata::ID::BornRule)
+    {
+        onRulesChange();
+    }
+    else if (property == HexagonAutomata::ID::SurviveRule)
+    {
+        onRulesChange();
+    }
+    else if (property == HexagonAutomata::ID::NeighborShape)
+    {
+        
+    }
 }
