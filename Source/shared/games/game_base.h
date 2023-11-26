@@ -78,7 +78,7 @@ public:
     void updateSavedLayout();
 
 public:
-    virtual LumatoneSandboxGameComponent* createController() = 0;
+    virtual LumatoneSandboxGameComponent* createController() { return nullptr; }
 
 protected:
     LumatoneKeyContext getKeyAt(int boardIndex, int keyIndex) const;
@@ -95,7 +95,7 @@ protected:
     LumatoneLayout layoutBeforeStart;
 
     virtual void addToQueue(LumatoneAction* action);
-    virtual LumatoneAction* renderFrame() const = 0;
+    virtual LumatoneAction* renderFrame() const { return nullptr; }
 
     LumatoneAction* queuedActions[MAX_QUEUE_SIZE];
     int queueSize = 0;
