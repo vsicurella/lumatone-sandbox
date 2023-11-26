@@ -109,7 +109,22 @@ bool HexagonAutomata::Game::nextTick()
         return true;
     }
 
-    updateCellStates();
+    if (!noSustainPassThrough || sustainIsOn)
+    {
+        if (clockMode == HexagonAutomata::ClockMode::Engine || clockFlag)
+        {
+            updateCellStates();
+            clockFlag = false;
+        }
+        else
+        {
+            updateUserInputCells();
+        }
+    }
+    else
+    {
+        updateUserInputCells();
+    }
 
     if (currentFrameCells.size() > 0)
     {
@@ -360,7 +375,9 @@ void HexagonAutomata::Game::setGenerationMode(GenerationMode newMode)
 
 void HexagonAutomata::Game::setRulesMode(RulesMode modeIn)
 {
-    switch (modeIn)
+    HexagonAutomata::State::setRulesMode(modeIn);
+
+    switch (rulesMode)
     {
     default:
     case HexagonAutomata::RulesMode::BornSurvive:
@@ -404,6 +421,8 @@ void HexagonAutomata::Game::setBornSurviveRules(juce::String bornInput, juce::St
 void HexagonAutomata::Game::setSpiralRule()
 {
     logInfo("setSpiralRule", "");
+
+    // HexagonAutomata::Game::setRulesMode(HexagonAutomata::RulesMode::SpiralRule);
     
     if (rules != nullptr)
     {
@@ -455,7 +474,7 @@ juce::ValueTree HexagonAutomata::Game::loadStateProperties(juce::ValueTree state
 
 void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
 {
-    HexagonAutomata::State::handleStatePropertyChange(stateIn, property);
+    // HexagonAutomata::State::handleStatePropertyChange(stateIn, property);
     
     if (property == HexagonAutomata::ID::GameMode)
     {
@@ -465,14 +484,15 @@ void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, c
     {
         setGenerationMode(generationMode);
     }
-    // else if (property == HexagonAutomata::ID::SyncGenTime)
-    // {
-    //     render->setMaxAge(ticksPerSyncGeneration * 6);
-    // }
-    // else if (property == HexagonAutomata::ID::AsyncGenTime)
-    // {
-    //     render->setMaxAge(ticksPerSyncGeneration * 6);
-    // }
+    else if (property == HexagonAutomata::ID::GenerationMs)
+    {
+        setGenerationBpm(static_cast<int>(stateIn[property]));
+    }
+    else if (property == HexagonAutomata::ID::RulesMode)
+    {
+        RulesMode rulesMode = RulesModeFromString((state[property]));
+        setRulesMode(rulesMode);
+    }
     else if (property == HexagonAutomata::ID::AliveColour)
     {
         render->setColour(aliveColour, deadColour);
@@ -489,17 +509,9 @@ void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, c
     {
         setBornSurviveRules(bornRules, surviveRules);
     }
-    else if (property == HexagonAutomata::ID::RulesMode)
-    {
-
-    }
     else if (property == HexagonAutomata::ID::NeighborShape)
     {
         
-    }
-    else if (property == HexagonAutomata::ID::RulesMode)
-    {
-
     }
 }
 
@@ -540,7 +552,6 @@ void HexagonAutomata::Game::updateUserInputCells()
         addToPopulation(cell, populatedCells);
         applyUpdatedCell(cell);
         currentFrameCells.add(cell);
-
     }
     newCells.removeRange(0, numCells);
 
@@ -638,7 +649,7 @@ void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce:
 
     logInfo("handleAnyNoteOn", "Note on " + juce::String(midiChannel) + "," + juce::String(midiNote) + " triggering cell " + juce::String(cellNum));
 
-    float velocityFloat = (float)velocity / 127.0f;
+    float velocityFloat = powf((float)velocity / 127.0f, 3);
 
     if (cell.isAlive())
     {
@@ -654,6 +665,56 @@ void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce:
     }
     else
         addSeed(hexCoord, velocityFloat, true);
+}
+
+void HexagonAutomata::Game::handleAnyNoteOff(int midiChannel, int midiNote)
+{
+    if (noSustainPassThrough && !sustainIsOn)
+    {
+        auto hexCoord = hexMap.keyCoordsToHex(midiChannel - 1, midiNote);
+        int cellNum = hexMap.hexToKeyNum(hexCoord);
+
+        juce::ScopedLock sl(stateLock);
+        MappedHexState cell = getMappedCell(cellNum);
+
+        clearCell(cell, true);
+    }
+}
+
+void HexagonAutomata::Game::handleAnyController(int channel, int ccNum, juce::uint8 value)
+{
+    if (ccNum == 64)
+    {
+        handleSustain(value >= 0x40);
+    }
+}
+
+void HexagonAutomata::Game::handleMidiClock()
+{
+    juce::ScopedTryLock fl(frameLock);
+    if (!fl.isLocked())
+    {
+        logWarning("handleMidiClock", "Skipped because frame lock could not be acquired");
+        return;
+    }
+
+    if (clockMode == HexagonAutomata::ClockMode::MidiClockClient)
+    {
+        ticksPerGeneration = 1;
+        logInfo("handleMidiClock", "");
+        // sendClockSignal();
+        clockFlag = true;
+    }
+}
+
+void HexagonAutomata::Game::handleSustain(bool toggled)
+{
+    sustainIsOn = toggled;
+
+    if (noSustainPassThrough && !sustainIsOn)
+    {
+        clearAllCells();
+    }
 }
 
 void HexagonAutomata::Game::completeMappingLoaded(LumatoneLayout layout)

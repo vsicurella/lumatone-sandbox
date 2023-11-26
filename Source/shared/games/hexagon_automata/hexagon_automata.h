@@ -56,6 +56,11 @@ private:
 private:
 
     void handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void handleAnyNoteOff(int midiChannel, int midiNote) override;
+
+    void handleAnyController(int channel, int ccNum, juce::uint8 value) override;
+    void handleMidiClock() override;
+    void handleSustain(bool toggled) override;
 
     void completeMappingLoaded(LumatoneLayout layout) override;
 
@@ -107,6 +112,11 @@ private:
     juce::Array<MappedHexState> clearedCells;
 
     juce::Random random;
+
+    // bool overrideClock = true;
+    bool clockFlag = false;
+
+    bool sustainIsOn = false;
 };
 }
 
