@@ -47,7 +47,7 @@ LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneS
     addAndMakeVisible(*endButton);
 
     fpsSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::IncDecButtons, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
-    fpsSlider->setRange(1, 60, 1);
+    fpsSlider->setRange(1, 240, 1);
     fpsSlider->setValue(gameEngine->getFps());
     fpsSlider->onValueChange = [&]
     {
