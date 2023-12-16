@@ -85,7 +85,7 @@ public:
 
     virtual void forceFps(double fps);
 
-    bool isGameLoaded() const { return gameStatus >= GameStatus::NoGame; }
+    bool isGameLoaded() const { return gameStatus > GameStatus::NoGame; }
     bool isGameRunning() const { return gameStatus == GameStatus::Running; }
     bool isGamePaused() const { return gameStatus == GameStatus::Paused; }
 
