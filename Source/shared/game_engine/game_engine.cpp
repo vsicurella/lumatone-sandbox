@@ -14,11 +14,12 @@
 
 #include "../lumatone_editor_library/LumatoneController.h"
 #include "../SandboxMenu.h"
+#include "game_engine.h"
 
 LumatoneSandboxGameEngine::LumatoneSandboxGameEngine(LumatoneController* controllerIn, juce::ValueTree parentTreeIn)
-    : LumatoneGameEngineState("GameEngine", parentTreeIn)
-    , controller(controllerIn)
+    : LumatoneGameEngineState("LumatoneSandboxGameEngine", parentTreeIn, nullptr)
     , LumatoneSandboxLogger("GameEngine")
+    , controller(controllerIn)
 {
     controller->addMidiListener(this);
     logInfo("LumatoneSandboxGameEngine", "Game Engine initialized.");
@@ -41,6 +42,11 @@ const LumatoneSandboxGameBase* LumatoneSandboxGameEngine::getGameLoaded() const
 
     logWarning("getGameLoaded", "No game is running.");
     return nullptr;
+}
+
+bool LumatoneSandboxGameEngine::checkNotesOn()
+{
+    return controller->appHasMidiNotesOn();
 }
 
 void LumatoneSandboxGameEngine::loadGame(juce::String gameId)
@@ -95,6 +101,7 @@ bool LumatoneSandboxGameEngine::startGame()
                 controller->addMidiListener(game.get());
                 controller->addEditorListener(game.get());
 
+                game->updateSavedLayout();
                 game->reset(true);
                 logInfo("startGame", "Starting game " + game->getName());
             }
@@ -177,7 +184,8 @@ void LumatoneSandboxGameEngine::resetGame()
     if (isGameLoaded())
     {
         jassert(game != nullptr);
-        game->reset(true);
+        writeStringProperty(LumatoneGameEngineState::ID::GameStatus, "STOP", nullptr);
+        // game->reset(true);
 
         setGameStatus(LumatoneGameEngineState::GameStatus::Stopped);
     }

@@ -11,8 +11,6 @@
 
 #include "../game_engine/game_engine_state.h"
 
-class LumatoneGameEngineState;
-
 class LumatoneGameBaseState : protected LumatoneStateBase
 {
 public:
@@ -30,16 +28,13 @@ public:
 
     int getNumTicks() const { return ticks; }
 
-protected:
-    virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;    
-    
-    virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
-    virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
+protected:    
+    virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override = 0;
+    virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override = 0;
 
 protected:
     juce::Identifier gameId;
     
-    juce::ValueTree engineStateTree;
     LumatoneGameEngineState engineState;
 
     int ticks = 0;

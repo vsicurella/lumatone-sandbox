@@ -26,17 +26,24 @@ juce::Array<juce::Identifier> LumatoneGameEngineState::GetGameEngineProperties()
 LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager *undoManager)
     : LumatoneStateBase(nameIn)
 {
-    if (stateIn.hasType(LumatoneGameEngineState::ID::GameEngineStateId))
-    {
-        state = stateIn;
-        state.addListener(this);
-    }
-    else
-    {
-        state = stateIn.getOrCreateChildWithName(LumatoneGameEngineState::ID::GameEngineStateId, undoManager);
-    }
-
+    state = stateIn.getOrCreateChildWithName(LumatoneGameEngineState::ID::GameEngineStateId, undoManager);
     loadStateProperties(state);
+}
+
+LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, const LumatoneGameEngineState& stateIn)
+    : LumatoneStateBase(nameIn)
+{
+    state = stateIn.state;
+    state.addListener(this);
+    loadStateProperties(state);
+}
+
+LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn)
+    : LumatoneStateBase(nameIn)
+{
+    state = stateIn;
+    loadStateProperties(state);
+    state.addListener(this);
 }
 
 void LumatoneGameEngineState::updateTimeIntervalMs() 
@@ -54,11 +61,22 @@ double LumatoneGameEngineState::getFps() const
     return runGameFps;
 }
 
+void LumatoneGameEngineState::setDefaultFps(double fps)
+{
+    defaultFps = fps;
+    writeIntProperty(LumatoneGameEngineState::ID::DefaultFps, defaultFps, nullptr);
+}
+
 void LumatoneGameEngineState::forceFps(double fps)
 {
     runGameFps = fps;
-    writeStringProperty(LumatoneGameEngineState::ID::RequestedFps, juce::String(runGameFps), nullptr);
     updateTimeIntervalMs();
+    writeStringProperty(LumatoneGameEngineState::ID::RequestedFps, juce::String(runGameFps), nullptr);
+}
+
+juce::ValueTree LumatoneGameEngineState::getGameStateTree()
+{
+    return state.getOrCreateChildWithName(LumatoneGameEngineState::ID::GameStateId, nullptr);
 }
 
 void LumatoneGameEngineState::setGameStatus(LumatoneGameEngineState::GameStatus newState)
@@ -73,13 +91,13 @@ void LumatoneGameEngineState::setGameName(LumatoneSandbox::GameName gameNameIn)
     writeStringProperty(LumatoneGameEngineState::ID::GameName, LumatoneSandbox::GameNameToString(gameNameIn), nullptr);
 }
 
-void LumatoneGameEngineState::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier &property)
-{
-    if (treeWhosePropertyHasChanged == state)
-    {
-        handleStatePropertyChange(state, property);
-    }
-}
+// void LumatoneGameEngineState::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier &property)
+// {
+//     if (treeWhosePropertyHasChanged == state)
+//     {
+//         handleStatePropertyChange(state, property);
+//     }
+// }
 
 juce::ValueTree LumatoneGameEngineState::loadStateProperties(juce::ValueTree stateIn)
 {
@@ -89,7 +107,7 @@ juce::ValueTree LumatoneGameEngineState::loadStateProperties(juce::ValueTree sta
 
     for (auto property : GetGameEngineProperties())
     {
-        if (newState.hasProperty(property))
+        // if (newState.hasProperty(property))
             handleStatePropertyChange(newState, property);
     }
 
@@ -100,22 +118,23 @@ void LumatoneGameEngineState::handleStatePropertyChange(juce::ValueTree stateIn,
 {
     if (property == LumatoneGameEngineState::ID::DefaultFps)
     {
-        defaultFps = static_cast<float>(stateIn.getProperty(property));
+        double readFps = static_cast<double>(stateIn.getProperty(property, 30.0));
+        setDefaultFps(readFps);
     }
     else if (property == LumatoneGameEngineState::ID::RequestedFps)
     {
-        runGameFps = stateIn.getProperty(property).toString().getFloatValue();
-        updateTimeIntervalMs();
+        double readFps = static_cast<double>(stateIn.getProperty(property, defaultFps));
+        forceFps(readFps);
     }
     else if (property == LumatoneGameEngineState::ID::GameName)
     {
-        juce::String readName = stateIn.getProperty(property).toString();
+        juce::String readName = stateIn.getProperty(property, juce::var(LumatoneSandbox::GameNameToString(LumatoneSandbox::GameName::NoGame))).toString();
         LumatoneSandbox::GameName name = LumatoneSandbox::GameNameFromString(readName);
         setGameName(name);
     }
     else if (property == LumatoneGameEngineState::ID::GameStatus)
     {
-        juce::String readStatus = stateIn.getProperty(property).toString();
+        juce::String readStatus = stateIn.getProperty(property, juce::var(GameStatusToString(LumatoneGameEngineState::GameStatus::NoGame))).toString();
         LumatoneGameEngineState::GameStatus status = LumatoneGameEngineState::GameStatusFromString(readStatus);
         setGameStatus(status);
     }

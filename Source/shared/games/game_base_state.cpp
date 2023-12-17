@@ -17,35 +17,27 @@ juce::Array<juce::Identifier> LumatoneGameBaseState::GetLumatoneGameBaseProperti
     return properties;
 }
 
-LumatoneGameBaseState::LumatoneGameBaseState(LumatoneSandbox::GameName name, juce::Identifier gameIdIn, juce::ValueTree stateIn)
-    : LumatoneStateBase(LumatoneSandbox::GameNameToString(name))
+LumatoneGameBaseState::LumatoneGameBaseState(LumatoneSandbox::GameName nameIn, juce::Identifier gameIdIn, juce::ValueTree stateIn)
+    : LumatoneStateBase(LumatoneSandbox::GameNameToString(nameIn))
     , gameId(gameIdIn)
-    , engineStateTree(stateIn)
-    , engineState(LumatoneSandbox::GameNameToString(name), stateIn)
+    , engineState(LumatoneSandbox::GameNameToString(nameIn) + "EngineCopy", stateIn)
+    // , LumatoneGameEngineState(LumatoneSandbox::GameNameToString(nameIn) + "EngineCopy", stateIn)
 {
-    state = engineStateTree.getOrCreateChildWithName(gameId, nullptr);
-    engineStateTree.addListener(this);
-}
-
-void LumatoneGameBaseState::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier &property)
-{
-    handleStatePropertyChange(state, property);
-}
-
-juce::ValueTree LumatoneGameBaseState::loadStateProperties(juce::ValueTree stateIn)
-{
-    juce::ValueTree newState = (stateIn.hasType(gameId)) ? stateIn : juce::ValueTree(gameId);
-
-    for (auto property : GetLumatoneGameBaseProperties())
+    state = engineState.getGameStateTree();
+    if (state.hasProperty(LumatoneGameEngineState::ID::GameName))
     {
-        if (newState.hasProperty(property))
-            handleStatePropertyChange(newState, property);
+        if (state[LumatoneGameEngineState::ID::GameName].toString() != name)
+        {
+            state.removeAllProperties(nullptr);
+            state.removeAllChildren(nullptr);
+        }
     }
 
-    return newState;
+    writeStringProperty(LumatoneGameEngineState::ID::GameName, name);
+    
+    state.addListener(this);
+    stateIn.addListener(this);
+    // state.addListener(this);
+    // state.getParent().addListener(this);
 }
 
-void LumatoneGameBaseState::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
-{
-
-}

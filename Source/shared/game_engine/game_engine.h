@@ -57,6 +57,9 @@ public:
 
     const LumatoneSandboxGameBase* getGameLoaded() const;
 
+    // DEBUG
+    bool checkNotesOn();
+
 private:
     juce::ListenerList<LumatoneSandboxGameEngine::Listener> engineListeners;
 

@@ -10,7 +10,7 @@
 #define LUMATONE_GAME_ENGINE_STATE_H
 
 #include "../games/games_index.h"
-#include "../lumatone_editor_library/data/state_base.h"
+#include "../lumatone_editor_library/data/lumatone_state.h"
 
 class LumatoneGameEngineState : protected LumatoneStateBase
 {
@@ -21,6 +21,7 @@ public:
         inline static const juce::Identifier DefaultFps = juce::Identifier("DefaultFps");
         inline static const juce::Identifier RequestedFps = juce::Identifier("RequestedFps");
         
+        inline static const juce::Identifier GameStateId = juce::Identifier("GameStateId");
         inline static const juce::Identifier GameStatus = juce::Identifier("GameStatus");
         inline static const juce::Identifier GameName = juce::Identifier("GameName");
         inline static const juce::Identifier LogLevel = juce::Identifier("GameEngineLogLevel");
@@ -76,14 +77,19 @@ public:
     static juce::Array<juce::Identifier> GetGameEngineProperties();
 
 public:
-    LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManager=nullptr);
+    LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManager);
+    LumatoneGameEngineState(juce::String nameIn, const LumatoneGameEngineState& stateIn);
+    LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn);
 
     virtual ~LumatoneGameEngineState() {}
 
     float getTimeIntervalMs() const;
     double getFps() const;
 
+    void setDefaultFps(double fps);
     virtual void forceFps(double fps);
+
+    juce::ValueTree getGameStateTree();
 
     bool isGameLoaded() const { return gameStatus > GameStatus::NoGame; }
     bool isGameRunning() const { return gameStatus == GameStatus::Running; }
@@ -106,7 +112,7 @@ protected:
     virtual void setGameName(LumatoneSandbox::GameName gameNameIn);
 
 protected:
-    virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;    
+    // virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;    
     
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
@@ -114,7 +120,7 @@ protected:
 protected:
     double defaultFps = 30;
     double runGameFps = 30;
-    float timeIntervalMs = 33.333f;
+    float timeIntervalMs = 0;
 
     LumatoneSandbox::GameName               gameName    = LumatoneSandbox::GameName::NoGame;
     LumatoneGameEngineState::GameStatus     gameStatus  = LumatoneGameEngineState::GameStatus::NoGame;
