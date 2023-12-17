@@ -53,7 +53,7 @@ juce::Colour HexagonAutomata::Renderer::renderGradientColour(const MappedHexStat
         return deadColour;
 
     auto ageFactor = (double)state.age / (double)maxAge;
-    auto colour = state.HexagonAutomata::HexState::colour;
+    auto colour = state.cellColor;
 
     // if (ageFactor <= 1.0f)
     //     colour = ageGradient.getColourAtPosition(ageFactor);
@@ -67,7 +67,7 @@ juce::Colour HexagonAutomata::Renderer::renderGradientColour(const MappedHexStat
 
 void HexagonAutomata::Renderer::renderCellColour(MappedHexState& state)
 {
-    state.HexagonAutomata::HexState::colour = getCellColour(state);
+    state.cellColor = getCellColour(state);
 }
 
 MappedLumatoneKey HexagonAutomata::Renderer::renderCellKey(const MappedHexState& state)
@@ -110,7 +110,7 @@ juce::Colour HexagonAutomata::Renderer::renderNewbornColour(const juce::Array<Ma
 
     for (auto cell : parents)
     {
-        auto colour = cell.HexagonAutomata::HexState::colour;
+        auto colour = cell.cellColor;
 
         hue += colour.getHue();
         saturation += colour.getSaturation();
