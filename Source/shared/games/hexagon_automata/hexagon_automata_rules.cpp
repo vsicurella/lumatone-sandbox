@@ -134,15 +134,9 @@ MappedCellStates BornSurviveRule::getNewCells(const State& state, const MappedCe
     juce::ScopedLock thisLock(getLock());
 
     MappedCellStates newCells;
-    int ticksPerGeneration = state.getTicksPerGeneration();
 
-    if (state.getGenerationMode() == GenerationMode::Synchronous)
-    {
-        if ((state.getNumTicks() < ticksPerGeneration) || (state.getNumTicks() % ticksPerGeneration != 0))
-        {
-            return newCells;
-        }
-    }
+    if (state.getGenerationMode() == GenerationMode::Synchronous && !doSyncAdvancement(state))
+        return newCells;
 
     juce::ScopedLock shapeLock(neighborsShape.getLock());
     MappedCellStates emptyCells = getEmptyNeighbors(state, population);
@@ -169,7 +163,7 @@ MappedCellStates BornSurviveRule::getNewCells(const State& state, const MappedCe
         juce::HashMap<juce::String, MappedHexState> bornNeighbors;
         for (const MappedHexState& cell : population)    
         {
-            if (cell.age < ticksPerGeneration || cell.age % ticksPerGeneration != 0)
+            if (!doAsyncAdvancement(state, cell))
                 continue;
 
             // Find neighbors that can be born
@@ -204,11 +198,7 @@ MappedCellStates BornSurviveRule::getUpdatedCells(const State& state, const Mapp
 
     MappedCellStates updatedCells;
 
-    if (state.getGenerationMode() == GenerationMode::Synchronous 
-      && (state.getNumTicks() < state.getTicksPerGeneration() 
-       || state.getNumTicks() % state.getTicksPerGeneration() != 0
-        )
-       ) 
+    if (state.getGenerationMode() == GenerationMode::Synchronous && !doSyncAdvancement(state)) 
     {
         updatedCells = population;
     }
@@ -216,7 +206,7 @@ MappedCellStates BornSurviveRule::getUpdatedCells(const State& state, const Mapp
     {
         if (state.getGenerationMode() == GenerationMode::Asynchronous)
         {
-            if (cell.age < state.getTicksPerGeneration() || cell.age % state.getTicksPerGeneration() != 0)
+            if (!doAsyncAdvancement(state, cell))
             {
                 updatedCells.add(cell);
                 continue;
@@ -354,6 +344,18 @@ NeighborsShapeTemp Rules::getDefaultNeighborsShape() const
     return Hex::Point().neighbors(1);
 }
 
+bool HexagonAutomata::Rules::doSyncAdvancement(const HexagonAutomata::State &state)
+{
+    int ticks = state.getTicksPerGeneration();
+    return state.getNumTicks() > 0 && state.getNumTicks() % ticks == 0;
+}
+
+bool HexagonAutomata::Rules::doAsyncAdvancement(const HexagonAutomata::State &state, const HexagonAutomata::MappedHexState &cell)
+{
+    int ticks = state.getTicksPerGeneration();
+    return cell.age > 0 && cell.age % state.getNumTicks() % ticks == 0;
+}
+
 TotalisticRule::TotalisticRule(int numStatesIn, juce::String shapeInputIn, juce::String ruleString)
     : Rules(shapeInputIn)
     , numStates(numStatesIn)
@@ -389,14 +391,11 @@ MappedCellStates TotalisticRule::getNewCells(const State &state, const MappedCel
     juce::ScopedLock thisLock(getLock());
 
     MappedCellStates newCells;
-    int ticksPerGeneration = state.getTicksPerGeneration();
 
     if (state.getGenerationMode() == GenerationMode::Synchronous)
     {
-        if ((state.getNumTicks() < ticksPerGeneration) || (state.getNumTicks() % ticksPerGeneration != 0))
-        {
+        if (!doSyncAdvancement(state))
             return newCells;
-        }
     }
 
     juce::ScopedLock shapeLock(neighborsShape.getLock());
@@ -425,7 +424,7 @@ MappedCellStates TotalisticRule::getNewCells(const State &state, const MappedCel
         juce::HashMap<juce::String, MappedHexState> bornNeighbors;
         for (const MappedHexState& cell : population)    
         {
-            if (cell.age < ticksPerGeneration || cell.age % ticksPerGeneration != 0)
+            if (!doAsyncAdvancement(state, cell))
                 continue;
 
             // Find neighbors that can be born
@@ -462,11 +461,7 @@ MappedCellStates TotalisticRule::getUpdatedCells(const State &state, const Mappe
 
     MappedCellStates updatedCells;
 
-    if (state.getGenerationMode() == GenerationMode::Synchronous 
-      && (state.getNumTicks() < state.getTicksPerGeneration() 
-       || state.getNumTicks() % state.getTicksPerGeneration() != 0
-        )
-       ) 
+    if (state.getGenerationMode() == GenerationMode::Synchronous && !doSyncAdvancement(state))
     {
         updatedCells = population;
     }
@@ -474,7 +469,7 @@ MappedCellStates TotalisticRule::getUpdatedCells(const State &state, const Mappe
     {
         if (state.getGenerationMode() == GenerationMode::Asynchronous)
         {
-            if (cell.age < state.getTicksPerGeneration() || cell.age % state.getTicksPerGeneration() != 0)
+            if (!doAsyncAdvancement(state, cell))
             {
                 updatedCells.add(cell);
                 continue;
@@ -737,4 +732,137 @@ int TotalisticRule::healthToState(float health) const
 HexagonAutomata::SpiralRule::SpiralRule()
     : TotalisticRule(3, getDefaultNeighborsShape(), "000200120021220221200222122022221210")
 {
+}
+
+HexagonAutomata::BzReactionRule::BzReactionRule(int numStates, int suppressIntermediates, int suppressSaturated, int speedIn)
+{
+    if (numStates > 1)
+    {
+        N = numStates;
+        oneOverN = 1.0f / (float)N;
+        modN = N + 1;
+        speed = juce::jlimit(1, N - 1, speedIn);
+    }
+
+    k1 = juce::jlimit(1, 8, suppressIntermediates);
+    k2 = juce::jlimit(1, 8, suppressSaturated);
+}
+
+MappedCellStates HexagonAutomata::BzReactionRule::getNewCells(const HexagonAutomata::State &board, const MappedCellStates &population)
+{
+    // TODO timings
+
+    MappedCellStates newCells;
+    
+    // for (int i = 0; i < board.numCells; i++)
+    // {
+    //     if (board.cells[i].health == 0.0f)
+    //     {
+    //     auto cell = board.getMappedCell(i);
+    //     cell.setBorn();
+    //     newCells.add(cell);
+    //     }
+    // }
+
+    return newCells; 
+}
+
+MappedCellStates HexagonAutomata::BzReactionRule::getUpdatedCells(const HexagonAutomata::State &board, const MappedCellStates &population)
+{
+    MappedCellStates updatedCells;
+
+    if (!doSyncAdvancement(board))
+    {
+        for (int i = 0; i < board.numCells; i++)
+        {
+            auto cell = board.getMappedCell(i);
+            cell.age++;
+            updatedCells.add(cell);
+        }
+
+        return updatedCells;
+    }
+
+    for (int i = 0; i < board.numCells; i++)
+    {
+        auto cell = board.getMappedCell(i);
+
+        if (board.generationMode == GenerationMode::Asynchronous && !doAsyncAdvancement(board, cell))
+            continue;
+        
+        auto neighbors = board.getNeighbors(cell, neighborsShape);
+        auto newHealth = getLifeFactor(cell, neighbors);
+        cell.health = newHealth;
+        if (cell.health == 1.0f)
+            cell.age = 0;
+        else
+            cell.age++;
+
+        updatedCells.add(cell);
+    }
+
+    return updatedCells;
+}
+
+float HexagonAutomata::BzReactionRule::getLifeFactor(const MappedHexState &origin, const MappedCellStates &neighbors)
+{
+    int state = healthToState(origin.health);
+    jassert(state >= 0 && state <= N);
+
+    if (state == N)
+        return stateToHealthFactor(0);
+    
+    int intermediate = 0;
+    int saturated = 0;
+
+    if (state == 0)
+    {
+        for (const MappedHexState& cell : neighbors)
+        {
+            int neighborState = healthToState(cell.health);
+            if (neighborState == N)
+                saturated++;
+            else if (neighborState > 0)
+                intermediate++;
+        }
+
+        return stateToHealthFactor(intermediate / k1 + saturated / k2);
+    }
+
+    int s = state;
+
+    for (const MappedHexState& cell : neighbors)
+    {
+        int neighborState = healthToState(cell.health);
+        if (neighborState == N)
+            saturated++;
+        else if (neighborState > 0)
+            intermediate++;
+
+        s += neighborState;
+    }
+
+    state = clipState(s / (intermediate + saturated + 1) + speed);
+    return stateToHealthFactor(state);
+}
+
+bool HexagonAutomata::BzReactionRule::generateNewLife(const MappedHexState &origin, const MappedCellStates &neighbors)
+{
+    return origin.health <= 0.0f;
+}
+
+float HexagonAutomata::BzReactionRule::stateToHealthFactor(int stateNum) const
+{
+    jassert((N - stateNum) * oneOverN <= 1.0f);
+    return (N - stateNum) * oneOverN;
+}
+
+int HexagonAutomata::BzReactionRule::healthToState(float health) const
+{
+    return N - juce::roundToInt(health * N);
+}
+
+int HexagonAutomata::BzReactionRule::clipState(int state) const
+{
+    return state % modN; 
 }

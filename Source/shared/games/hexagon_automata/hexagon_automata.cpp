@@ -110,6 +110,8 @@ bool HexagonAutomata::Game::nextTick()
         return true;
     }
 
+    numUpdatesInFrame = maxUpdatesPerFrame > 0 ? maxUpdatesPerFrame : currentFrameCells.size();
+
     if (!noSustainPassThrough || sustainIsOn)
     {
         if (clockMode == HexagonAutomata::ClockMode::Engine || clockFlag)
@@ -211,11 +213,12 @@ LumatoneAction* HexagonAutomata::Game::renderFrame() const
     }
 
     juce::Array<MappedLumatoneKey> keyUpdates;
-    int limit = juce::jmin(maxUpdatesPerFrame, currentFrameCells.size());
+    // int limit = juce::jmin(maxUpdatesPerFrame, currentFrameCells.size());
+    // int limit = maxUpdatesPerFrame > 0 ? juce::jmin(maxUpdatesPerFrame, currentFrameCells.size()) : currentFrameCells.size();
 
-    for (int i = 0; i < limit; i++)
+    for (int i = 0; i < numUpdatesInFrame; i++)
     {
-        CellUpdate update = currentFrameCells.getReference(i);
+        const MappedHexState& update = currentFrameCells.getReference(i);
         MappedLumatoneKey renderedKey;
 
         switch (gameMode)
@@ -251,8 +254,9 @@ void HexagonAutomata::Game::addSeed(Hex::Point point, float healthIn, bool trigg
     HexState state(1.0f);
     auto newCell = HexagonAutomata::MappedHexState(
         state,
+        point,
         layout->getMappedKey(keyCoord.boardIndex, keyCoord.keyIndex),
-        point
+        hexMap
     );
 
     newCell.health = healthIn;
@@ -379,6 +383,9 @@ void HexagonAutomata::Game::setRulesMode(RulesMode modeIn)
     case HexagonAutomata::RulesMode::SpiralRule:
         setSpiralRule();
         break;
+    case HexagonAutomata::RulesMode::BzReactionRule:
+        setReactionRule(64, 2, 3, 5);
+        break;
     }
 }
 
@@ -425,6 +432,20 @@ void HexagonAutomata::Game::setSpiralRule()
     }
 
     rules = std::make_unique<HexagonAutomata::SpiralRule>();
+}
+
+void HexagonAutomata::Game::setReactionRule(int numStates, int k1, int k2, int speed)
+{
+    logInfo("setReactionRule", "");
+    
+    if (rules != nullptr)
+    {
+        juce::ScopedLock l(rules->getLock());
+        rules.reset(new HexagonAutomata::BzReactionRule(numStates, k1, k2, speed));
+        return;
+    }
+
+    rules = std::make_unique<HexagonAutomata::BzReactionRule>(numStates, k1, k2, speed);
 }
 
 void HexagonAutomata::Game::logSkippedFrame(juce::String method) const
@@ -604,25 +625,60 @@ void HexagonAutomata::Game::updateCellStates()
     // }
 
     auto updatedCells = rules->getUpdatedCells(*static_cast<State*>(this), populatedCells);
-    for (MappedHexState& cell : updatedCells)
+    for (MappedHexState& update : updatedCells)
     {
-        if (cell.isAlive())
+        if (update.isAlive())
         {
-            addToPopulation(cell, nextPopulation);
+            addToPopulation(update, nextPopulation);
         }
-        else
-        {
-            if (gameMode == GameMode::Sequencer)
-            {
-                // logInfo("updateCellStates (updatedCells)", "triggerCellMidi");
-                triggerCellMidi(cell);
-            }
 
-            // move these below this scope for render effects
-            render->renderCellColour(cell);
-            currentFrameCells.add(cell);
-            applyUpdatedCell(cell);
+        const HexState& current = cells[update.cellNum];
+        if (current.age != update.age || current.health != update.health)
+        {
+            render->renderCellColour(update);
+            applyUpdatedCell(update);
+
+            if (update.cellColor != current.cellColor)
+                currentFrameCells.add(update);
+
+            if (update.isDead())
+            {
+                if (gameMode == GameMode::Sequencer)
+                {
+                    // logInfo("updateCellStates (updatedCells)", "triggerCellMidi");
+                    triggerCellMidi(update);
+                }
+
+            }
         }
+
+        // if (update.isAlive())
+        // {
+        //     addToPopulation(update, nextPopulation);
+
+        //     auto cellNum = hexMap.hexToKeyNum(update);
+        //     const HexState& current = cells[cellNum];
+            
+        //     if (rulesMode == RulesMode::BzReactionRule && current != update)
+        //     {
+        //         render->renderCellColour(update);
+        //         currentFrameCells.add(update);
+        //         applyUpdatedCell(update);
+        //     }
+        // }
+        // else
+        // {
+        //     if (gameMode == GameMode::Sequencer)
+        //     {
+        //         // logInfo("updateCellStates (updatedCells)", "triggerCellMidi");
+        //         triggerCellMidi(update);
+        //     }
+
+        //     // move these below this scope for render effects
+        //     render->renderCellColour(update);
+        //     currentFrameCells.add(update);
+        //     applyUpdatedCell(update);
+        // }
     }
     // if (updatedCells.size())
     // {
@@ -646,7 +702,8 @@ void HexagonAutomata::Game::addFramesToQueue()
     {
         addToQueue(renderFrame());
         // logInfo("nextTick", "added " + juce::String(juce::jmin(currentFrameCells.size(), maxUpdatesPerFrame)) + " cell updates to queue;");
-        currentFrameCells.removeRange(0, maxUpdatesPerFrame);
+    
+        currentFrameCells.removeRange(0, numUpdatesInFrame);
     }
 }
 
@@ -667,7 +724,7 @@ void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce:
     if (cell.isAlive())
     {
         // clearCell(cell);
-        cell.setBorn(velocity);
+        cell.setBorn(velocityFloat);
 
         if (gameMode == HexagonAutomata::GameMode::Sequencer)
         {

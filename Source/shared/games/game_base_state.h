@@ -38,7 +38,7 @@ protected:
     LumatoneGameEngineState engineState;
 
     int ticks = 0;
-    int maxUpdatesPerFrame = 10;
+    int maxUpdatesPerFrame = 30;
 };
 
 #endif

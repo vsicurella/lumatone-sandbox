@@ -44,7 +44,8 @@ public:
 
     void setBornSurviveRules(juce::String bornInput, juce::String surviveInput) override;
     void setSpiralRule();
-        
+    void setReactionRule(int numStates, int k1, int k2, int speed);
+
 private:
     // void addToPopulationNow(MappedHexState& cell);
     void addToPopulation(MappedHexState& cell, MappedCellStates& population);
@@ -108,7 +109,8 @@ private:
     std::unique_ptr<HexagonAutomata::Rules> rules;
     std::unique_ptr<HexagonAutomata::Renderer> render;
 
-    MappedCellUpdates currentFrameCells;
+    MappedCellStates currentFrameCells;
+    int numUpdatesInFrame = 0;
     
     MappedCellStates newCells;
     MappedCellStates clearedCells;

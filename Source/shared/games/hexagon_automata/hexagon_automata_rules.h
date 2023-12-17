@@ -41,13 +41,16 @@ public:
     virtual NeighborsShapeTemp getNeighborsShape() const;
     virtual NeighborsShapeTemp getDefaultNeighborsShape() const;
 
+    virtual bool doSyncAdvancement(const HexagonAutomata::State& state);
+    virtual bool doAsyncAdvancement(const HexagonAutomata::State& state, const HexagonAutomata::MappedHexState& cell);
+
     // Return array of cells that are alive
     // virtual MappedCellStates getPopulation(const HexagonAutomata::State& gameState) const; 
     // Return Array of cells to run born rules on
     virtual MappedCellStates getEmptyNeighbors(const HexagonAutomata::State& gameState, const MappedCellStates& population) const;
 
-    virtual MappedCellUpdates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) = 0;
-    virtual MappedCellUpdates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) = 0;
+    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) = 0;
+    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) = 0;
     
     // virtual juce::Array<MappedHexState> getNeighboringCells(const CellStates& population, const NeighborsShape& neighborShape) const = 0;
 
@@ -73,8 +76,8 @@ struct BornSurviveRule : public Rules
 
     virtual ~BornSurviveRule() override { }
 
-    virtual MappedCellUpdates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
-    virtual MappedCellUpdates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
 
 protected:
     virtual float getLifeFactor(const MappedHexState& origin, const MappedCellStates& neighbors) override;
@@ -128,8 +131,8 @@ struct TotalisticRule : public Rules
 
     virtual ~TotalisticRule() override { }
 
-    virtual MappedCellUpdates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
-    virtual MappedCellUpdates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
 
 public:
     virtual NeighborsShapeTemp getDefaultNeighborsShape() const override;
@@ -175,6 +178,40 @@ class SpiralRule : public TotalisticRule
 public:
 
     SpiralRule();
+};
+
+
+class BzReactionRule : public Rules
+{
+public:
+
+    BzReactionRule(int numStates, int suppressIntermediates, int suppressSaturated, int speedIn);
+    virtual ~BzReactionRule() { }
+
+    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+
+
+protected:
+
+    virtual float getLifeFactor(const MappedHexState& origin, const MappedCellStates& neighbors) override;
+    virtual bool generateNewLife(const MappedHexState& origin, const MappedCellStates& neighbors) override;
+
+    virtual float stateToHealthFactor(int stateNum) const;
+    virtual int healthToState(float health) const;
+
+    virtual int clipState(int state) const;
+
+protected:
+    int N = 1;
+    
+    int k1 = 1;  // Weight for intermediate states
+    int k2 = 1;      // Weight for saturated states
+
+    int speed = 0;
+    
+    float oneOverN = 1.0f;
+    int modN = 2;
 };
 
 }
