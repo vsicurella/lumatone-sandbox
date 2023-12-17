@@ -853,16 +853,19 @@ bool HexagonAutomata::BzReactionRule::generateNewLife(const MappedHexState &orig
 
 float HexagonAutomata::BzReactionRule::stateToHealthFactor(int stateNum) const
 {
-    jassert((N - stateNum) * oneOverN <= 1.0f);
-    return (N - stateNum) * oneOverN;
+    // jassert((N - stateNum) * oneOverN <= 1.0f);
+    // return (N - stateNum) * oneOverN;
+    return stateNum * oneOverN;
 }
 
 int HexagonAutomata::BzReactionRule::healthToState(float health) const
 {
-    return N - juce::roundToInt(health * N);
+    // return N - juce::roundToInt(health * N);
+    return juce::roundToInt(health * N);
 }
 
 int HexagonAutomata::BzReactionRule::clipState(int state) const
 {
-    return state % modN; 
+    // return state % modN; 
+    return juce::jlimit(0,  N, state);
 }
