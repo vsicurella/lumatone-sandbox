@@ -53,13 +53,15 @@ private:
     void updateUserInputCells();
     void updateCellStates();
 
+    void addFramesToQueue(); // Turn into game base method?
+
 private:
 
     void handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
     void handleAnyNoteOff(int midiChannel, int midiNote) override;
 
     void handleAnyController(int channel, int ccNum, juce::uint8 value) override;
-    void handleMidiClock() override;
+    void handleMidiClock(int quarterNoteInterval) override;
     void handleSustain(bool toggled) override;
 
     void completeMappingLoaded(LumatoneLayout layout) override;
@@ -87,7 +89,7 @@ private:
     void logCellState(juce::String method, juce::String message, const MappedCellStates& states) const;
 
 protected:
-    juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override; // kludge?
+    // juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override; // kludge?
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 public:
@@ -106,10 +108,10 @@ private:
     std::unique_ptr<HexagonAutomata::Rules> rules;
     std::unique_ptr<HexagonAutomata::Renderer> render;
 
-    juce::Array<MappedHexState> currentFrameCells;
+    MappedCellUpdates currentFrameCells;
     
-    juce::Array<MappedHexState> newCells;
-    juce::Array<MappedHexState> clearedCells;
+    MappedCellStates newCells;
+    MappedCellStates clearedCells;
 
     juce::Random random;
 

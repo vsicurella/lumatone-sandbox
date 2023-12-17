@@ -47,6 +47,7 @@ struct GameOptions
     int generationMs    = 1000;
 
     float bpm = 100;
+    float qnRatio = 1.0f;
 
     juce::String bornRules = juce::String("2");
     juce::String surviveRules = juce::String("3,4");
@@ -67,7 +68,8 @@ struct State : public LumatoneGameBaseState
              , public HexagonAutomata::GameOptions
 {
     State(std::shared_ptr<LumatoneLayout> layoutIn, juce::ValueTree engineStateIn);
-    State(const State& copy, juce::ValueTree engineStateIn);
+    // State(std::shared_ptr<LumatoneLayout> layoutIn, const LumatoneGameEngineState& engineStateIn);
+    // State(const State& copy, const LumatoneGameEngineState& engineStateIn);
 
     GameMode getGameMode() const { return gameMode; }
     virtual void setGameMode(GameMode modeIn);
@@ -102,6 +104,8 @@ struct State : public LumatoneGameBaseState
     float getGenerationBpm() const { return engineState.msecToBpm(generationMs); }
     virtual void setGenerationMs(float msecValue);
     virtual void setGenerationBpm(float bpmValue);
+    
+    virtual void setGenerationQN(float qnRatio); // Quarter Note ratio - for MIDI clock mode
 
     int getTicksPerGeneration() const { return ticksPerGeneration; }
 
@@ -115,16 +119,18 @@ struct State : public LumatoneGameBaseState
     GameOptions getOptions() const { return static_cast<GameOptions>(*this); }
 
 protected:
-    void updateGenerationTickRate();
+    void updateGenerationMsTicks();
+    void updateGenerationClockTime();
 
 protected:
     // TODO - this should be the one that's used
-    // virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
+    virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 protected:
 
     int ticksPerGeneration = 10;
+    int ticksPerQuarterNote = 0;
 };
     
 }

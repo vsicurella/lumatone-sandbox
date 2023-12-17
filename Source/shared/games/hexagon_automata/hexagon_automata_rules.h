@@ -46,8 +46,8 @@ public:
     // Return Array of cells to run born rules on
     virtual MappedCellStates getEmptyNeighbors(const HexagonAutomata::State& gameState, const MappedCellStates& population) const;
 
-    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) = 0;
-    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) = 0;
+    virtual MappedCellUpdates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) = 0;
+    virtual MappedCellUpdates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) = 0;
     
     // virtual juce::Array<MappedHexState> getNeighboringCells(const CellStates& population, const NeighborsShape& neighborShape) const = 0;
 
@@ -73,8 +73,8 @@ struct BornSurviveRule : public Rules
 
     virtual ~BornSurviveRule() override { }
 
-    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
-    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellUpdates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellUpdates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
 
 protected:
     virtual float getLifeFactor(const MappedHexState& origin, const MappedCellStates& neighbors) override;
@@ -128,8 +128,8 @@ struct TotalisticRule : public Rules
 
     virtual ~TotalisticRule() override { }
 
-    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
-    virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellUpdates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellUpdates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
 
 public:
     virtual NeighborsShapeTemp getDefaultNeighborsShape() const override;

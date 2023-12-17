@@ -154,15 +154,61 @@ HexagonAutomata::Component::Component(HexagonAutomata::Game* gameIn)
     deadColourLabel->attachToComponent(deadColourSelector.get(), false);
     addAndMakeVisible(*deadColourLabel);
 
-    game->setRulesMode(HexagonAutomata::RulesMode::SpiralRule);
+    midiClockToggle = std::make_unique<juce::ToggleButton>("Use MIDI Clock");
+    midiClockToggle->onClick = [&]
+    {
+        game->setClockMode(midiClockToggle->getToggleState() ? HexagonAutomata::ClockMode::MidiClockClient : HexagonAutomata::ClockMode::Engine);
+    };
+    addAndMakeVisible(*midiClockToggle);
+
+    qnRatioSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::IncDecButtons, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
+    qnRatioSlider->setRange(0.0001, 32, 0.0001);
+    qnRatioSlider->setValue(1.0, juce::NotificationType::dontSendNotification);
+    qnRatioSlider->onValueChange = [&]
+    {
+        game->setGenerationQN(qnRatioSlider->getValue());
+    };
+    addAndMakeVisible(*qnRatioSlider);
+
+    qnRatioLabel = std::make_unique<juce::Label>("Quarter Note Ratio Label", "QN Ratio:");
+    qnRatioLabel->setJustificationType(juce::Justification::centredLeft);
+    qnRatioLabel->attachToComponent(qnRatioSlider.get(), true);
+    addAndMakeVisible(*qnRatioLabel);
+
+
+    resetButton = std::make_unique<juce::TextButton>("Reset", "Clear all cells");
+    resetButton->onClick = [&]
+    {
+        game->clearAllCells();
+    };
+    addAndMakeVisible(*resetButton);
+
 }
 
 HexagonAutomata::Component::~Component()
 { 
     game = nullptr;
 
+    midiClockToggle = nullptr;
+    deadColourLabel = nullptr;
+    deadColourSelector = nullptr;
+    aliveColourLabel = nullptr;
+    aliveColourSelector = nullptr;
+    distanceLabel = nullptr;
+    distanceSlider = nullptr;
+    surviveRuleLabel = nullptr;
+    surviveRuleInput = nullptr;
+    bornRuleLabel = nullptr;
+    bornRuleInput = nullptr;
+    genSpeedLabel = nullptr;
     genSpeedSlider = nullptr;
     addSeedButton = nullptr;
+    rulesModeLabel = nullptr;
+    rulesModeSelector = nullptr;
+    generationModeLabel = nullptr;
+    generationModeSelector = nullptr;
+    gameModeLabel = nullptr;
+    gameModeSelector = nullptr;
 }
 
 inline int HexagonAutomata::Component::getModeColumnWidth(juce::Font font) const
@@ -213,6 +259,7 @@ void HexagonAutomata::Component::resized()
     float bornRuleLabelWidth = labelFont.getStringWidthFloat(bornRuleLabel->getText());
     float surviveRuleLabelWidth = labelFont.getStringWidthFloat(surviveRuleLabel->getText());
     float distanceLabelWidth = labelFont.getStringWidthFloat(distanceLabel->getText());
+    float qnRatioLabelWidth = labelFont.getStringWidthFloat(qnRatioLabel->getText());
     
     gameModeLabel->setSize(gameModeLabelWidth, controlHeight);
     generationModeLabel->setSize(generationModeWidth, controlHeight);
@@ -221,6 +268,7 @@ void HexagonAutomata::Component::resized()
     bornRuleLabel->setSize(bornRuleLabelWidth, buttonHeight);
     surviveRuleLabel->setSize(surviveRuleLabelWidth, buttonHeight);
     distanceLabel->setSize(distanceLabelWidth, controlHeight);
+    qnRatioLabel->setSize(qnRatioLabelWidth, controlHeight);
 
     int modeWidth = getModeColumnWidth(labelFont);
 
@@ -296,6 +344,21 @@ void HexagonAutomata::Component::resized()
     genSpeedItem.associatedComponent = genSpeedSlider.get();
     genSpeedItem.height = buttonHeight;
 
+
+    juce::GridItem::StartAndEndProperty tempoColumnProperties = { 7 };
+    grid.templateColumns.add(juce::Grid::TrackInfo(tempoColumnId + "margin", juce::Grid::Px(0)));
+    grid.templateColumns.add(juce::Grid::TrackInfo(tempoColumnId, juce::Grid::Px(controlsMaxWidth)));
+
+    juce::GridItem clockToggleItem(gItemTemplate);
+    clockToggleItem.associatedComponent = midiClockToggle.get();
+    float clockToggleWidth = labelFont.getStringWidth(midiClockToggle->getButtonText());
+    clockToggleItem.width = clockToggleWidth;
+    // midiClockToggle->setBounds(genSpeedSlider->getRight() + margin, flexArea.getY(), flexArea.getWidth() - modeControlsMaxWidth, controlHeight);
+    
+    juce::GridItem qnRatioItem(gItemTemplate);
+    qnRatioItem.associatedComponent = qnRatioSlider.get();
+    // qnRatioSlider->setBounds(midiClockToggle->getX() + qnRatioLabelWidth, midiClockToggle->getBottom() + labelMargin, flexArea.getWidth() - qnRatioLabelWidth, controlHeight);
+
     int rowNum = 1;
 
     grid.items.add(gameModeItem.withColumn(modeColumnProperties).withRow({ rowNum++ }));
@@ -310,6 +373,10 @@ void HexagonAutomata::Component::resized()
     grid.items.add(addSeedItem.withColumn({ 1, 3 }).withRow({ rowNum }));
     grid.items.add(genSpeedItem.withColumn({ 4, 5 }).withRow({ rowNum }));
     rowNum++;
+
+    rowNum = 1;
+    grid.items.add(clockToggleItem.withColumn(tempoColumnProperties).withRow({ rowNum++ }));
+    grid.items.add(qnRatioItem.withColumn(tempoColumnProperties).withRow({ rowNum++ }));
 
     auto leftControlsArea = flexArea.withWidth(modeControlsMaxWidth);
     grid.performLayout(leftControlsArea);
@@ -348,6 +415,14 @@ void HexagonAutomata::Component::resized()
         coloursGrid.items.add(deadColourItem.withColumn({ 4 }));
         coloursGrid.performLayout(flexArea.withLeft(leftControlsArea.getRight()).withWidth(flexArea.getWidth() - modeControlsMaxWidth));
     }
+
+    resetButton->setBounds(qnRatioSlider->getX(), qnRatioSlider->getBottom() + margin, qnRatioSlider->getWidth(), controlHeight);
+
+    // midiClockToggle->setBounds(genSpeedSlider->getRight() + margin, flexArea.getY(), flexArea.getWidth() - modeControlsMaxWidth, controlHeight);
+    
+    // float qnRatioLabelWidth = labelFont.getStringWidthFloat(qnRatioLabel->getText());
+    // qnRatioLabel->setSize(qnRatioLabelWidth, controlHeight);
+    // qnRatioSlider->setBounds(midiClockToggle->getX() + qnRatioLabelWidth, midiClockToggle->getBottom() + labelMargin, flexArea.getWidth() - qnRatioLabelWidth, controlHeight);
 }
 
 void HexagonAutomata::Component::colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour)

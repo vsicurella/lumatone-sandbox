@@ -7,12 +7,19 @@ HexagonAutomata::State::State(std::shared_ptr<LumatoneLayout> layoutIn, juce::Va
 
 }
 
-HexagonAutomata::State::State(const State& copy, juce::ValueTree engineStateIn)
-    : LumatoneGameBaseState(LumatoneSandbox::GameName::HexagonAutomata, HexagonAutomata::ID::GameId, engineStateIn)
-    , HexagonAutomata::BoardState(static_cast<const State&>(copy))
-{
+// HexagonAutomata::State::State(const State& copy, juce::ValueTree engineStateIn)
+//     : LumatoneGameBaseState(LumatoneSandbox::GameName::HexagonAutomata, HexagonAutomata::ID::GameId, engineStateIn)
+//     , HexagonAutomata::BoardState(static_cast<const State&>(copy))
+// {
 
-}
+// }
+
+// HexagonAutomata::State::State(const State& copy, const LumatoneGameEngineState& engineStateIn)
+//     : LumatoneGameBaseState(LumatoneSandbox::GameName::HexagonAutomata, HexagonAutomata::ID::GameId, engineStateIn)
+//     , HexagonAutomata::BoardState(static_cast<const State&>(copy))
+// {
+
+// }
 
 void HexagonAutomata::State::setGameMode(GameMode modeIn)
 {
@@ -36,6 +43,11 @@ void HexagonAutomata::State::setClockMode(ClockMode newMode)
 {
     clockMode = newMode;
     writeStringProperty(HexagonAutomata::ID::ClockMode, ClockModeToString(clockMode));
+
+    if (clockMode == ClockMode::Engine)
+        updateGenerationMsTicks();
+    else if (clockMode == ClockMode::MidiClockClient)
+        updateGenerationClockTime();
 }
 
 void HexagonAutomata::State::setNoSustainPassthrough(bool passThroughWithNoSustain)
@@ -75,7 +87,7 @@ void HexagonAutomata::State::setNeighborDistance(int distance)
 void HexagonAutomata::State::setGenerationMs(float msecValue)
 {
     generationMs = msecValue;
-    updateGenerationTickRate();
+    updateGenerationMsTicks();
     writeStringProperty(HexagonAutomata::ID::GenerationMs, juce::String(generationMs));
 }
 
@@ -86,6 +98,11 @@ void HexagonAutomata::State::setGenerationBpm(float bpmValue)
     setGenerationMs(ms);
 }
 
+void HexagonAutomata::State::setGenerationQN(float qnRatioIn)
+{
+    qnRatio = qnRatioIn;
+    ticksPerGeneration = juce::roundToInt(ticksPerQuarterNote * qnRatio);
+}
 
 void HexagonAutomata::State::setOptions(GameOptions options)
 {
@@ -98,16 +115,38 @@ void HexagonAutomata::State::setOptions(GameOptions options)
     setGenerationMs(options.generationMs);
 }
 
-void HexagonAutomata::State::updateGenerationTickRate()
+void HexagonAutomata::State::updateGenerationMsTicks()
 {
     ticksPerGeneration = juce::roundToInt(engineState.msecToTicks(generationMs));
+}
+
+void HexagonAutomata::State::updateGenerationClockTime()
+{
+    ticksPerGeneration = juce::roundToInt(ticksPerQuarterNote * qnRatio);
+}
+
+juce::ValueTree HexagonAutomata::State::loadStateProperties(juce::ValueTree stateIn)
+{
+    juce::ValueTree newState = (stateIn.hasType(gameId)) 
+                             ? stateIn
+                             : juce::ValueTree(gameId);
+
+    for (auto property : HexagonAutomata::GetStateProperties())
+    {
+        handleStatePropertyChange(newState, property);
+    }
+    
+    return newState;
 }
 
 void HexagonAutomata::State::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
 {
     if (property == LumatoneGameEngineState::ID::RequestedFps)
     {
-        updateGenerationTickRate();
+        if (clockMode == ClockMode::Engine)
+            updateGenerationMsTicks();
+        else if (clockMode == ClockMode::MidiClockClient)
+            updateGenerationClockTime();
     }
     else if (property == HexagonAutomata::ID::AliveColour)
     {
@@ -132,10 +171,5 @@ void HexagonAutomata::State::handleStatePropertyChange(juce::ValueTree stateIn, 
         {
             deadColour = juce::Colours::black;
         }
-    }
-    else if (property == HexagonAutomata::ID::BornRule)
-    {
-        juce::String input = stateIn.getProperty(property).toString();
-        
     }
 }

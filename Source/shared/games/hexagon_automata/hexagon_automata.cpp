@@ -13,6 +13,7 @@ HexagonAutomata::Game::Game(juce::ValueTree engineStateIn, LumatoneController* c
     : LumatoneSandboxGameBase(controller, "Hexagon Automata")
     , HexagonAutomata::State(controller->shareMappingData(), engineStateIn)
 {
+    engineStateIn.addListener(this);
     initialize();
 }
 
@@ -114,23 +115,19 @@ bool HexagonAutomata::Game::nextTick()
         if (clockMode == HexagonAutomata::ClockMode::Engine || clockFlag)
         {
             updateCellStates();
+            addFramesToQueue();
             clockFlag = false;
         }
         else
         {
             updateUserInputCells();
+            addFramesToQueue();
         }
     }
     else
     {
         updateUserInputCells();
-    }
-
-    if (currentFrameCells.size() > 0)
-    {
-        addToQueue(renderFrame());
-        // logInfo("nextTick", "added " + juce::String(juce::jmin(currentFrameCells.size(), maxUpdatesPerFrame)) + " cell updates to queue;");
-        currentFrameCells.removeRange(0, maxUpdatesPerFrame);
+        addFramesToQueue();
     }
 
     ticks++;
@@ -154,11 +151,7 @@ bool HexagonAutomata::Game::pauseTick()
 
     updateUserInputCells();
 
-    if (currentFrameCells.size() > 0)
-    {
-        addToQueue(renderFrame());
-        currentFrameCells.removeRange(0, maxUpdatesPerFrame);
-    }
+    addFramesToQueue();
 
     return true;
 }
@@ -222,7 +215,7 @@ LumatoneAction* HexagonAutomata::Game::renderFrame() const
 
     for (int i = 0; i < limit; i++)
     {
-        MappedHexState update = currentFrameCells.getReference(i);
+        CellUpdate update = currentFrameCells.getReference(i);
         MappedLumatoneKey renderedKey;
 
         switch (gameMode)
@@ -456,62 +449,70 @@ void HexagonAutomata::Game::logCellState(juce::String method, juce::String messa
     logInfo(method, stateString);
 }
 
-juce::ValueTree HexagonAutomata::Game::loadStateProperties(juce::ValueTree stateIn)
-{
-    juce::ValueTree newState = (stateIn.hasType(gameId)) 
-                             ? stateIn
-                             : juce::ValueTree(gameId);
+// juce::ValueTree HexagonAutomata::Game::loadStateProperties(juce::ValueTree stateIn)
+// {
+//     juce::ValueTree newState = (stateIn.hasType(gameId)) 
+//                              ? stateIn
+//                              : juce::ValueTree(gameId);
 
-    LumatoneGameBaseState::loadStateProperties(newState);
+//     LumatoneGameBaseState::loadStateProperties(newState);
 
-    for (auto property : HexagonAutomata::GetStateProperties())
-    {
-        handleStatePropertyChange(newState, property);
-    }
+//     for (auto property : HexagonAutomata::GetStateProperties())
+//     {
+//         handleStatePropertyChange(newState, property);
+//     }
     
-    return newState;
-}
+//     return newState;
+// }
 
 void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
 {
-    // HexagonAutomata::State::handleStatePropertyChange(stateIn, property);
-    
     if (property == HexagonAutomata::ID::GameMode)
     {
-        setGameMode(gameMode);
+        auto value = state.getProperty(property, juce::var(GameModeToString(GameMode::Classic)));
+        auto readMode = GameModeFromString(value.toString());
+        setGameMode(readMode);
     }
     else if (property == HexagonAutomata::ID::GenerationMode)
     {
-        setGenerationMode(generationMode);
+        auto value = state.getProperty(property, juce::var(GenerationModeToString(GenerationMode::Synchronous)));
+        auto readMode = GenerationModeFromString(value.toString());
+        setGenerationMode(readMode);
     }
     else if (property == HexagonAutomata::ID::GenerationMs)
     {
-        setGenerationBpm(static_cast<int>(stateIn[property]));
+        setGenerationMs(static_cast<float>(state.getProperty(property, 1000.0f)));
     }
     else if (property == HexagonAutomata::ID::RulesMode)
     {
-        RulesMode rulesMode = RulesModeFromString((state[property]));
+        auto value = state.getProperty(property, juce::var(RulesModeToString(RulesMode::BornSurvive)));
+        RulesMode rulesMode = RulesModeFromString(value.toString());
         setRulesMode(rulesMode);
-    }
-    else if (property == HexagonAutomata::ID::AliveColour)
-    {
-        render->setColour(aliveColour, deadColour);
-    }
-    else if (property == HexagonAutomata::ID::DeadColour)
-    {
-        render->setColour(aliveColour, deadColour);
     }
     else if (property == HexagonAutomata::ID::BornRule)
     {
-        setBornSurviveRules(bornRules, surviveRules);
+        auto bornRulesInput = state.getProperty(HexagonAutomata::ID::BornRule, "2");
+        auto surviveRulesInput = state.getProperty(HexagonAutomata::ID::SurviveRule, "3,4");
+        setBornSurviveRules(bornRulesInput, surviveRulesInput);
     }
     else if (property == HexagonAutomata::ID::SurviveRule)
     {
-        setBornSurviveRules(bornRules, surviveRules);
+        auto bornRulesInput = state.getProperty(HexagonAutomata::ID::BornRule, "2");
+        auto surviveRulesInput = state.getProperty(HexagonAutomata::ID::SurviveRule, "3,4");
+        setBornSurviveRules(bornRulesInput, surviveRulesInput);
     }
-    else if (property == HexagonAutomata::ID::NeighborShape)
+    else
     {
-        
+        HexagonAutomata::State::handleStatePropertyChange(stateIn, property);
+
+        if (property == HexagonAutomata::ID::AliveColour)
+        {
+            render->setColour(aliveColour, deadColour);
+        }
+        else if (property == HexagonAutomata::ID::DeadColour)
+        {
+            render->setColour(aliveColour, deadColour);
+        }
     }
 }
 
@@ -639,6 +640,16 @@ void HexagonAutomata::Game::updateCellStates()
     populatedCells.swapWith(nextPopulation);
 }
 
+void HexagonAutomata::Game::addFramesToQueue()
+{
+    if (currentFrameCells.size() > 0)
+    {
+        addToQueue(renderFrame());
+        // logInfo("nextTick", "added " + juce::String(juce::jmin(currentFrameCells.size(), maxUpdatesPerFrame)) + " cell updates to queue;");
+        currentFrameCells.removeRange(0, maxUpdatesPerFrame);
+    }
+}
+
 void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
 {
     auto hexCoord = hexMap.keyCoordsToHex(midiChannel - 1, midiNote);
@@ -649,7 +660,9 @@ void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce:
 
     logInfo("handleAnyNoteOn", "Note on " + juce::String(midiChannel) + "," + juce::String(midiNote) + " triggering cell " + juce::String(cellNum));
 
-    float velocityFloat = powf((float)velocity / 127.0f, 3);
+    float velocityFloat = (float)velocity / 127.0f;
+    if (rulesMode == RulesMode::SpiralRule)
+        velocity = powf(velocity, 3);
 
     if (cell.isAlive())
     {
@@ -689,8 +702,11 @@ void HexagonAutomata::Game::handleAnyController(int channel, int ccNum, juce::ui
     }
 }
 
-void HexagonAutomata::Game::handleMidiClock()
+void HexagonAutomata::Game::handleMidiClock(int quarterNoteInterval)
 {
+    if (clockMode != HexagonAutomata::ClockMode::MidiClockClient)
+        return;
+
     juce::ScopedTryLock fl(frameLock);
     if (!fl.isLocked())
     {
@@ -698,13 +714,15 @@ void HexagonAutomata::Game::handleMidiClock()
         return;
     }
 
-    if (clockMode == HexagonAutomata::ClockMode::MidiClockClient)
+    if (quarterNoteInterval != ticksPerQuarterNote)
     {
-        ticksPerGeneration = 1;
-        logInfo("handleMidiClock", "");
-        // sendClockSignal();
-        clockFlag = true;
+        ticksPerQuarterNote = quarterNoteInterval;
+        updateGenerationClockTime();
     }
+
+    // logInfo("handleMidiClock", "");
+    // sendClockSignal();
+    clockFlag = true;
 }
 
 void HexagonAutomata::Game::handleSustain(bool toggled)

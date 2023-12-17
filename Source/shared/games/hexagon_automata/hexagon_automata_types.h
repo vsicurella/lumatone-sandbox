@@ -153,6 +153,8 @@ struct ID
     inline static const juce::Identifier NoSustainPassThrough = juce::Identifier("NoSustainPassThrough");
 
     inline static const juce::Identifier GenerationMs = juce::Identifier("GenerationMs");           // Ms per generation
+    inline static const juce::Identifier GenerationBpm = juce::Identifier("GenerationBpm");          // Run generation timer at this rate
+    inline static const juce::Identifier GenerationQnRatio = juce::Identifier("GenerationQnRatio");      // Multiply generation timer by this rate
     
     inline static const juce::Identifier BornRule = juce::Identifier("BornRule");                   // number string
     inline static const juce::Identifier SurviveRule = juce::Identifier("SurviveRule");             // number string

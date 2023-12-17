@@ -49,6 +49,7 @@ private:
 
     inline static const juce::String modeColumnId = juce::String("ModeColumn");
     inline static const juce::String rulesColumnId = juce::String("RulesColumn");
+    inline static const juce::String tempoColumnId = juce::String("TempoColumn");
     inline static const juce::String controlsColumnId = juce::String("ControlsColumn");
 
     inline int getModeColumnWidth(juce::Font font) const;
@@ -89,6 +90,14 @@ private:
 
     std::unique_ptr<CustomPickerPanel> deadColourSelector;
     std::unique_ptr<juce::Label> deadColourLabel;
+
+    std::unique_ptr<juce::ToggleButton> midiClockToggle;
+    std::unique_ptr<juce::ToggleButton> sustainNoPassThroughToggle;
+    
+    std::unique_ptr<juce::Slider> qnRatioSlider;
+    std::unique_ptr<juce::Label> qnRatioLabel;
+
+    std::unique_ptr<juce::TextButton> resetButton;
 
     float marginScalar = 0.1f;
 
