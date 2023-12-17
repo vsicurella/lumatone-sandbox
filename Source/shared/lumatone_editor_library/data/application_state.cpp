@@ -91,7 +91,7 @@ juce::ValueTree LumatoneApplicationState::loadStateProperties(juce::ValueTree st
                              ? stateIn
                              : juce::ValueTree(LumatoneStateProperty::StateTree);
 
-    DBG("LumatoneApplicationState::loadStateProperties:\n" + newState.toXmlString());
+    // DBG("LumatoneApplicationState::loadStateProperties:\n" + newState.toXmlString());
     for (auto property : getLumatoneApplicationProperties())
     {
         if (newState.hasProperty(property))

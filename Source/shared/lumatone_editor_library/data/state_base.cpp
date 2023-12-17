@@ -48,3 +48,8 @@ void LumatoneStateBase::writeStringProperty(const juce::Identifier key, juce::St
 {
     state.setPropertyExcludingListener(this, key, value, undo);
 }
+
+void LumatoneStateBase::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier &property)
+{
+    handleStatePropertyChange(treeWhosePropertyHasChanged, property);
+}

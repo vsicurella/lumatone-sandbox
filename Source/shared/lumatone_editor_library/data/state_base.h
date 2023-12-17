@@ -15,9 +15,9 @@ class LumatoneStateBase : protected juce::ValueTree::Listener
 {
 public:
     LumatoneStateBase(juce::String nameIn) : name(nameIn) { }
-    LumatoneStateBase(const LumatoneStateBase& stateIn) 
-        : state(stateIn.state) 
-        , name(stateIn.name) { }
+    // LumatoneStateBase(const LumatoneStateBase& stateIn) 
+    //     : state(stateIn.state) 
+    //     , name(stateIn.name) { }
 
     bool getBoolProperty(const juce::Identifier key, bool fallback) const;
     int getIntProperty(const juce::Identifier key, int fallback) const;
@@ -25,15 +25,14 @@ public:
 
     virtual bool writeToPropertiesFile();
 
-// friend:
-//     juce::ValueTree getOrCreateChild(juce::Identifier childId);
-
 protected:
     void writeBoolProperty(const juce::Identifier key, bool value, juce::UndoManager* undo=nullptr);
     void writeIntProperty(const juce::Identifier key, int value, juce::UndoManager* undo=nullptr);
     void writeStringProperty(const juce::Identifier key, juce::String value, juce::UndoManager* undo=nullptr);
 
 protected:
+    virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
+
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) = 0;
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) = 0;
 
