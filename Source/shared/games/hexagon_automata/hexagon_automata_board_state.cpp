@@ -38,7 +38,7 @@ HexagonAutomata::MappedHexState HexagonAutomata::BoardState::getMappedCell(int c
     auto keyCoord = layout->keyNumToKeyCoord(cellNum);
 
     auto mappedKey = MappedLumatoneKey(*layout->readKey(keyCoord.boardIndex, keyCoord.keyIndex), keyCoord.boardIndex, keyCoord.keyIndex);
-    return HexagonAutomata::MappedHexState(cells[cellNum], mappedKey, hex);
+    return HexagonAutomata::MappedHexState(cells[cellNum], hex, mappedKey, hexMap);
 }
 
 juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getNeighbors(Hex::Point cellCoord, const juce::Array<Hex::Point, juce::CriticalSection>& vector) const
@@ -55,7 +55,7 @@ juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getNei
             continue;
 
         auto mappedKey = MappedLumatoneKey(*layout->readKey(keyCoord.boardIndex, keyCoord.keyIndex), keyCoord.boardIndex, keyCoord.keyIndex);
-        auto mappedCell = MappedHexState(cells[cellNum], mappedKey, neighbor);
+        auto mappedCell = MappedHexState(cells[cellNum], neighbor, mappedKey, cellNum);
         mappedCells.add(mappedCell);
     }
 
@@ -79,7 +79,7 @@ juce::Array<HexagonAutomata::MappedHexState> HexagonAutomata::BoardState::getAli
         if (cell.isAlive())
         {
             auto mappedKey = MappedLumatoneKey(*layout->readKey(keyCoord.boardIndex, keyCoord.keyIndex), keyCoord.boardIndex, keyCoord.keyIndex);
-            auto mappedCell = MappedHexState(cell, mappedKey, point);
+            auto mappedCell = MappedHexState(cell, point, mappedKey, cellNum);
             mappedCells.add(mappedCell);
         }
     }
