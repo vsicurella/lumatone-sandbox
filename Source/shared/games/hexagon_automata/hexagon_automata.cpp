@@ -110,7 +110,9 @@ bool HexagonAutomata::Game::nextTick()
         return true;
     }
 
-    numUpdatesInFrame = maxUpdatesPerFrame > 0 ? maxUpdatesPerFrame : currentFrameCells.size();
+    numUpdatesInFrame = maxUpdatesPerFrame > 0 
+                      ? juce::jmin(maxUpdatesPerFrame, currentFrameCells.size())
+                      : currentFrameCells.size();
 
     if (!noSustainPassThrough || sustainIsOn)
     {
