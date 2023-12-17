@@ -10,10 +10,17 @@
 
 #pragma once
 #include "../game_base.h"
+#include "../game_base_state.h"
 #include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
 
-class HexRings : public LumatoneSandboxGameBase
+class HexRings : public LumatoneSandboxGameBase, protected LumatoneGameBaseState
 {
+public:
+    struct ID
+    {
+        inline static const juce::Identifier GameId = juce::Identifier("HexRingsGame");
+    };
+
 public:
     struct Frame
     {
@@ -40,8 +47,10 @@ protected:
     LumatoneAction* renderFrame() const override;
 
 private:
-
     void advanceFrameQueue();
+
+    juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override { return stateIn; }
+    void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override { }
 
 public:
     juce::Colour getRandomColourVelocity(juce::uint8 velocity);
@@ -59,7 +68,6 @@ private:
     juce::Array<HexRings::Frame> frameQueue;
     juce::Array<HexRings::Frame> currentFrame;
     int maxQueueFramesPerTick = 5;
-    int maxUpdatesPerFrame = 10;
 
     std::unique_ptr<LumatoneHexMap> hexMap;
 

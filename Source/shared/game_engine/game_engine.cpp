@@ -44,10 +44,10 @@ const LumatoneSandboxGameBase* LumatoneSandboxGameEngine::getGameLoaded() const
     return nullptr;
 }
 
-bool LumatoneSandboxGameEngine::checkNotesOn()
-{
-    return controller->appHasMidiNotesOn();
-}
+// bool LumatoneSandboxGameEngine::checkNotesOn()
+// {
+//     return controller->appHasMidiNotesOn();
+// }
 
 void LumatoneSandboxGameEngine::loadGame(juce::String gameId)
 {

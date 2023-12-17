@@ -61,12 +61,12 @@ LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneS
     addAndMakeVisible(*fpsLabel);
 
 
-    testButton = std::make_unique<juce::TextButton>("Test", ".");
-    testButton->onClick = [&]
-    {
-        jassert(!gameEngine->checkNotesOn());
-    };
-    addAndMakeVisible(*testButton);
+    // testButton = std::make_unique<juce::TextButton>("Test", ".");
+    // testButton->onClick = [&]
+    // {
+    //     jassert(!gameEngine->checkNotesOn());
+    // };
+    // addAndMakeVisible(*testButton);
 
 
     gameEngine->addEngineListener(this);
@@ -129,7 +129,7 @@ void LumatoneSandboxGameEngineComponent::resized()
     int fpsSliderWidth = controlsArea.getWidth() - fpsSliderX - controlMargin;
     fpsSlider->setBounds(fpsSliderX, endButton->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
 
-    testButton->setBounds(controlMargin, fpsSlider->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
+    // testButton->setBounds(controlMargin, fpsSlider->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
 
     if (gameComponent != nullptr)
     {

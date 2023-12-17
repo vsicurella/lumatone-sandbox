@@ -11,11 +11,14 @@
 #include "hex_rings.h"
 #include "hex_rings_launcher.h"
 
+#include "../games_index.h"
+
 #include "../../lumatone_editor_library/LumatoneController.h"
 #include "../../lumatone_editor_library/actions/edit_actions.h"
 
 HexRings::HexRings(juce::ValueTree gameEngineState, LumatoneController* controller)
     : LumatoneSandboxGameBase(controller, "HexRings")
+    , LumatoneGameBaseState(LumatoneSandbox::GameName::HexRings, HexRings::ID::GameId, gameEngineState)
 {
     hexMap.reset(new LumatoneHexMap(controller->shareMappingData()));
     reset(true);
@@ -26,6 +29,8 @@ bool HexRings::reset(bool clearQueue)
     LumatoneSandboxGameBase::reset(clearQueue);
     auto layout = getIdentityLayout(true);
     queueLayout(layout);
+
+    return false;
 }
 
 bool HexRings::nextTick()
