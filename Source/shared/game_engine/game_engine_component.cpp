@@ -1,5 +1,6 @@
 #include "./game_engine_component.h"
 #include "../games/game_component.h"
+#include "game_engine_component.h"
 
 //==============================================================================
 LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneSandboxGameEngine* gameEngineIn)
@@ -12,28 +13,27 @@ LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneS
         if (startPauseButton->getToggleState())
         {
             gameEngine->startGame();
-            startPauseButton->setButtonText("Pause");
-            startPauseButton->setTooltip("Pause game");
+            showPauseButton();
         }
         else
         {
             gameEngine->pauseGame();
-            startPauseButton->setButtonText("Start");
-            startPauseButton->setTooltip("Begin game");
+            showStartButton();
         }
     };
     addAndMakeVisible(*startPauseButton);
+    showNoGameLoaded();
 
-    resetButton = std::make_unique<juce::TextButton>("Reset", "Reset to beginning of game");
-    resetButton->onClick = [&]
-    {
-        startPauseButton->setToggleState(false, juce::NotificationType::dontSendNotification);
-        startPauseButton->setButtonText("Start");
-        startPauseButton->setTooltip("Begin game");
+    // resetButton = std::make_unique<juce::TextButton>("Reset", "Reset to beginning of game");
+    // resetButton->onClick = [&]
+    // {
+    //     startPauseButton->setToggleState(false, juce::NotificationType::dontSendNotification);
+    //     startPauseButton->setButtonText("Start");
+    //     startPauseButton->setTooltip("Begin game");
 
-        gameEngine->resetGame();
-    };
-    addAndMakeVisible(*resetButton);
+    //     gameEngine->resetGame();
+    // };
+    // addAndMakeVisible(*resetButton);
 
     endButton = std::make_unique<juce::TextButton>("End", "End game and reset to before game started.");
     endButton->onClick = [&]
@@ -48,7 +48,7 @@ LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneS
 
     fpsSlider = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::IncDecButtons, juce::Slider::TextEntryBoxPosition::TextBoxLeft);
     fpsSlider->setRange(1, 240, 1);
-    fpsSlider->setValue(gameEngine->getFps());
+    fpsSlider->setValue(gameEngine->getFps(), juce::NotificationType::dontSendNotification);
     fpsSlider->onValueChange = [&]
     {
         gameEngine->forceFps(fpsSlider->getValue());
@@ -59,13 +59,25 @@ LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneS
     fpsLabel->setJustificationType(juce::Justification::centred);
     fpsLabel->attachToComponent(fpsSlider.get(), true);
     addAndMakeVisible(*fpsLabel);
+
+
+    testButton = std::make_unique<juce::TextButton>("Test", ".");
+    testButton->onClick = [&]
+    {
+        jassert(!gameEngine->checkNotesOn());
+    };
+    addAndMakeVisible(*testButton);
+
+
+    gameEngine->addEngineListener(this);
 }
 
 LumatoneSandboxGameEngineComponent::~LumatoneSandboxGameEngineComponent()
 {
-    fpsSlider = nullptr;
+    gameEngine->removeEngineListener(this);
 
-    resetButton = nullptr;
+    fpsSlider = nullptr;
+    // resetButton = nullptr;
     startPauseButton = nullptr;
 }
 
@@ -106,7 +118,7 @@ void LumatoneSandboxGameEngineComponent::resized()
     auto buttonFont = getLookAndFeel().getTextButtonFont(*startPauseButton, controlHeight);
 
     startPauseButton->setBounds(controlMargin, sectionMargin, buttonWidth, controlHeight);
-    resetButton->setBounds(startPauseButton->getRight() + controlMargin, sectionMargin, buttonWidth, controlHeight);
+    // resetButton->setBounds(startPauseButton->getRight() + controlMargin, sectionMargin, buttonWidth, controlHeight);
     endButton->setBounds(controlMargin, startPauseButton->getBottom() + controlMargin, buttonWidth, controlHeight);
 
     auto labelFont = getLookAndFeel().getLabelFont(*fpsLabel);
@@ -116,6 +128,8 @@ void LumatoneSandboxGameEngineComponent::resized()
     int fpsSliderX = fpsLabel->getRight() + labelMargin;
     int fpsSliderWidth = controlsArea.getWidth() - fpsSliderX - controlMargin;
     fpsSlider->setBounds(fpsSliderX, endButton->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
+
+    testButton->setBounds(controlMargin, fpsSlider->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
 
     if (gameComponent != nullptr)
     {
@@ -144,4 +158,50 @@ void LumatoneSandboxGameEngineComponent::endGame()
     gameEngine->endGame();
     gameComponent = nullptr;
     resized();
+}
+void LumatoneSandboxGameEngineComponent::gameStatusChanged(LumatoneSandboxGameBase *game, LumatoneGameEngineState::GameStatus status)
+{
+    if (game != nullptr)
+    {
+        if (status == LumatoneGameEngineState::GameStatus::Running)
+        {
+            showPauseButton();
+        }
+        else
+        {
+            showStartButton();
+        }
+        return;
+    }
+
+    showNoGameLoaded();
+}
+
+void LumatoneSandboxGameEngineComponent::gameEnded()
+{
+    startPauseButton->setToggleState(false, juce::NotificationType::dontSendNotification);
+    showStartButton();
+}
+
+void LumatoneSandboxGameEngineComponent::showNoGameLoaded()
+{
+    startPauseButton->setEnabled(false);
+    startPauseButton->setToggleState(false, juce::NotificationType::dontSendNotification);
+    startPauseButton->setButtonText("Select a game");
+}
+
+void LumatoneSandboxGameEngineComponent::showStartButton()
+{
+    startPauseButton->setEnabled(true);
+    startPauseButton->setToggleState(false, juce::NotificationType::dontSendNotification);
+    startPauseButton->setButtonText("Start");
+    startPauseButton->setTooltip("Begin game");
+}
+
+void LumatoneSandboxGameEngineComponent::showPauseButton()
+{
+    startPauseButton->setEnabled(true);
+    startPauseButton->setToggleState(true, juce::NotificationType::dontSendNotification);
+    startPauseButton->setButtonText("Pause");
+    startPauseButton->setTooltip("Pause game");
 }
