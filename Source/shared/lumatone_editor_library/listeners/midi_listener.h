@@ -80,7 +80,7 @@ public:
     /*
         Callback for components that use a MIDI Clock
     */
-    virtual void handleMidiClock() {}
+    virtual void handleMidiClock(int quarterNoteDuration) {}
 
     /*
         Callback for sustain pedal messages

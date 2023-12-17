@@ -21,6 +21,7 @@ LumatoneApplicationMidiController::~LumatoneApplicationMidiController()
 void LumatoneApplicationMidiController::sendMidiMessage(const juce::MidiMessage msg)
 {
     // logInfo("sendMidiMessage", msg.getDescription());
+    appMidiState.processNextMidiEvent(msg);
     firmwareDriver.sendMessageNow(msg);
 }
 
@@ -103,7 +104,7 @@ void LumatoneApplicationMidiController::sendKeyNoteOff(int boardIndex, int keyIn
         : *appState.getKey(boardIndex, keyIndex);
 
     jassert(key.channelNumber > 0 && key.channelNumber <= 16 && key.noteNumber >= 0 && key.noteNumber < 128);
-        
+    
     juce::MidiMessage msg = juce::MidiMessage::noteOff(key.channelNumber, key.noteNumber);
     sendMidiMessage(msg);
 }
@@ -171,11 +172,7 @@ void LumatoneApplicationMidiController::midiMessageReceived(juce::MidiInput *sou
 
     if (message.isMidiClock())
     {
-        if (++clockInterval == maxClockInterval)
-        {
-            clockInterval = 0;
-            listeners.call(&LumatoneEditor::MidiListener::handleMidiClock);
-        }
+        listeners.call(&LumatoneEditor::MidiListener::handleMidiClock, quarterNoteInterval);
     }
     else if (message.isNoteOn())
     {

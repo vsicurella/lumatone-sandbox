@@ -80,10 +80,9 @@ private:
     LumatoneFirmwareDriver& firmwareDriver;
 
     LumatoneMidiState deviceMidiState;
-    LumatoneMidiState appMidiState; 
+    LumatoneMidiState appMidiState;
 
-    unsigned int clockInterval = 0;
-    unsigned int maxClockInterval = 48;
+    int quarterNoteInterval = 24;
 };
 
 

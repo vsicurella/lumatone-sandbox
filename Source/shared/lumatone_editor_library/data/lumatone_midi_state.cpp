@@ -24,6 +24,8 @@ void LumatoneMidiState::reset()
         for (int n = 0; n < 128; n++)
         {
             velocityStates[ch][n] = 0;
+            aftertouchStates[ch][n] = 0;
+            controllerStates[ch][n] = 0;
         }
     }
 
