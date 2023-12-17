@@ -319,6 +319,7 @@ void LumatoneKeyboardComponent::clearHeldNotes()
     {
         if (key)
         {
+            key->noteOff();
             key->clearUiState();
         }
     }
