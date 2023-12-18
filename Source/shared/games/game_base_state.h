@@ -24,7 +24,9 @@ public:
     static juce::Array<juce::Identifier> GetLumatoneGameBaseProperties();
 
 public:
-    LumatoneGameBaseState(LumatoneSandbox::GameName name, juce::Identifier gameId, juce::ValueTree engineStateIn);
+    LumatoneGameBaseState(LumatoneSandbox::GameName name, juce::Identifier gameId, LumatoneGameEngineState& gameEngineStateIn);
+
+    juce::ValueTree getNode() const { return state; };
 
     int getNumTicks() const { return ticks; }
 

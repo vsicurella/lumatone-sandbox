@@ -15,7 +15,7 @@ class Game : public LumatoneSandboxGameBase
 {
 public:
 
-    Game(juce::ValueTree engineStateIn, LumatoneController* controller);
+    Game(LumatoneGameEngineState& gameEngineStateIn, LumatoneController* controller);
     // Game(LumatoneController* controller, const HexagonAutomata::BoardState& stateIn);
     ~Game() override;
     

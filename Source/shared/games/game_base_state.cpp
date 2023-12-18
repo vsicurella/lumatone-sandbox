@@ -17,27 +17,13 @@ juce::Array<juce::Identifier> LumatoneGameBaseState::GetLumatoneGameBaseProperti
     return properties;
 }
 
-LumatoneGameBaseState::LumatoneGameBaseState(LumatoneSandbox::GameName nameIn, juce::Identifier gameIdIn, juce::ValueTree stateIn)
+LumatoneGameBaseState::LumatoneGameBaseState(LumatoneSandbox::GameName nameIn, juce::Identifier gameIdIn, LumatoneGameEngineState& gameEngineStateIn)
     : LumatoneStateBase(LumatoneSandbox::GameNameToString(nameIn))
     , gameId(gameIdIn)
-    , engineState(LumatoneSandbox::GameNameToString(nameIn) + "EngineCopy", stateIn)
-    // , LumatoneGameEngineState(LumatoneSandbox::GameNameToString(nameIn) + "EngineCopy", stateIn)
+    , engineState(LumatoneSandbox::GameNameToString(nameIn) + "EngineCopy", gameEngineStateIn)
 {
-    state = engineState.getGameStateTree();
-    if (state.hasProperty(LumatoneGameEngineState::ID::GameName))
-    {
-        if (state[LumatoneGameEngineState::ID::GameName].toString() != name)
-        {
-            state.removeAllProperties(nullptr);
-            state.removeAllChildren(nullptr);
-        }
-    }
-
+    state = juce::ValueTree(LumatoneGameEngineState::ID::GameStateId);
     writeStringProperty(LumatoneGameEngineState::ID::GameName, name);
     
-    state.addListener(this);
-    stateIn.addListener(this);
-    // state.addListener(this);
-    // state.getParent().addListener(this);
+    engineState.addStateListener(this);
 }
-

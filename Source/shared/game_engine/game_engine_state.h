@@ -12,6 +12,7 @@
 #include "../games/games_index.h"
 #include "../lumatone_editor_library/data/lumatone_state.h"
 
+class LumatoneGameBaseState;
 class LumatoneGameEngineState : protected LumatoneStateBase
 {
 public:
@@ -79,21 +80,31 @@ public:
 public:
     LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManager);
     LumatoneGameEngineState(juce::String nameIn, const LumatoneGameEngineState& stateIn);
-    LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn);
 
     virtual ~LumatoneGameEngineState() {}
 
     float getTimeIntervalMs() const;
     double getFps() const;
 
-    void setDefaultFps(double fps);
-    virtual void forceFps(double fps);
+    void addStateListener(LumatoneStateBase* stateIn);
 
-    juce::ValueTree getGameStateTree();
+public:
+    void setDefaultFps(double fps);
+private:
+    void setDefaultFps(double fps, bool writeToState);
+
+public:
+    virtual void forceFps(double fps);
+private:
+    virtual void forceFps(double fps, bool writeToState);
+
+public:
+    // juce::ValueTree getGameStateTree();
 
     bool isGameLoaded() const { return gameStatus > GameStatus::NoGame; }
     bool isGameRunning() const { return gameStatus == GameStatus::Running; }
     bool isGamePaused() const { return gameStatus == GameStatus::Paused; }
+
 
 public:
     static float bpmToMsec(float bpmValue) { return 6.0e4f / bpmValue; }
@@ -106,10 +117,13 @@ public:
     float ticksToBpm(float ticksValue) const { return msecToBpm(ticksToMsec(ticksValue)); }
 
 protected:
+    void setGameState(LumatoneGameBaseState* gameStateIn);
+
+protected:
     void updateTimeIntervalMs();
 
-    virtual void setGameStatus(LumatoneGameEngineState::GameStatus newState);
-    virtual void setGameName(LumatoneSandbox::GameName gameNameIn);
+    virtual void setGameStatus(LumatoneGameEngineState::GameStatus newState, bool writeToState);
+    void setGameName(LumatoneSandbox::GameName gameNameIn, bool writeToState);
 
 protected:
     // virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;    

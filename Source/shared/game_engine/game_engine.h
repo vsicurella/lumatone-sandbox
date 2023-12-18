@@ -42,8 +42,6 @@ public:
     ~LumatoneSandboxGameEngine() override;
 
     LumatoneController* getController()  { return controller; }
-
-    void setGameStatus(LumatoneGameEngineState::GameStatus newStatus) override;
    
     void loadGame(juce::String gameId);
     // void setGame(LumatoneSandboxGameBase* newGameIn);
@@ -59,6 +57,9 @@ public:
 
     // DEBUG
     // bool checkNotesOn();
+
+private:
+    void setGameStatus(LumatoneGameEngineState::GameStatus newStatus, bool writeToState=true) override;
 
 private:
     juce::ListenerList<LumatoneSandboxGameEngine::Listener> engineListeners;

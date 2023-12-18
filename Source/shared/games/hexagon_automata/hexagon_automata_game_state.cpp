@@ -1,20 +1,20 @@
 #include "hexagon_automata_game_state.h"
 
-HexagonAutomata::State::State(std::shared_ptr<LumatoneLayout> layoutIn, juce::ValueTree engineStateIn)
-    : LumatoneGameBaseState(LumatoneSandbox::GameName::HexagonAutomata, HexagonAutomata::ID::GameId, engineStateIn)
+HexagonAutomata::State::State(std::shared_ptr<LumatoneLayout> layoutIn, LumatoneGameEngineState& gameEngineStateIn)
+    : LumatoneGameBaseState(LumatoneSandbox::GameName::HexagonAutomata, HexagonAutomata::ID::GameId, gameEngineStateIn)
     , HexagonAutomata::BoardState(layoutIn)
 {
 
 }
 
-// HexagonAutomata::State::State(const State& copy, juce::ValueTree engineStateIn)
+// HexagonAutomata::State::State(const State& copy, LumatoneGameEngineState& gameEngineStateIn)
 //     : LumatoneGameBaseState(LumatoneSandbox::GameName::HexagonAutomata, HexagonAutomata::ID::GameId, engineStateIn)
 //     , HexagonAutomata::BoardState(static_cast<const State&>(copy))
 // {
 
 // }
 
-// HexagonAutomata::State::State(const State& copy, const LumatoneGameEngineState& engineStateIn)
+// HexagonAutomata::State::State(const State& copy, LumatoneGameEngineState& gameEngineStateIn)
 //     : LumatoneGameBaseState(LumatoneSandbox::GameName::HexagonAutomata, HexagonAutomata::ID::GameId, engineStateIn)
 //     , HexagonAutomata::BoardState(static_cast<const State&>(copy))
 // {
@@ -127,16 +127,12 @@ void HexagonAutomata::State::updateGenerationClockTime()
 
 juce::ValueTree HexagonAutomata::State::loadStateProperties(juce::ValueTree stateIn)
 {
-    juce::ValueTree newState = (stateIn.hasType(gameId)) 
-                             ? stateIn
-                             : juce::ValueTree(gameId);
-
     for (auto property : HexagonAutomata::GetStateProperties())
     {
-        handleStatePropertyChange(newState, property);
+        handleStatePropertyChange(stateIn, property);
     }
     
-    return newState;
+    return stateIn;
 }
 
 void HexagonAutomata::State::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)

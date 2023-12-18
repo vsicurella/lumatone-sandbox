@@ -37,7 +37,7 @@ public:
 
 public:
 
-    HexRings(juce::ValueTree gameEngineState, LumatoneController* controllerIn);
+    HexRings(LumatoneGameEngineState& gameEngineState, LumatoneController* controllerIn);
 
     bool reset(bool clearQueue) override;
 

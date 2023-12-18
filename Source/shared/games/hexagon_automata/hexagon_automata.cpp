@@ -9,11 +9,10 @@
 
 #include "../../lumatone_editor_library/color/adjust_layout_colour.h"
 
-HexagonAutomata::Game::Game(juce::ValueTree engineStateIn, LumatoneController* controller)
+HexagonAutomata::Game::Game(LumatoneGameEngineState& gameEngineStateIn, LumatoneController* controller)
     : LumatoneSandboxGameBase(controller, "Hexagon Automata")
-    , HexagonAutomata::State(controller->shareMappingData(), engineStateIn)
+    , HexagonAutomata::State(controller->shareMappingData(), gameEngineStateIn)
 {
-    engineStateIn.addListener(this);
     initialize();
 }
 

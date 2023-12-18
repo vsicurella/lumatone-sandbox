@@ -10,7 +10,9 @@
 
 #include "./game_engine.h"
 #include "./game_loader.h"
+
 #include "../games/game_base.h"
+#include "../games/game_base_state.h"
 
 #include "../lumatone_editor_library/LumatoneController.h"
 #include "../SandboxMenu.h"
@@ -53,22 +55,31 @@ void LumatoneSandboxGameEngine::loadGame(juce::String gameId)
 {
     endGame();
 
-    auto newGame = LumatoneSandboxGameLoader::CreateGameInstance(gameId, state, controller);
+    auto newGame = LumatoneSandboxGameLoader::CreateGameInstance(gameId, *this, controller);
     if (newGame == nullptr)
     {
         logError("setGame", "Error loading game: " + gameId);
         return;
     }
 
+    auto gameState = dynamic_cast<LumatoneGameBaseState*>(newGame);
+    if (gameState == nullptr)
+    {
+        logError("setGame", "Game does not inherit from LumatoneGameBaseState: aborting");
+        return;
+    }
+
     game.reset(newGame);
     logInfo("setGame", "New game loaded: " + game->getName());
+
+    setGameState(gameState);
 
     setGameStatus(LumatoneGameEngineState::GameStatus::Loaded);
 }
 
-void LumatoneSandboxGameEngine::setGameStatus(LumatoneGameEngineState::GameStatus newStatus)
+void LumatoneSandboxGameEngine::setGameStatus(LumatoneGameEngineState::GameStatus newStatus, bool writeToState)
 {
-    LumatoneGameEngineState::setGameStatus(newStatus);
+    LumatoneGameEngineState::setGameStatus(newStatus, writeToState);
     
     LumatoneSandboxGameBase* gamePtr = isGameLoaded() ? game.get() : nullptr;
     engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameStatusChanged, gamePtr, newStatus);
@@ -254,8 +265,6 @@ void LumatoneSandboxGameEngine::processGameActionQueue()
 
 void LumatoneSandboxGameEngine::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
 {
-    LumatoneSandboxGameEngine::handleStatePropertyChange(stateIn, property);
-
     // Should probably incorporate this with Logger
     if (property == LumatoneGameEngineState::ID::LogLevel)
     {

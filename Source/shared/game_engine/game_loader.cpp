@@ -16,7 +16,7 @@
 #include "../games/hex_rings/hex_rings.h"
 #include "../games/hexagon_automata/hexagon_automata.h"
 
-LumatoneSandboxGameBase* LumatoneSandboxGameLoader::CreateGameInstance(juce::String gameId, juce::ValueTree gameEngineState, LumatoneController *controller)
+LumatoneSandboxGameBase* LumatoneSandboxGameLoader::CreateGameInstance(juce::String gameId, LumatoneGameEngineState& gameEngineState, LumatoneController *controller)
 {
     LumatoneSandbox::GameName gameName = LumatoneSandbox::GameNameFromString(gameId);
 

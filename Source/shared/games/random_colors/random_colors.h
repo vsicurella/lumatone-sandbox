@@ -32,7 +32,7 @@ public:
 
 public:
 
-    RandomColors(juce::ValueTree gameEngineState, LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
+    RandomColors(LumatoneGameEngineState& gameEngineState, LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
 
     bool reset(bool clearQueue) override;
 

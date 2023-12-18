@@ -67,9 +67,9 @@ struct State : public LumatoneGameBaseState
              , public HexagonAutomata::BoardState
              , public HexagonAutomata::GameOptions
 {
-    State(std::shared_ptr<LumatoneLayout> layoutIn, juce::ValueTree engineStateIn);
-    // State(std::shared_ptr<LumatoneLayout> layoutIn, const LumatoneGameEngineState& engineStateIn);
-    // State(const State& copy, const LumatoneGameEngineState& engineStateIn);
+    State(std::shared_ptr<LumatoneLayout> layoutIn, LumatoneGameEngineState& gameEngineStateIn);
+    // State(std::shared_ptr<LumatoneLayout> layoutIn, LumatoneGameEngineState& gameEngineStateIn);
+    // State(const State& copy, LumatoneGameEngineState& gameEngineStateIn);
 
     GameMode getGameMode() const { return gameMode; }
     virtual void setGameMode(GameMode modeIn);
@@ -109,12 +109,6 @@ struct State : public LumatoneGameBaseState
 
     int getTicksPerGeneration() const { return ticksPerGeneration; }
 
-    // int getSyncGenTicks() const { return ticksPerSyncGeneration; }
-    // virtual void setTicksPerSyncGeneration(int ticks);
-    
-    // int getAsyncGenTicks() const { return ticksPerAsyncGeneration; }
-    // virtual void setTicksPerAsyncGeneration(int ticks);
-
     void setOptions(GameOptions options);
     GameOptions getOptions() const { return static_cast<GameOptions>(*this); }
 
@@ -123,7 +117,6 @@ protected:
     void updateGenerationClockTime();
 
 protected:
-    // TODO - this should be the one that's used
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
