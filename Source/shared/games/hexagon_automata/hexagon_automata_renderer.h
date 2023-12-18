@@ -23,8 +23,8 @@ public:
 
     void setColour(juce::Colour aliveColourIn, juce::Colour deadColourIn=juce::Colours::transparentBlack);
 
-    virtual juce::Colour getCellColour(const MappedHexState& state);
-    virtual void renderCellColour(MappedHexState& state);
+    virtual juce::Colour getBinaryCellColour(const MappedHexState& state);
+    virtual void renderCellColour(MappedHexState& state, bool gradient);
 
     virtual MappedLumatoneKey renderCellKey(const MappedHexState& state);
     virtual MappedLumatoneKey renderSequencerKey(const MappedHexState& cell, const LumatoneLayout& noteLayout);
@@ -32,7 +32,7 @@ public:
 private:
     // TODO other colour modes
     virtual void setMaxAge(int ticks);
-    virtual juce::Colour renderGradientColour(const MappedHexState& state);
+    virtual juce::Colour getGradientColour(const MappedHexState& state);
     virtual juce::Colour renderNewbornColour(const juce::Array<MappedHexState>& parents);
 
 private:

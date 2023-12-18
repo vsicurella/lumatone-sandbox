@@ -24,8 +24,8 @@ void HexagonAutomata::Renderer::setColour(juce::Colour aliveColourIn, juce::Colo
     if (deadColourIn != juce::Colours::transparentBlack)
         deadColour = deadColourIn;
 
-    ageGradient = juce::ColourGradient(aliveColour, 0.0f, 0.0f,
-        oldColour, 1.0f, 1.0f, false);
+    // ageGradient = juce::ColourGradient(aliveColour, 0.0f, 0.0f, oldColour, 1.0f, 1.0f, false);
+    healthGradient = juce::ColourGradient(deadColour, 0.0f, 0.0f, aliveColour, 1.0f, 1.0f, false);
 }
 
 void HexagonAutomata::Renderer::setMaxAge(int ticks)
@@ -33,47 +33,38 @@ void HexagonAutomata::Renderer::setMaxAge(int ticks)
     maxAge = ticks;
 }
 
-juce::Colour HexagonAutomata::Renderer::getCellColour(const MappedHexState& state)
+juce::Colour HexagonAutomata::Renderer::getBinaryCellColour(const MappedHexState& state)
 {
     if (static_cast<const HexagonAutomata::HexState&>(state).isEmpty())
         return emptyColour;
     if (state.isAlive())
-    {
-        return aliveColour.interpolatedWith(deadColour, 1.0f - state.health);
-    }
+        return aliveColour;
     return deadColour;
 }
 
-juce::Colour HexagonAutomata::Renderer::renderGradientColour(const MappedHexState& state)
+juce::Colour HexagonAutomata::Renderer::getGradientColour(const MappedHexState& state)
 {
-    if (state.HexagonAutomata::HexState::isEmpty())
-        return emptyColour;
-
-    if (state.isDead())
-        return deadColour;
-
-    auto ageFactor = (double)state.age / (double)maxAge;
-    auto colour = state.cellColor;
-
-    // if (ageFactor <= 1.0f)
-    //     colour = ageGradient.getColourAtPosition(ageFactor);
-
-
-
-    healthGradient = juce::ColourGradient(deadColour, 0.0f, 0.0f,
-                                            colour, 1.0f, 1.0f, false);
-    return healthGradient.getColourAtPosition(state.health);
+    // if (state.HexagonAutomata::HexState::isEmpty())
+    //     return emptyColour;
+    // if (state.isDead())
+    //     return deadColour;
+    // return healthGradient.getColourAtPosition(state.health);
+    return juce::Colour::fromHSL(state.health, 1.0f, 0.62f, 1.0f);
 }
 
-void HexagonAutomata::Renderer::renderCellColour(MappedHexState& state)
+void HexagonAutomata::Renderer::renderCellColour(MappedHexState& state, bool gradient)
 {
-    state.cellColor = getCellColour(state);
+    if (gradient)
+        state.cellColor = getGradientColour(state);
+    else
+        state.cellColor = getBinaryCellColour(state);
 }
 
 MappedLumatoneKey HexagonAutomata::Renderer::renderCellKey(const MappedHexState& state)
 {
     auto key = static_cast<const MappedLumatoneKey&>(state);
-    key.colour = getCellColour(state);
+    // key.colour = getBinaryCellColour(state);
+    key.colour = state.cellColor;
     return key;
 }
 
