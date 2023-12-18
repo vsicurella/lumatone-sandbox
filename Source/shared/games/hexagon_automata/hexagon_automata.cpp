@@ -385,9 +385,11 @@ void HexagonAutomata::Game::setRulesMode(RulesMode modeIn)
         setSpiralRule();
         break;
     case HexagonAutomata::RulesMode::BzReactionRule:
-        setReactionRule(64, 2, 3, 5);
+        setReactionRule(24, 2, 2, 5);
         break;
     }
+
+    gradientRender = rules->getNumCellStates() > 2;
 }
 
 void HexagonAutomata::Game::setAliveColour(juce::Colour newColour)
@@ -471,22 +473,6 @@ void HexagonAutomata::Game::logCellState(juce::String method, juce::String messa
     logInfo(method, stateString);
 }
 
-// juce::ValueTree HexagonAutomata::Game::loadStateProperties(juce::ValueTree stateIn)
-// {
-//     juce::ValueTree newState = (stateIn.hasType(gameId)) 
-//                              ? stateIn
-//                              : juce::ValueTree(gameId);
-
-//     LumatoneGameBaseState::loadStateProperties(newState);
-
-//     for (auto property : HexagonAutomata::GetStateProperties())
-//     {
-//         handleStatePropertyChange(newState, property);
-//     }
-    
-//     return newState;
-// }
-
 void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
 {
     if (property == HexagonAutomata::ID::GameMode)
@@ -540,7 +526,7 @@ void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, c
 
 void HexagonAutomata::Game::addToPopulation(MappedHexState &cell, MappedCellStates& population)
 {
-    render->renderCellColour(cell);
+    render->renderCellColour(cell, gradientRender);
     population.add(cell);
 }
 
@@ -553,7 +539,8 @@ bool HexagonAutomata::Game::removeFromPopulation(MappedHexState& cell, MappedCel
          && compare.keyIndex == cell.keyIndex
             )
         {
-            render->renderCellColour(cell);
+            cell.setDead();
+            render->renderCellColour(cell, false);
             population.remove(i);
             return true;
         }
@@ -632,11 +619,14 @@ void HexagonAutomata::Game::updateCellStates()
         {
             addToPopulation(update, nextPopulation);
         }
+        else
+        {
+            render->renderCellColour(update, gradientRender);
+        }
 
         const HexState& current = cells[update.cellNum];
         if (current.age != update.age || current.health != update.health)
         {
-            render->renderCellColour(update);
             applyUpdatedCell(update);
 
             if (update.cellColor != current.cellColor)
@@ -652,34 +642,6 @@ void HexagonAutomata::Game::updateCellStates()
 
             }
         }
-
-        // if (update.isAlive())
-        // {
-        //     addToPopulation(update, nextPopulation);
-
-        //     auto cellNum = hexMap.hexToKeyNum(update);
-        //     const HexState& current = cells[cellNum];
-            
-        //     if (rulesMode == RulesMode::BzReactionRule && current != update)
-        //     {
-        //         render->renderCellColour(update);
-        //         currentFrameCells.add(update);
-        //         applyUpdatedCell(update);
-        //     }
-        // }
-        // else
-        // {
-        //     if (gameMode == GameMode::Sequencer)
-        //     {
-        //         // logInfo("updateCellStates (updatedCells)", "triggerCellMidi");
-        //         triggerCellMidi(update);
-        //     }
-
-        //     // move these below this scope for render effects
-        //     render->renderCellColour(update);
-        //     currentFrameCells.add(update);
-        //     applyUpdatedCell(update);
-        // }
     }
     // if (updatedCells.size())
     // {

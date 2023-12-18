@@ -16,7 +16,6 @@ class Game : public LumatoneSandboxGameBase
 public:
 
     Game(LumatoneGameEngineState& gameEngineStateIn, LumatoneController* controller);
-    // Game(LumatoneController* controller, const HexagonAutomata::BoardState& stateIn);
     ~Game() override;
     
     bool reset(bool clearQueue) override;
@@ -47,7 +46,6 @@ public:
     void setReactionRule(int numStates, int k1, int k2, int speed);
 
 private:
-    // void addToPopulationNow(MappedHexState& cell);
     void addToPopulation(MappedHexState& cell, MappedCellStates& population);
     bool removeFromPopulation(MappedHexState& cell, MappedCellStates& population);
 
@@ -90,7 +88,6 @@ private:
     void logCellState(juce::String method, juce::String message, const MappedCellStates& states) const;
 
 protected:
-    // juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override; // kludge?
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 public:
@@ -116,6 +113,8 @@ private:
     MappedCellStates clearedCells;
 
     juce::Random random;
+
+    bool gradientRender = false;
 
     // bool overrideClock = true;
     bool clockFlag = false;
