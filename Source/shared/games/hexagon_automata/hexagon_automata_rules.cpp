@@ -744,34 +744,14 @@ HexagonAutomata::BzReactionRule::BzReactionRule(int numStates, int suppressInter
         speed = juce::jlimit(1, N - 1, speedIn);
     }
 
-    k1 = juce::jlimit(1, 8, suppressIntermediates);
-    k2 = juce::jlimit(1, 8, suppressSaturated);
-}
-
-MappedCellStates HexagonAutomata::BzReactionRule::getNewCells(const HexagonAutomata::State &board, const MappedCellStates &population)
-{
-    // TODO timings
-
-    MappedCellStates newCells;
-    
-    // for (int i = 0; i < board.numCells; i++)
-    // {
-    //     if (board.cells[i].health == 0.0f)
-    //     {
-    //     auto cell = board.getMappedCell(i);
-    //     cell.setBorn();
-    //     newCells.add(cell);
-    //     }
-    // }
-
-    return newCells; 
+    setConstants(suppressIntermediates, suppressSaturated);
 }
 
 MappedCellStates HexagonAutomata::BzReactionRule::getUpdatedCells(const HexagonAutomata::State &board, const MappedCellStates &population)
 {
     MappedCellStates updatedCells;
 
-    if (!doSyncAdvancement(board))
+    if (board.generationMode == GenerationMode::Synchronous && !doSyncAdvancement(board))
     {
         for (int i = 0; i < board.numCells; i++)
         {
@@ -802,6 +782,18 @@ MappedCellStates HexagonAutomata::BzReactionRule::getUpdatedCells(const HexagonA
     }
 
     return updatedCells;
+}
+
+void HexagonAutomata::BzReactionRule::setNeighborsShape(const NeighborsShape &newShape)
+{
+    Rules::setNeighborsShape(newShape);
+    setConstants(k1, k2);
+}
+
+void HexagonAutomata::BzReactionRule::setConstants(int intermediate, int saturated)
+{
+    k1 = juce::jlimit(1, neighborsShape.size(), intermediate);
+    k2 = juce::jlimit(1, neighborsShape.size(), saturated);
 }
 
 float HexagonAutomata::BzReactionRule::getLifeFactor(const MappedHexState &origin, const MappedCellStates &neighbors)

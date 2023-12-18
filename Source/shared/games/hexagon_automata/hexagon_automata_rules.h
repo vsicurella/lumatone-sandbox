@@ -36,8 +36,10 @@ public:
 
     virtual ~Rules() { }
 
+    virtual int getNumCellStates() const { return 2; }
+
     void setNeighborsShape(juce::String shapeInputIn);
-    void setNeighborsShape(const NeighborsShape& shapeIn);
+    virtual void setNeighborsShape(const NeighborsShape& shapeIn);
     virtual NeighborsShapeTemp getNeighborsShape() const;
     virtual NeighborsShapeTemp getDefaultNeighborsShape() const;
 
@@ -134,6 +136,8 @@ struct TotalisticRule : public Rules
     virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
     virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
 
+    int getNumCellStates() const override { return numStates; }
+
 public:
     virtual NeighborsShapeTemp getDefaultNeighborsShape() const override;
 
@@ -145,7 +149,7 @@ protected:
 
 protected:
     void setNeighborsShape(juce::String shapeInputIn) { Rules::setNeighborsShape(shapeInputIn); }
-    void setNeighborsShape(const NeighborsShape& shapeIn) { Rules::setNeighborsShape(shapeIn); }
+    virtual void setNeighborsShape(const NeighborsShape& shapeIn) override { Rules::setNeighborsShape(shapeIn); }
 
 protected:
     static int expectedRuleSize(int numStates, const NeighborsShape& shape);
@@ -188,9 +192,14 @@ public:
     BzReactionRule(int numStates, int suppressIntermediates, int suppressSaturated, int speedIn);
     virtual ~BzReactionRule() { }
 
-    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
+    virtual MappedCellStates getNewCells(const HexagonAutomata::State& board, const MappedCellStates& population) override { return MappedCellStates(); }
     virtual MappedCellStates getUpdatedCells(const HexagonAutomata::State& board, const MappedCellStates& population) override;
 
+    int getNumCellStates() const override { return N; }
+
+    void setNeighborsShape(const NeighborsShape& newShape) override;
+
+    void setConstants(int intermediate, int saturated);
 
 protected:
 
