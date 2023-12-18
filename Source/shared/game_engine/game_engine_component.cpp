@@ -35,7 +35,7 @@ LumatoneSandboxGameEngineComponent::LumatoneSandboxGameEngineComponent(LumatoneS
     // };
     // addAndMakeVisible(*resetButton);
 
-    endButton = std::make_unique<juce::TextButton>("End", "End game and reset to before game started.");
+    endButton = std::make_unique<juce::TextButton>("Stop", "End game and reset to before game started.");
     endButton->onClick = [&]
     {
         startPauseButton->setToggleState(false, juce::NotificationType::dontSendNotification);
@@ -119,15 +119,18 @@ void LumatoneSandboxGameEngineComponent::resized()
 
     startPauseButton->setBounds(controlMargin, sectionMargin, buttonWidth, controlHeight);
     // resetButton->setBounds(startPauseButton->getRight() + controlMargin, sectionMargin, buttonWidth, controlHeight);
-    endButton->setBounds(controlMargin, startPauseButton->getBottom() + controlMargin, buttonWidth, controlHeight);
+    endButton->setBounds(startPauseButton->getRight() + controlMargin, sectionMargin, buttonWidth, controlHeight);
+    // endButton->setBounds(controlMargin, startPauseButton->getBottom() + controlMargin, buttonWidth, controlHeight);
 
     auto labelFont = getLookAndFeel().getLabelFont(*fpsLabel);
     int labelWidth = labelFont.getStringWidth(fpsLabel->getText() + "__");
-    fpsLabel->setBounds(controlMargin, endButton->getBottom() + controlMargin, labelWidth, controlHeight);
+    // fpsLabel->setBounds(controlMargin, endButton->getBottom() + controlMargin, labelWidth, controlHeight);
+    fpsLabel->setSize(labelWidth, controlHeight);
 
     int fpsSliderX = fpsLabel->getRight() + labelMargin;
     int fpsSliderWidth = controlsArea.getWidth() - fpsSliderX - controlMargin;
-    fpsSlider->setBounds(fpsSliderX, endButton->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
+    // fpsSlider->setBounds(fpsSliderX, endButton->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
+    fpsSlider->setBounds(fpsSliderX, startPauseButton->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
 
     // testButton->setBounds(controlMargin, fpsSlider->getBottom() + controlMargin, fpsSliderWidth, controlHeight);
 
