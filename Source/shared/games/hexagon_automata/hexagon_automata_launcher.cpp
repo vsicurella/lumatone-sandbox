@@ -44,7 +44,7 @@ HexagonAutomata::Component::Component(HexagonAutomata::Game* gameIn)
     };
     addAndMakeVisible(*generationModeSelector);
     
-    generationModeLabel = std::make_unique<juce::Label>("Generation Mode Label", "Style");
+    generationModeLabel = std::make_unique<juce::Label>("Generation Mode Label", "Mode");
     generationModeLabel->setJustificationType(juce::Justification::centredLeft);
     generationModeLabel->attachToComponent(generationModeSelector.get(), true);
     addAndMakeVisible(*generationModeLabel);
@@ -61,7 +61,7 @@ HexagonAutomata::Component::Component(HexagonAutomata::Game* gameIn)
     };
     addAndMakeVisible(*rulesModeSelector);
     
-    rulesModeLabel = std::make_unique<juce::Label>("Generation Mode Label", "Style");
+    rulesModeLabel = std::make_unique<juce::Label>("Generation Mode Label", "Algorithm");
     rulesModeLabel->setJustificationType(juce::Justification::centredLeft);
     rulesModeLabel->attachToComponent(rulesModeSelector.get(), true);
     addAndMakeVisible(*rulesModeLabel);
