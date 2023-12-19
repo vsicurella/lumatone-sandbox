@@ -137,6 +137,8 @@ juce::ValueTree HexagonAutomata::State::loadStateProperties(juce::ValueTree stat
 
 void HexagonAutomata::State::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
 {
+    LumatoneGameBaseState::handleStatePropertyChange(stateIn, property);
+    
     if (property == LumatoneGameEngineState::ID::RequestedFps)
     {
         if (clockMode == ClockMode::Engine)

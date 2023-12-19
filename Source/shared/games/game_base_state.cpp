@@ -6,7 +6,7 @@
 
 */
 
-#include "./game_base_state.h"
+#include "game_base_state.h"
 
 juce::Array<juce::Identifier> LumatoneGameBaseState::GetLumatoneGameBaseProperties()
 {
@@ -26,4 +26,12 @@ LumatoneGameBaseState::LumatoneGameBaseState(LumatoneSandbox::GameName nameIn, j
     writeStringProperty(LumatoneGameEngineState::ID::GameName, name);
     
     engineState.addStateListener(this);
+}
+
+void LumatoneGameBaseState::handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier &property)
+{
+    if (engineState == stateIn)
+    {
+        engineState.handleStatePropertyChange(stateIn, property);
+    }
 }

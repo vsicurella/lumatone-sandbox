@@ -494,8 +494,8 @@ void HexagonAutomata::Game::handleStatePropertyChange(juce::ValueTree stateIn, c
     else if (property == HexagonAutomata::ID::RulesMode)
     {
         auto value = state.getProperty(property, juce::var(RulesModeToString(RulesMode::BornSurvive)));
-        RulesMode rulesMode = RulesModeFromString(value.toString());
-        setRulesMode(rulesMode);
+        RulesMode readMode = RulesModeFromString(value.toString());
+        setRulesMode(readMode);
     }
     else if (property == HexagonAutomata::ID::BornRule)
     {

@@ -86,6 +86,9 @@ public:
     float getTimeIntervalMs() const;
     double getFps() const;
 
+    bool operator==(const juce::ValueTree& compare) const;
+    bool operator!=(const juce::ValueTree& compare) const;
+
     void addStateListener(LumatoneStateBase* stateIn);
 
 public:
@@ -125,9 +128,7 @@ protected:
     virtual void setGameStatus(LumatoneGameEngineState::GameStatus newState, bool writeToState);
     void setGameName(LumatoneSandbox::GameName gameNameIn, bool writeToState);
 
-protected:
-    // virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;    
-    
+protected:    
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
@@ -140,6 +141,8 @@ protected:
     LumatoneGameEngineState::GameStatus     gameStatus  = LumatoneGameEngineState::GameStatus::NoGame;
     
     bool sentFirstGameMessage = false;
+
+    friend class LumatoneGameBaseState; // preferably shouldn't have to do this?
 };
 
 #endif // LUMATONE_GAME_ENGINE_STATE_H

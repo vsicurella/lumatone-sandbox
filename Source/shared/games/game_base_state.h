@@ -32,7 +32,7 @@ public:
 
 protected:    
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override = 0;
-    virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override = 0;
+    virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 protected:
     juce::Identifier gameId;

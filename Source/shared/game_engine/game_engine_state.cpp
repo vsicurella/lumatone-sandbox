@@ -37,7 +37,7 @@ LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, const Luma
     : LumatoneStateBase(nameIn)
 {
     state = loadStateProperties(stateIn.state);
-    state.addListener(this);
+    // state.addListener(this); // we lose callback order certainty with this
 }
 
 void LumatoneGameEngineState::setGameState(LumatoneGameBaseState* gameStateIn)
@@ -69,6 +69,16 @@ float LumatoneGameEngineState::getTimeIntervalMs() const
 double LumatoneGameEngineState::getFps() const
 {
     return runGameFps;
+}
+
+bool LumatoneGameEngineState::operator==(const juce::ValueTree &compare) const
+{
+    return state == compare;
+}
+
+bool LumatoneGameEngineState::operator!=(const juce::ValueTree &compare) const
+{
+    return state != compare;
 }
 
 void LumatoneGameEngineState::addStateListener(LumatoneStateBase *stateIn)
