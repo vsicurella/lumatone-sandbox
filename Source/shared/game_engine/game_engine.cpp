@@ -149,7 +149,6 @@ bool LumatoneSandboxGameEngine::startGame()
 void LumatoneSandboxGameEngine::forceFps(double fps)
 {
     LumatoneGameEngineState::forceFps(fps);
-    startTimer(getTimeIntervalMs());
 }
 
 void LumatoneSandboxGameEngine::pauseGame()
