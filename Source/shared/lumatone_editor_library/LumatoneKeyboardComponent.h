@@ -8,13 +8,15 @@
   ==============================================================================
 */
 
-#pragma once
+#ifndef LUMATONE_KEYBOARD_COMPONENT_H
+#define LUMATONE_KEYBOARD_COMPONENT_H
 
 #include <JuceHeader.h>
 
-#include "./data/application_state.h"
-#include "./data/lumatone_midi_state.h"
 #include "./lumatone_output_map.h"
+
+#include "./data/application_state.h"
+#include "./midi/lumatone_midi_state.h"
 
 #include "LumatoneKeyComponent.h"
 
@@ -36,6 +38,35 @@ class LumatoneKeyboardComponent : public juce::Component,
                                   public LumatoneEditor::EditorListener,
                                   public LumatoneEditor::MidiListener
 {
+public: 
+
+    enum class UiMode
+    {
+        None,           // Do not interact
+        Controller,     // Only send signals about keys pressed
+        Perform         // Send MIDI based on layout    
+    };
+
+public:
+    class Listener
+    {
+    public:
+        /*
+            Callback for virtual key pressed.
+        */
+        virtual void handleKeyDown(int keyNum) {}
+
+        /*
+            Callback for virtual key released.
+        */
+        virtual void handleKeyUp(int keyNum) {}
+
+        /*
+            Callback for virtual key dragged.
+        */
+        virtual void handleKeyHold(int key, float xDistance, float yDistance) {}
+    };
+
 public:
     LumatoneKeyboardComponent(LumatoneController* controllerIn);
     ~LumatoneKeyboardComponent() override;
@@ -47,6 +78,9 @@ public:
 
     LumatoneComponentRenderMode getRenderMode() const { return renderMode; }
     void setRenderMode(LumatoneComponentRenderMode modeIn);
+
+    LumatoneKeyboardComponent::UiMode getUiMode() const { return uiMode; }
+    void setUiMode(LumatoneKeyboardComponent::UiMode modeIn);
 
 public:
     // LumatoneEditor::EditorListener Implementation
@@ -60,7 +94,7 @@ public:
 private:
 
     void updateKeyColour(int boardIndex, int keyIndex, const juce::Colour& colour);
-    void resetLayoutState();
+    void resetLayoutState(const LumatoneLayout* optionalLayout=nullptr);
 
     void keyUpdateCallback(int boardIndex, int keyIndex, const LumatoneKey& keyData, bool doRepaint=true);
     void mappingUpdateCallback();
@@ -79,6 +113,12 @@ public:
 private:
     // Playing mode implementations
     void updateKeyState(int boardIndex, int keyIndex, bool keyIsDown);
+
+protected:
+    juce::ListenerList<LumatoneKeyboardComponent::Listener> listeners;
+public:
+    void addListener(LumatoneKeyboardComponent::Listener* listenerIn) { listeners.add(listenerIn); }
+    void removeListener(LumatoneKeyboardComponent::Listener* listenerIn) { listeners.remove(listenerIn); }
 
 protected:
     // juce::Component UI implementations
@@ -109,15 +149,10 @@ private:
 private:
     // LumatoneMidiState::Listener implementations
 
-    // void handleNoteOn(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 velocity) override;
-    // void handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote) override;
-    // void handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch) override;
-    // void handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 value) override;
-
-    void handleDeviceNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
-    void handleDeviceNoteOff(int midiChannel, int midiNote) override;
-    void handleDeviceAftertouch(int midiChannel, int midiNote, juce::uint8 aftertouch) override { }
-    void handleDeviceController(int midiChannel, int midiNote, juce::uint8 value) override { }
+    void handleNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void handleNoteOff(int midiChannel, int midiNote) override;
+    void handleAftertouch(int midiChannel, int midiNote, juce::uint8 aftertouch) override { }
+    void handleController(int midiChannel, int midiNote, juce::uint8 value) override { }
 
 
 private:
@@ -146,6 +181,8 @@ private:
     LumatoneRender      lumatoneRender;
 
     LumatoneOutputMap   lumatoneMidiMap;
+
+    LumatoneKeyboardComponent::UiMode uiMode = LumatoneKeyboardComponent::UiMode::Perform;
 
     // std::unique_ptr<juce::Label> lblFirmwareVersion;
 
@@ -216,3 +253,5 @@ private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LumatoneKeyboardComponent)
 };
+
+#endif LUMATONE_KEYBOARD_COMPONENT_H
