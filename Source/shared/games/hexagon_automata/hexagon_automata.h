@@ -26,6 +26,7 @@ public:
     LumatoneAction* renderFrame() const override;
 
 public:
+    void addSeed(int cellNum, float healthIn=1.0f, bool triggerMidi=true);
     void addSeed(Hex::Point coord, float healthIn=1.0f, bool triggerMidi=true);
     void addSeeds(juce::Array<Hex::Point> seedCoords, bool triggerMidi=true);
     void addSeeds(int numSeeds, bool triggerMidi=true);
@@ -55,15 +56,24 @@ private:
     void addFramesToQueue(); // Turn into game base method?
 
 private:
+    // MIDI listener
+    void handleNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void handleNoteOff(int midiChannel, int midiNote) override;
 
-    void handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
-    void handleAnyNoteOff(int midiChannel, int midiNote) override;
-
-    void handleAnyController(int channel, int ccNum, juce::uint8 value) override;
+    void handleController(int channel, int ccNum, juce::uint8 value) override;
     void handleMidiClock(int quarterNoteInterval) override;
     void handleSustain(bool toggled) override;
 
+    // Virtual Keyboard Listener
+    void handleKeyDown(int keyNum) override;
+    void handleKeyUp(int keyNum) override;
+
+    // Editor Listener
     void completeMappingLoaded(LumatoneLayout layout) override;
+
+private:
+    void handleCellNoteOn(int cellNum, juce::uint8 velocity);
+    void handleCellNoteOff(int cellNum);
 
 private:
 

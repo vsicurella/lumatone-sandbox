@@ -20,6 +20,7 @@
 class LumatoneSandboxGameBase;
 class LumatoneAction;
 class LumatoneController;
+class LumatoneKeyboardComponent;
 
 class LumatoneSandboxGameEngine : public LumatoneGameEngineState
                                 , private LumatoneEditor::MidiListener
@@ -55,6 +56,8 @@ public:
 
     const LumatoneSandboxGameBase* getGameLoaded() const;
 
+    void setVirtualKeyboard(LumatoneKeyboardComponent* keyboardIn);
+
     // DEBUG
     // bool checkNotesOn();
 
@@ -81,6 +84,7 @@ private:
 private:
     juce::ApplicationCommandManager* commandManager;
     LumatoneController* controller;
+    LumatoneKeyboardComponent* keyboard;
 
     std::unique_ptr<LumatoneSandboxGameBase> game;
 

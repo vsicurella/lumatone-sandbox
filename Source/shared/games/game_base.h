@@ -10,14 +10,14 @@
 
 #pragma once
 
-// #include "../lumatone_editor_library/LumatoneController.h"
-// #include "../lumatone_editor_library/actions/edit_actions.h"
-
 #include "../game_engine/game_engine_state.h"
 
 #include "../lumatone_editor_library/data/lumatone_context.h"
+
 #include "../lumatone_editor_library/listeners/midi_listener.h"
 #include "../lumatone_editor_library/listeners/editor_listener.h"
+
+#include "../lumatone_editor_library/LumatoneKeyboardComponent.h"
 
 #include "../debug/LumatoneSandboxLogger.h"
 
@@ -43,6 +43,7 @@ public:
 
 class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener
                               , public LumatoneEditor::EditorListener
+                              , public LumatoneKeyboardComponent::Listener
                               , protected LumatoneSandboxLogger
 {
 public:

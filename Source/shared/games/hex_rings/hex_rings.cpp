@@ -99,7 +99,7 @@ int HexRings::getRingSizeVelocity(juce::uint8 velocity) const
     return juce::roundToInt((float)velocity / 127.0f * 4);
 }
 
-void HexRings::handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
+void HexRings::handleNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
 {
     auto colour = getRandomColourVelocity(velocity);
     auto ringSize = getRingSizeVelocity(velocity);

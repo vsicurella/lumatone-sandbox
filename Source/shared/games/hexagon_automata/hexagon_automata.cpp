@@ -249,6 +249,12 @@ LumatoneAction* HexagonAutomata::Game::renderFrame() const
     return nullptr;
 }
 
+void HexagonAutomata::Game::addSeed(int cellNum, float healthIn, bool triggerMidi)
+{
+    auto coord = hexMap.keyNumToHex(cellNum);
+    addSeed(coord, healthIn, triggerMidi);
+}
+
 void HexagonAutomata::Game::addSeed(Hex::Point point, float healthIn, bool triggerMidi)
 {
     auto keyCoord = hexMap.hexToKeyCoords(point);
@@ -670,51 +676,28 @@ void HexagonAutomata::Game::addFramesToQueue()
     }
 }
 
-void HexagonAutomata::Game::handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
+void HexagonAutomata::Game::handleNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
 {
     auto hexCoord = hexMap.keyCoordsToHex(midiChannel - 1, midiNote);
     int cellNum = hexMap.hexToKeyNum(hexCoord);
 
-    juce::ScopedLock sl(stateLock);
-    MappedHexState cell = getMappedCell(cellNum);
-
     logInfo("handleAnyNoteOn", "Note on " + juce::String(midiChannel) + "," + juce::String(midiNote) + " triggering cell " + juce::String(cellNum));
 
-    float velocityFloat = (float)velocity / 127.0f;
-    if (rulesMode == RulesMode::SpiralRule)
-        velocity = powf(velocity, 3);
-
-    if (cell.isAlive())
-    {
-        // clearCell(cell);
-        cell.setBorn(velocityFloat);
-
-        if (gameMode == HexagonAutomata::GameMode::Sequencer)
-        {
-            triggerCellMidi(cell);
-        }
-        
-        applyUpdatedCell(cell);
-    }
-    else
-        addSeed(hexCoord, velocityFloat, true);
+    handleCellNoteOn(cellNum, velocity);
 }
 
-void HexagonAutomata::Game::handleAnyNoteOff(int midiChannel, int midiNote)
+void HexagonAutomata::Game::handleNoteOff(int midiChannel, int midiNote)
 {
     if (noSustainPassThrough && !sustainIsOn)
     {
         auto hexCoord = hexMap.keyCoordsToHex(midiChannel - 1, midiNote);
         int cellNum = hexMap.hexToKeyNum(hexCoord);
 
-        juce::ScopedLock sl(stateLock);
-        MappedHexState cell = getMappedCell(cellNum);
-
-        clearCell(cell, true);
+        handleCellNoteOff(cellNum);
     }
 }
 
-void HexagonAutomata::Game::handleAnyController(int channel, int ccNum, juce::uint8 value)
+void HexagonAutomata::Game::handleController(int channel, int ccNum, juce::uint8 value)
 {
     if (ccNum == 64)
     {
@@ -755,10 +738,55 @@ void HexagonAutomata::Game::handleSustain(bool toggled)
     }
 }
 
+void HexagonAutomata::Game::handleKeyDown(int keyNum)
+{
+    handleCellNoteOn(keyNum, 127);
+}
+
+void HexagonAutomata::Game::handleKeyUp(int keyNum)
+{
+    if (noSustainPassThrough && !sustainIsOn)
+    {
+        handleCellNoteOff(keyNum);
+    }
+}
+
 void HexagonAutomata::Game::completeMappingLoaded(LumatoneLayout layout)
 {
     LumatoneSandboxGameBase::completeMappingLoaded(layout);
     quitGame = true;
+}
+
+void HexagonAutomata::Game::handleCellNoteOn(int cellNum, juce::uint8 velocity)
+{
+    juce::ScopedLock sl(stateLock);
+    MappedHexState cell = getMappedCell(cellNum);
+
+    float velocityFloat = (float)velocity / 127.0f;
+    if (rulesMode == RulesMode::SpiralRule)
+        velocity = powf(velocity, 3);
+
+    if (cell.isAlive())
+    {
+        // clearCell(cell);
+        cell.setBorn(velocityFloat);
+
+        if (gameMode == HexagonAutomata::GameMode::Sequencer)
+        {
+            triggerCellMidi(cell);
+        }
+        
+        applyUpdatedCell(cell);
+    }
+    else
+        addSeed(cellNum, velocityFloat, true);
+}
+
+void HexagonAutomata::Game::handleCellNoteOff(int cellNum)
+{
+    juce::ScopedLock sl(stateLock);
+    MappedHexState cell = getMappedCell(cellNum);
+    clearCell(cell, true);
 }
 
 LumatoneSandboxGameComponent* HexagonAutomata::Game::createController()

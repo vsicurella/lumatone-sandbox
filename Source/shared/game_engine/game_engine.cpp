@@ -32,6 +32,12 @@ LumatoneSandboxGameEngine::~LumatoneSandboxGameEngine()
     for (int i = 0; i < numActions; i++)
         delete actionQueue[i];
 
+    if (keyboard != nullptr && gameStatus != GameStatus::NoGame)
+    {
+        keyboard->removeListener(game.get());
+        keyboard = nullptr;
+    }
+
     engineListeners.clear();
     game = nullptr;
     controller = nullptr;
@@ -44,6 +50,18 @@ const LumatoneSandboxGameBase* LumatoneSandboxGameEngine::getGameLoaded() const
 
     logWarning("getGameLoaded", "No game is running.");
     return nullptr;
+}
+
+void LumatoneSandboxGameEngine::setVirtualKeyboard(LumatoneKeyboardComponent *keyboardIn)
+{
+    LumatoneKeyboardComponent* lastKeyboard = keyboard;
+    keyboard = keyboardIn;
+
+    if (keyboard != nullptr && gameStatus != GameStatus::NoGame)
+    {
+        lastKeyboard->removeListener(game.get());
+        keyboard->addListener(game.get());
+    }
 }
 
 // bool LumatoneSandboxGameEngine::checkNotesOn()
@@ -73,7 +91,6 @@ void LumatoneSandboxGameEngine::loadGame(juce::String gameId)
     logInfo("setGame", "New game loaded: " + game->getName());
 
     setGameState(gameState);
-
     setGameStatus(LumatoneGameEngineState::GameStatus::Loaded);
 }
 
@@ -111,6 +128,10 @@ bool LumatoneSandboxGameEngine::startGame()
             {
                 controller->addMidiListener(game.get());
                 controller->addEditorListener(game.get());
+                if (keyboard)
+                {
+                    keyboard->addListener(game.get());
+                }
 
                 game->updateSavedLayout();
                 game->reset(true);
@@ -173,7 +194,11 @@ bool LumatoneSandboxGameEngine::endGame()
         {
             controller->removeMidiListener(game.get());
             controller->removeEditorListener(game.get());
-            
+            if (keyboard != nullptr)
+            {
+                keyboard->removeListener(game.get());
+            }
+
             game->end();
             processGameActionQueue();
 
