@@ -15,10 +15,12 @@
 #ifndef LUMATONE_MIDI_MANAGER_H
 #define LUMATONE_MIDI_MANAGER_H
 
-#include "./application_state.h"
 #include "./lumatone_midi_state.h"
+
+#include "../data/application_state.h"
+#include "../data/lumatone_context.h"
+
 #include "../lumatone_midi_driver/firmware_driver_listener.h"
-#include "./lumatone_context.h"
 
 // #include "../../debug/LumatoneSandboxLogger.h"
 

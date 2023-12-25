@@ -17,7 +17,7 @@
 #include "key_update_buffer.h"
 
 #include "./data/application_state.h"
-#include "./data/lumatone_midi_manager.h"
+#include "./midi/lumatone_midi_manager.h"
 
 // #include "../debug/LumatoneSandboxLogger.h"
 
