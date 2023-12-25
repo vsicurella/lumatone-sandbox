@@ -214,7 +214,7 @@ void LumatoneSandboxProcessor::getStateInformation (juce::MemoryBlock& destData)
 void LumatoneSandboxProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     auto state = juce::ValueTree::readFromData(data, sizeInBytes);
-    DBG("Read from memory:\n" + treeState.toXmlString());
+    DBG("Read from memory:\n" + state.toXmlString());
 
     controller->loadStateProperties(state);
 }
