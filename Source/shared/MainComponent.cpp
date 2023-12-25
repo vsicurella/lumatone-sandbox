@@ -72,6 +72,7 @@ void MainComponent::resized()
 void MainComponent::setGameEngine(LumatoneSandboxGameEngine* engineIn)
 {
     engineIn->addEngineListener(this);
+    engineIn->setVirtualKeyboard(lumatoneComponent.get());
 
     jassert(gameEngineComponent.get() == nullptr);
     gameEngineComponent = std::make_unique<LumatoneSandboxGameEngineComponent>(engineIn);
@@ -148,7 +149,12 @@ void MainComponent::gameStatusChanged(LumatoneSandboxGameBase* game, LumatoneGam
     {
     case LumatoneGameEngineState::GameStatus::Loaded:
         gameLoadedCallback(game);
+        lumatoneComponent->setUiMode(LumatoneKeyboardComponent::UiMode::Controller);
+
         break;
+    case LumatoneGameEngineState::GameStatus::Stopped:
+        lumatoneComponent->setUiMode(LumatoneKeyboardComponent::UiMode::Perform);
+
     default: 
         return;
     }

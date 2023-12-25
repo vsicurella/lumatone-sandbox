@@ -57,7 +57,7 @@ public:
     int getRingSizeVelocity(juce::uint8 velocity) const;
 
 public:
-    void handleAnyNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
+    void handleNoteOn(int midiChannel, int midiNote, juce::uint8 velocity) override;
 
 public:
     virtual LumatoneSandboxGameComponent* createController() override;
