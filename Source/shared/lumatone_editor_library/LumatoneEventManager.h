@@ -10,11 +10,11 @@
 
 #pragma once
 
-#include "./lumatone_midi_driver/firmware_driver_listener.h"
-#include "listeners/status_listener.h"
-#include "./data/lumatone_midi_state.h"
-
+#include "./listeners/status_listener.h"
+#include "./midi/lumatone_midi_state.h"
 #include "./listeners/firmware_listener.h"
+
+#include "./lumatone_midi_driver/firmware_driver_listener.h"
 
 class LumatoneFirmwareDriver;
 
