@@ -254,11 +254,26 @@ bool LumatoneLayout::isKeyCoordValid(const LumatoneKeyCoord& coord) const
         && coord.keyIndex < getOctaveBoardSize();
 }
 
+bool LumatoneLayout::isKeyCoordValid(int keyIndex, int boardIndex) const
+{
+    return keyIndex >= 0 
+        && keyIndex < getOctaveBoardSize()
+        && boardIndex >= 0 
+        && boardIndex < getNumBoards();
+}
+
 int LumatoneLayout::keyCoordToKeyNum(const LumatoneKeyCoord& coord) const
 {
     if (!isKeyCoordValid(coord))
         return -1;
     return coord.boardIndex * getOctaveBoardSize() + coord.keyIndex;
+}
+
+int LumatoneLayout::keyCoordToKeyNum(int keyIndex, int boardIndex) const
+{
+    if (!isKeyCoordValid(keyIndex, boardIndex))
+        return -1;
+    return boardIndex * getOctaveBoardSize() + keyIndex;
 }
 
 LumatoneKeyCoord LumatoneLayout::keyNumToKeyCoord(int keyNum) const

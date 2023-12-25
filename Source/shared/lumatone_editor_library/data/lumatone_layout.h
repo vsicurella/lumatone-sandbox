@@ -92,7 +92,11 @@ public:
 	MappedLumatoneKey getMappedKey(int boardIndex, int keyIndex) const;
 
     bool isKeyCoordValid(const LumatoneKeyCoord& coord) const;
+    bool isKeyCoordValid(int keyIndex, int boardIndex) const;
+
 	int keyCoordToKeyNum(const LumatoneKeyCoord& coord) const;
+	int keyCoordToKeyNum(int keyIndex, int boardIndex) const;
+	
 	LumatoneKeyCoord keyNumToKeyCoord(int keyNum) const;
 
 	void transform(std::function<void(int,int,LumatoneKey&)> transformFnc);
