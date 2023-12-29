@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./ColourPaletteDataStructure.h"
+#include "./colour_palette_file.h"
 
 class LumatonePaletteLibrary
 {

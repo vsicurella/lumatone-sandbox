@@ -1,9 +1,9 @@
 #include "MainComponent.h"
 #include "SandboxMenu.h"
 
-#include "lumatone_editor_library/LumatoneController.h"
-#include "lumatone_editor_library/LumatoneKeyboardComponent.h"
-#include "gui/connection_status.h"
+#include "./lumatone_editor_library/device/lumatone_controller.h"
+#include "./lumatone_editor_library/ui/keyboard_component.h"
+#include "./gui/connection_status.h"
 
 #include "./game_engine/game_engine_component.h"
 #include "./games/game_base.h"

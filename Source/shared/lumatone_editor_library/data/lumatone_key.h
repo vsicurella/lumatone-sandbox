@@ -8,9 +8,11 @@
   ==============================================================================
 */
 
-#pragma once
+#ifndef LUMATONE_KEY_STATE_H
+#define LUMATONE_KEY_STATE_H
 
-#include "../lumatone_editor_common.h"
+#include "lumatone_editor_common.h"
+
 #include "../lumatone_midi_driver/firmware_definitions.h"
 
 typedef LumatoneFirmware::LumatoneKeyType LumatoneKeyType;
@@ -73,3 +75,5 @@ public:
     int boardIndex = -1;
     int keyIndex = -1;
 };
+
+#endif LUMATONE_KEY_STATE_H

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LUMATONE_APPLICATION_STATE_H
+#define LUMATONE_APPLICATION_STATE_H
 
 #include "lumatone_state.h"
 #include "lumatone_context.h"
@@ -82,3 +83,5 @@ private:
 
     std::shared_ptr<LumatoneColourModel> colourModel;
 };
+
+#endif LUMATONE_APPLICATION_STATE_H

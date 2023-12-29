@@ -4,8 +4,8 @@
 #include "./hexagon_automata_rules.h"
 #include "./hexagon_automata_launcher.h"
 
-#include "../../lumatone_editor_library/LumatoneController.h"
 #include "../../lumatone_editor_library/actions/edit_actions.h"
+#include "../../lumatone_editor_library/device/lumatone_controller.h"
 
 #include "../../lumatone_editor_library/color/adjust_layout_colour.h"
 

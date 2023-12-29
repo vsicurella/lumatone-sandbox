@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    ColourSelectionGroup.h
+    colour_selection_group.h
     Created: 20 Dec 2020 5:40:13pm
     Author:  Vincenzo
 
@@ -10,7 +10,9 @@
   ==============================================================================
 */
 
-#pragma once
+#ifndef COLOUR_SELECTION_BROADCASTER_H
+#define COLOUR_SELECTION_BROADCASTER_H
+
 #include <JuceHeader.h>
 
 class ColourSelectionBroadcaster;
@@ -147,3 +149,5 @@ private:
 
     int selectedBroadcasterIndex = -1;
 };
+
+#endif COLOUR_SELECTION_BROADCASTER_H

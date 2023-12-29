@@ -1,5 +1,5 @@
 #include "lumatone_action.h"
-#include "../LumatoneController.h"
+#include "../device/lumatone_controller.h"
 
 
 LumatoneAction::LumatoneAction(LumatoneController* controllerIn, juce::String nameIn)

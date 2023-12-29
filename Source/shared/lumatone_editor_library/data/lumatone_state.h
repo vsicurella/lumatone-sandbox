@@ -8,7 +8,8 @@
   ==============================================================================
 */
 
-#pragma once
+#ifndef LUMATONE_STATE_H
+#define LUMATONE_STATE_H
 
 #include "state_base.h"
 #include "lumatone_layout.h"
@@ -117,3 +118,5 @@ private:
     int                         numBoards = 5;
     int                         octaveBoardSize = 56;
 };
+
+#endif LUMATONE_STATE_H

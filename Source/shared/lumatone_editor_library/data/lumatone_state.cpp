@@ -10,7 +10,7 @@
 
 #include "lumatone_state.h"
 
-#include "../lumatone_output_map.h"
+#include "../mapping/lumatone_output_map.h"
 
 juce::Array<juce::Identifier> LumatoneState::getLumatoneStateProperties()
 {

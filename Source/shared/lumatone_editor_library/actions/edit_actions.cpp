@@ -9,7 +9,7 @@
 */
 #include "edit_actions.h"
 
-#include "../LumatoneController.h"
+#include "../device/lumatone_controller.h"
 
 using namespace LumatoneEditAction;
 

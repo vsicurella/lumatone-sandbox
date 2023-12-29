@@ -2,10 +2,12 @@
 #include "sandbox_editor.h"
 
 #include "../shared/game_engine/game_engine.h"
+
 #include "../shared/lumatone_editor_library/lumatone_midi_driver/lumatone_midi_driver.h"
 #include "../shared/lumatone_editor_library/palettes/palette_library.h"
-#include "../shared/lumatone_editor_library/DeviceActivityMonitor.h"
-#include "../shared/lumatone_editor_library/LumatoneController.h"
+#include "../shared/lumatone_editor_library/device/activity_monitor.h"
+#include "../shared/lumatone_editor_library/device/lumatone_controller.h"
+
 #include "../shared/SandboxMenu.h"
 
 #include "../shared/debug/LumatoneSandboxLogTableModel.h"

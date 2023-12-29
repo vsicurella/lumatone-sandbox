@@ -12,7 +12,7 @@
 
 #include "../shared/MainComponent.h"
 
-#include "../shared/lumatone_editor_library/DeviceActivityMonitor.h"
+#include "../shared/lumatone_editor_library/activity_monitor.h"
 #include "../shared/lumatone_editor_library/palettes/palette_library.h"
 
 #include "../shared/gui/adjust_colour_panel.h"

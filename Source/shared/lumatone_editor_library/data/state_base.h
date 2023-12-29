@@ -8,7 +8,9 @@
 ==============================================================================
 */
 
-#pragma once
+#ifndef LUMATONE_STATE_BASE_H
+#define LUMATONE_STATE_BASE_H
+
 #include <JuceHeader.h>
 
 class LumatoneStateBase : protected juce::ValueTree::Listener
@@ -40,3 +42,5 @@ protected:
     juce::ValueTree state;
     juce::String name;
 };
+
+#endif LUMATONE_STATE_BASE_H

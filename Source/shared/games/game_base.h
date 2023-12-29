@@ -8,7 +8,8 @@
   ==============================================================================
 */
 
-#pragma once
+#ifndef LUMATONE_GAME_BASE_H
+#define LUMATONE_GAME_BASE_H
 
 #include "../game_engine/game_engine_state.h"
 
@@ -17,7 +18,7 @@
 #include "../lumatone_editor_library/listeners/midi_listener.h"
 #include "../lumatone_editor_library/listeners/editor_listener.h"
 
-#include "../lumatone_editor_library/LumatoneKeyboardComponent.h"
+#include "../lumatone_editor_library/ui/keyboard_component.h"
 
 #include "../debug/LumatoneSandboxLogger.h"
 
@@ -109,3 +110,5 @@ protected:
 private:
     juce::String name;
 };
+
+#endif LUMATONE_GAME_BASE_H

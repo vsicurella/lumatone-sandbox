@@ -11,8 +11,8 @@
 #include "random_colors.h"
 #include "random_colors_launcher.h"
 
-#include "../../lumatone_editor_library/LumatoneController.h"
 #include "../../lumatone_editor_library/actions/edit_actions.h"
+#include "../../lumatone_editor_library/device/lumatone_controller.h"
 
 RandomColors::RandomColors(LumatoneGameEngineState& gameEngineState, LumatoneController* controllerIn, RandomColors::Options options)
     : LumatoneSandboxGameBase(controllerIn, "Random Colors")

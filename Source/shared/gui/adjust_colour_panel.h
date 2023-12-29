@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../lumatone_editor_library/LumatoneController.h"
-#include "../lumatone_editor_library/palettes/ColourPaletteWindow.h"
+#include "../lumatone_editor_library/device/lumatone_controller.h"
+#include "../lumatone_editor_library/palettes/colour_palette_window.h"
 #include "../lumatone_editor_library/palettes/palette_library.h"
 
 #include "../lumatone_editor_library/actions/edit_actions.h"

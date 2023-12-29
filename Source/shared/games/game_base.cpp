@@ -10,8 +10,8 @@
 
 #include "game_base.h"
 
-#include "../lumatone_editor_library/LumatoneController.h"
 #include "../lumatone_editor_library/actions/edit_actions.h"
+#include "../lumatone_editor_library/device/lumatone_controller.h"
 
 LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String nameIn)
     : controller(controllerIn)

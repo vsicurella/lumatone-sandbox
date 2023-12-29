@@ -8,9 +8,10 @@
   ==============================================================================
 */
 
-#pragma once
+#ifndef LUMATONE_COLOR_MODEL_H
+#define LUMATONE_COLOR_MODEL_H
 
-#include "../lumatone_editor_common.h"
+#include "../data/lumatone_editor_common.h"
 #include "interpolation.h"
 
 #define MAX_INCREMENT 16
@@ -65,3 +66,5 @@ private:
 
     std::unique_ptr<juce::HashMap<LumatoneEditor::ColourHash,juce::Colour>> cache;
 };
+
+#endif LUMATONE_COLOR_MODEL_H

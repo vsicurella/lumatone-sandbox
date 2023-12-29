@@ -1,8 +1,9 @@
-#pragma once
+#ifndef LUMATONE_ADJUST_LAYOUT_COLOR_H
+#define LUMATONE_ADJUST_LAYOUT_COLOR_H
 
-#include "../LumatoneController.h"
 #include "../actions/edit_actions.h"
-#include "../hex/lumatone_hex_map.h"
+#include "../device/lumatone_controller.h"
+#include "../mapping/lumatone_hex_map.h"
 
 class AdjustLayoutColour 
 {
@@ -193,3 +194,5 @@ private:
 
     AdjustLayoutColour::Type currentAction;
 };
+
+#endif LUMATONE_ADJUST_LAYOUT_COLOR_H

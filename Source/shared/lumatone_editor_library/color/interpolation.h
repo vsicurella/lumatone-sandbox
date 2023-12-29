@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LUMATONE_COLOR_INTERPOLATION
+#define LUMATONE_COLOR_INTERPOLATION
 
 namespace Interpolate
 {
@@ -85,3 +86,5 @@ namespace Interpolate
                          params.tx, params.ty, params.tz);
     }
 }
+
+#endif LUMATONE_COLOR_INTERPOLATION

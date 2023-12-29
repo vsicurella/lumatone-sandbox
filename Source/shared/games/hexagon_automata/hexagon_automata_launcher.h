@@ -12,7 +12,7 @@
 
 #include "../game_component.h"
 
-#include "../../lumatone_editor_library/palettes/ColourSelectionPanels.h"
+#include "../../lumatone_editor_library/palettes/colour_picker_panel.h"
 
 #include "./hexagon_automata_game_state.h"
 namespace HexagonAutomata

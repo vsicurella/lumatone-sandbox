@@ -10,7 +10,7 @@
 
 #include "../games/games_index.h"
 
-#include "../lumatone_editor_library/LumatoneController.h"
+#include "../lumatone_editor_library/device/lumatone_controller.h"
 
 #include "../games/random_colors/random_colors.h"
 #include "../games/hex_rings/hex_rings.h"

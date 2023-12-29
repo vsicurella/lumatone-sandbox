@@ -8,8 +8,10 @@
   ==============================================================================
 */
 
-#pragma once
-#include "../lumatone_editor_common.h"
+#ifndef LUMATONE_BOARD_STATE_H
+#define LUMATONE_BOARD_STATE_H
+
+#include "../data/lumatone_editor_common.h"
 #include "lumatone_key.h"
 
 #define MAXBOARDSIZE 56
@@ -38,3 +40,5 @@ private:
     int numKeys;
 
 };
+
+#endif LUMATONE_BOARD_STATE_H

@@ -8,15 +8,15 @@
   ==============================================================================
 */
 
-#include "./game_engine.h"
+#include "game_engine.h"
+
 #include "./game_loader.h"
 
 #include "../games/game_base.h"
 #include "../games/game_base_state.h"
 
-#include "../lumatone_editor_library/LumatoneController.h"
+#include "../lumatone_editor_library/device/lumatone_controller.h"
 #include "../SandboxMenu.h"
-#include "game_engine.h"
 
 LumatoneSandboxGameEngine::LumatoneSandboxGameEngine(LumatoneController* controllerIn, juce::ValueTree parentTreeIn)
     : LumatoneGameEngineState("LumatoneSandboxGameEngine", parentTreeIn, nullptr)

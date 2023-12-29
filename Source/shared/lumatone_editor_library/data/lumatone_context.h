@@ -1,6 +1,7 @@
 // Supply pitch/note, tuning, or remapped configs for a LumatoneLayout
 
-#pragma once
+#ifndef LUMATONE_LAYOUT_CONTEXT_H
+#define LUMATONE_LAYOUT_CONTEXT_H
 
 #include "./lumatone_layout.h"
 
@@ -43,3 +44,5 @@ private:
     bool midiNotesMapped = false;
     juce::Array<int, juce::CriticalSection> mappedMidiNotes;
 };
+
+#endif LUMATONE_LAYOUT_CONTEXT_H

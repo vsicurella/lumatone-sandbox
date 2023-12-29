@@ -11,7 +11,7 @@
 #pragma once
 #include "../game_base.h"
 #include "../game_base_state.h"
-#include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
+#include "../../lumatone_editor_library/mapping/lumatone_hex_map.h"
 
 class HexRings : public LumatoneSandboxGameBase, protected LumatoneGameBaseState
 {

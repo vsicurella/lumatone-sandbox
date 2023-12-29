@@ -13,7 +13,7 @@
 
 #include "../games_index.h"
 
-#include "../../lumatone_editor_library/LumatoneController.h"
+#include "../../lumatone_editor_library/device/lumatone_controller.h"
 #include "../../lumatone_editor_library/actions/edit_actions.h"
 
 HexRings::HexRings(LumatoneGameEngineState& gameEngineState, LumatoneController* controller)

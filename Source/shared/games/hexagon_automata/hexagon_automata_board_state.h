@@ -11,8 +11,7 @@
 
 #include "./hexagon_automata_cell_state.h"
 
-#include "../../lumatone_editor_library/hex/hex_field.h"
-#include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
+#include "../../lumatone_editor_library/mapping/lumatone_hex_map.h"
 
 namespace HexagonAutomata
 {

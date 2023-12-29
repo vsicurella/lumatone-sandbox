@@ -8,7 +8,9 @@ Author:  hsstraub
 ==============================================================================
 */
 
-#pragma once
+#ifndef LUMATONE_LAYOUT_STATE_H
+#define LUMATONE_LAYOUT_STATE_H
+
 #include "./lumatone_board.h"
 
 // Velocity curve config
@@ -128,3 +130,5 @@ public:
 	LumatoneConfigTable afterTouchTable;
 	LumatoneConfigTable lumaTouchTable;
 };
+
+#endif LUMATONE_LAYOUT_STATE_H

@@ -11,7 +11,8 @@
 
 #include <JuceHeader.h>
 
-#include "../../lumatone_editor_library/hex/lumatone_hex_map.h"
+#include "../../lumatone_editor_library/mapping/lumatone_hex_map.h"
+
 namespace HexagonAutomata
 {
 struct HexState
