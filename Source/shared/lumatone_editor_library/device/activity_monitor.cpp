@@ -12,9 +12,12 @@
 
 #include "../lumatone_midi_driver/lumatone_midi_driver.h"
 #include "../lumatone_midi_driver/firmware_sysex.h"
+#include "../listeners/status_listener.h"
 
-DeviceActivityMonitor::DeviceActivityMonitor(LumatoneFirmwareDriver* midiDriverIn, LumatoneApplicationState stateIn)
+
+DeviceActivityMonitor::DeviceActivityMonitor(const LumatoneApplicationState& stateIn, LumatoneFirmwareDriver* midiDriverIn)
     :   LumatoneApplicationState("DeviceActivityMonitor", stateIn)
+    ,   LumatoneApplicationState::DeviceController(static_cast<LumatoneApplicationState&>(*this))
     ,   midiDriver(midiDriverIn)
 {
     detectDevicesIfDisconnected = getBoolProperty(LumatoneApplicationProperty::DetectDeviceIfDisconnected, true);
@@ -35,7 +38,7 @@ DeviceActivityMonitor::~DeviceActivityMonitor()
 void DeviceActivityMonitor::setDetectDeviceIfDisconnected(bool doDetection)
 {
     detectDevicesIfDisconnected = doDetection;
-    writeBoolProperty(LumatoneApplicationProperty::DetectDeviceIfDisconnected, detectDevicesIfDisconnected);
+    setStateProperty(LumatoneApplicationProperty::DetectDeviceIfDisconnected, detectDevicesIfDisconnected);
 
     if (!detectDevicesIfDisconnected)
     {
@@ -51,8 +54,8 @@ void DeviceActivityMonitor::setDetectDeviceIfDisconnected(bool doDetection)
 void DeviceActivityMonitor::setCheckForInactivity(bool monitorActivity)
 {
     checkConnectionOnInactivity = monitorActivity;
-    writeBoolProperty(LumatoneApplicationProperty::CheckConnectionIfInactive, checkConnectionOnInactivity);
-    
+    setStateProperty(LumatoneApplicationProperty::CheckConnectionIfInactive, checkConnectionOnInactivity);
+
     if (checkConnectionOnInactivity && isConnectionEstablished())
     {
         startTimer(inactivityTimeoutMs);
@@ -97,7 +100,7 @@ void DeviceActivityMonitor::pingAllDevices()
 //         juce::String outputId = getStringProperty(LumatoneApplicationProperty::LastOutputDeviceId);
 //         if (outputId.length() <= 0)
 //             return false;
-        
+
 //         int outputIndex = midiDriver->findIndexOfOutputDevice(outputId);
 //         if (outputIndex >= 0)
 //         {
@@ -118,7 +121,7 @@ void DeviceActivityMonitor::pingAllDevices()
 void DeviceActivityMonitor::startIndividualDetection()
 {
     jassert(outputPingIds.size() == 0);
-    
+
     testOutputIndex = -1;
     outputDevices = midiDriver->getMidiOutputList();
     inputDevices = midiDriver->getMidiInputList();
@@ -163,7 +166,7 @@ void DeviceActivityMonitor::testNextOutput()
     {
         midiDriver->sendGetSerialIdentityRequest(testOutputIndex);
     }
-    
+
     waitingForResponse = true;
     startTimer(responseTimeoutMs);
 }
@@ -172,7 +175,7 @@ void DeviceActivityMonitor::startDeviceDetection()
 {
     // if (midiDriver->getHostMode() != LumatoneFirmwareDriver::HostMode::Driver)
     //     return; // Only allow in Driver mode
-        
+
     // Belongs somewhere else?
     if (!midiDriver->hasDevicesDefined())
     {
@@ -192,7 +195,7 @@ void DeviceActivityMonitor::startActivityMonitoring()
 {
     if (midiDriver->getHostMode() != LumatoneFirmwareDriver::HostMode::Driver)
         return; // Only allow in Driver mode
-        
+
     deviceConnectionMode = DetectConnectionMode::waitingForInactivity;
     startTimer(inactivityTimeoutMs);
 }
@@ -211,7 +214,7 @@ void DeviceActivityMonitor::stopMonitoringDevice()
 }
 
 bool DeviceActivityMonitor::initializeConnectionTest()
-{    
+{
     bool isIdle = !midiDriver->isWaitingForResponse();
     if (isIdle)
     {
@@ -235,14 +238,14 @@ bool DeviceActivityMonitor::initializeConnectionTest()
 int DeviceActivityMonitor::getPingIdFromResponse(const juce::MidiMessage &msg)
 {
     unsigned int pingId = 0;
-    
+
     auto errorCode = LumatoneSysEx::unpackPingResponse(msg, pingId);
 
     if (errorCode != FirmwareSupport::Error::noError)
     {
         if (errorCode == FirmwareSupport::Error::messageIsAnEcho)
             return -1;
-        
+
         DBG("WARNING: Ping response error in auto connection routine detected");
         jassertfalse;
     }
@@ -263,15 +266,13 @@ void DeviceActivityMonitor::checkDetectionStatus()
     if (isConnectionEstablished())
     {
         deviceDetectInProgress = false;
-        statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::ONLINE);
-
         outputPingIds.clear();
 
         if (checkConnectionOnInactivity)
             startActivityMonitoring();
         else
             deviceConnectionMode = DetectConnectionMode::noDeviceMonitoring;
-        
+
         return;
     }
 
@@ -283,8 +284,8 @@ void DeviceActivityMonitor::checkDetectionStatus()
             deviceDetectInProgress = false;
             waitingForResponse = false;
             startTimer(detectRoutineTimeoutMs);
-            
-            statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
+
+            getStatusListeners()->call(&LumatoneEditor::StatusListener::connectionFailed);
         }
         else
         {
@@ -329,7 +330,7 @@ void DeviceActivityMonitor::checkDetectionStatus()
             {
                 testNextOutput();
             }
-            
+
             // Set timeout for next attempt
             else
             {
@@ -338,7 +339,7 @@ void DeviceActivityMonitor::checkDetectionStatus()
                 waitingForResponse = false;
                 startTimer(detectRoutineTimeoutMs);
 
-                statusListeners.call(&LumatoneEditor::StatusListener::connectionFailed);
+                getStatusListeners()->call(&LumatoneEditor::StatusListener::connectionFailed);
             }
         }
 
@@ -419,6 +420,7 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
 
     if (cmd == PERIPHERAL_CALBRATION_DATA && !isConnectionEstablished())
     {
+        DBG("DAM: Unexpected calibration data received");
         sendCalibratePitchModOff = true;
         // startTimer(100);
         return;
@@ -451,6 +453,7 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
                     if (!isConnectionEstablished())
                     {
                         sendCalibratePitchModOff = true;
+                        jassertfalse;
                     }
                 }
                 break;
@@ -492,7 +495,7 @@ void DeviceActivityMonitor::handleResponse(int inputDeviceIndex, const juce::Mid
             case DetectConnectionMode::waitingForInactivity:
                 startTimer(inactivityTimeoutMs);
                 break;
-            
+
             default:
                 break;
             }
@@ -550,7 +553,7 @@ void DeviceActivityMonitor::noAnswerToMessage(juce::MidiDeviceInfo expectedDevic
             startTimer(threadDelayMs);
         }
     }
-    
+
     else if (isConnectionEstablished())
     {
         onDisconnection();
@@ -566,7 +569,7 @@ void DeviceActivityMonitor::onDisconnection()
 
     waitingForResponse = false;
 
-    juce::MessageManager::callAsync([&]() { statusListeners.call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::DISCONNECTED); });
+    getStatusListeners()->call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::DISCONNECTED);
 
     if (detectDevicesIfDisconnected)
     {
@@ -614,6 +617,8 @@ void DeviceActivityMonitor::establishConnection(int inputIndex, int outputIndex)
 
         DBG("\tPlugin host mode.");
     }
+
+    setConnectionState(ConnectionState::ONLINE);
 
     startTimer(threadDelayMs);
 }

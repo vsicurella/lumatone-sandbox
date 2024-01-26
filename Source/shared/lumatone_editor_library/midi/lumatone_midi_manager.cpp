@@ -3,7 +3,7 @@
 
 #include "../lumatone_midi_driver/lumatone_midi_driver.h"
 
-LumatoneApplicationMidiController::LumatoneApplicationMidiController(LumatoneApplicationState stateIn, LumatoneFirmwareDriver& firmwareDriverIn)
+LumatoneApplicationMidiController::LumatoneApplicationMidiController(const LumatoneApplicationState& stateIn, LumatoneFirmwareDriver& firmwareDriverIn)
     : appState("LumatoneApplicationMidiController", stateIn)
     , firmwareDriver(firmwareDriverIn)
     // , LumatoneSandboxLogger("LumatoneApplicationMidiController")
@@ -37,16 +37,16 @@ void LumatoneApplicationMidiController::sendMidiMessageInContext(const juce::Mid
 
     // auto key = appState.getKeyContext(msg.getChannel(), setNote ? msg.getNoteNumber() : msg.getControllerNumber());
     auto key = appState.getKeyContext(boardIndex, keyIndex);
-        
+
     juce::MidiMessage newMsg = msg;
-    newMsg.setChannel(key.channelNumber);
+    newMsg.setChannel(key.getMidiChannel());
 
     if (setNote)
-        newMsg.setNoteNumber(key.noteNumber);
+        newMsg.setNoteNumber(key.getMidiNumber());
 
     if (setController)
-        newMsg = juce::MidiMessage::controllerEvent(key.channelNumber, key.noteNumber, msg.getControllerValue());
-        
+        newMsg = juce::MidiMessage::controllerEvent(key.getMidiChannel(), key.getMidiNumber(), msg.getControllerValue());
+
     sendMidiMessage(newMsg);
 }
 
@@ -63,34 +63,34 @@ void LumatoneApplicationMidiController::sendKeyNoteOn(int boardIndex, int keyInd
 //     LumatoneKey key;
 //     if (useContext)
 //         key = (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex);
-//     else 
+//     else
 //         key = appState.getKeyContext(boardIndex, keyIndex);
 // #else
 //     LumatoneKey key = (useContext)
 //         ? (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex);
-//         : appState.getKeyContext(boardIndex, keyIndex); 
+//         : appState.getKeyContext(boardIndex, keyIndex);
 // #endif
 
     LumatoneKey key
     #if JUCE_DEBUG
     ; if (useContext)
-        key = 
-    #else 
-       = (useContext) ? 
+        key =
+    #else
+       = (useContext) ?
     #endif
         (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex)
     #if JUCE_DEBUG
     ; else
-        key = 
+        key =
     #else
         :
     #endif
-        *appState.getKey(boardIndex, keyIndex);
-    
+        appState.getKey(boardIndex, keyIndex);
 
-    jassert(key.channelNumber > 0 && key.channelNumber <= 16 && key.noteNumber >= 0 && key.noteNumber < 128);
-        
-    juce::MidiMessage msg = juce::MidiMessage::noteOn(key.channelNumber, key.noteNumber, velocity);
+
+    jassert(key.getMidiChannel() > 0 && key.getMidiChannel() <= 16 && key.getMidiNumber() >= 0 && key.getMidiNumber() < 128);
+
+    juce::MidiMessage msg = juce::MidiMessage::noteOn(key.getMidiChannel(), key.getMidiNumber(), velocity);
     sendMidiMessage(msg);
 }
 
@@ -100,11 +100,11 @@ void LumatoneApplicationMidiController::sendKeyNoteOff(int boardIndex, int keyIn
 
     LumatoneKey key = (useContext)
         ? (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex)
-        : *appState.getKey(boardIndex, keyIndex);
+        : appState.getKey(boardIndex, keyIndex);
 
-    jassert(key.channelNumber > 0 && key.channelNumber <= 16 && key.noteNumber >= 0 && key.noteNumber < 128);
-    
-    juce::MidiMessage msg = juce::MidiMessage::noteOff(key.channelNumber, key.noteNumber);
+    jassert(key.getMidiChannel() > 0 && key.getMidiChannel() <= 16 && key.getMidiNumber() >= 0 && key.getMidiNumber() < 128);
+
+    juce::MidiMessage msg = juce::MidiMessage::noteOff(key.getMidiChannel(), key.getMidiNumber());
     sendMidiMessage(msg);
 }
 
@@ -120,7 +120,7 @@ void LumatoneApplicationMidiController::allNotesOff(int midiChannel)
             auto msg = juce::MidiMessage::noteOff(midiChannel, i);
             sendMidiMessage(msg);
         }
-        
+
     }
 }
 

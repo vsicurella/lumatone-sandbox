@@ -18,7 +18,7 @@ namespace LumatoneEditAction {
     {
     public:
         SingleNoteAssignAction(
-            LumatoneController* controller,
+            LumatoneApplicationState* state,
             int boardIndexIn,
             int keyIndexIn,
             bool setKeyType,
@@ -33,7 +33,7 @@ namespace LumatoneEditAction {
             bool newCCFaderDefault = true);
 
         SingleNoteAssignAction(const SingleNoteAssignAction& second)
-            : LumatoneAction(second.controller, "SingleNoteAssign")
+            : LumatoneAction(second.state, "SingleNoteAssign")
             , boardId(second.boardId)
             , keyIndex(second.keyIndex)
             , setKeyType(second.setKeyType)
@@ -46,7 +46,7 @@ namespace LumatoneEditAction {
         {}
 
         SingleNoteAssignAction(
-            LumatoneController* controller,
+            LumatoneApplicationState* state,
             int boardId,
             int keyIndex,
             juce::Colour newColour
@@ -76,10 +76,10 @@ namespace LumatoneEditAction {
     class SectionEditAction : public LumatoneAction
     {
     public:
-        SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates=false);
+        SectionEditAction(LumatoneApplicationState* state, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates=false);
 
         SectionEditAction(const SectionEditAction& second)
-            : LumatoneAction(second.controller, "SectionEditAction")
+            : LumatoneAction(second.state, "SectionEditAction")
             , boardId(second.boardId)
             , previousData(second.previousData)
             , newData(second.newData)
@@ -104,9 +104,9 @@ namespace LumatoneEditAction {
     class MultiKeyAssignAction : public LumatoneAction
     {
     public:
-        MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys, bool setConfig=true, bool setColour=true, bool bufferKeyUpdates=false);
+        MultiKeyAssignAction(LumatoneApplicationState* state, const juce::Array<MappedLumatoneKey>& updatedKeys, bool setConfig=true, bool setColour=true, bool bufferKeyUpdates=false);
         MultiKeyAssignAction(const MultiKeyAssignAction& copy)
-            : LumatoneAction(copy.controller, "MultiKeyAssign")
+            : LumatoneAction(copy.state, "MultiKeyAssign")
 			, previousKeys(copy.previousKeys)
             , newData(copy.newData)
             , setConfig(copy.setConfig)
@@ -136,10 +136,10 @@ namespace LumatoneEditAction {
     class InvertFootControllerEditAction : public LumatoneAction
     {
     public:
-        InvertFootControllerEditAction(LumatoneController* controller, bool newValue);
+        InvertFootControllerEditAction(LumatoneApplicationState* state, bool newValue);
 
         InvertFootControllerEditAction(const InvertFootControllerEditAction& second)
-            : LumatoneAction(second.controller, "InvertFootControllerEdit")
+            : LumatoneAction(second.state, "InvertFootControllerEdit")
             , previousData(second.previousData)
             , newData(second.newData)
         {}
@@ -156,10 +156,10 @@ namespace LumatoneEditAction {
     class ExprPedalSensivityEditAction : public LumatoneAction
     {
     public:
-        ExprPedalSensivityEditAction(LumatoneController* controller, int newValue);
+        ExprPedalSensivityEditAction(LumatoneApplicationState* state, int newValue);
 
         ExprPedalSensivityEditAction(const ExprPedalSensivityEditAction& second)
-            : LumatoneAction(second.controller, "ExprPedalSensitivityEdit")
+            : LumatoneAction(second.state, "ExprPedalSensitivityEdit")
             , previousData(second.previousData)
             , newData(second.newData)
         {}
@@ -176,10 +176,10 @@ namespace LumatoneEditAction {
     class InvertSustainEditAction : public LumatoneAction
     {
     public:
-        InvertSustainEditAction(LumatoneController* controller, bool newValue);
+        InvertSustainEditAction(LumatoneApplicationState* state, bool newValue);
         
         InvertSustainEditAction(const InvertSustainEditAction& second)
-            : LumatoneAction(second.controller, "InvertSustainEdit")
+            : LumatoneAction(second.state, "InvertSustainEdit")
             , previousData(second.previousData)
             , newData(second.newData)
         {}

@@ -21,7 +21,7 @@ class ColourSelectionListener
 {
 public:
     virtual ~ColourSelectionListener() {}
-    virtual void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) = 0;
+    virtual void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour)=0;
 };
 
 class ColourSelectionBroadcaster

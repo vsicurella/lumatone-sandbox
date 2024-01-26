@@ -34,8 +34,13 @@ static juce::MidiMessage createExtendedMacroColourSysEx(juce::uint8 cmd, int red
 // Create a SysEx message encoding a table with a defined size
 static juce::MidiMessage createTableSysEx(juce::uint8 boardIndex, juce::uint8 cmd, juce::uint8 tableSize, const juce::uint8 table[]);
 
+// Returns colour parsed from 6 nibbles of RGB LED intensity data
+static juce::Colour parseLedIntensity8Bit(const juce::uint8* data);
 
-// Checks if message is a valid Lumatone firmware response and is expected length, then runs supplied unpacking function or returns an error code 
+// Checks if message is a valid Lumatone firmware response and is expected length,
+static FirmwareSupport::Error isValid(const juce::MidiMessage& response, size_t numBytes);
+
+// Checks message validity, then runs supplied unpacking function or returns an error code 
 static FirmwareSupport::Error unpackIfValid(const juce::MidiMessage& response, size_t numBytes, std::function<FirmwareSupport::Error(const juce::uint8*)> unpackFunction);
 
 // Generic unpacking of octave data from a SysEx message
@@ -156,6 +161,8 @@ static FirmwareSupport::Error unpackGetPresetFlagsResponse(const juce::MidiMessa
 
 // For CMD 48h response: get expression pedal sensitivity
 static FirmwareSupport::Error unpackGetExpressionPedalSensitivityResponse(const juce::MidiMessage& response, int& sensitivity);
+
+static FirmwareSupport::Error unpackGetMacroLightIntensityResponse(const juce::MidiMessage& response, juce::Colour& activeColour, juce::Colour& inactiveColour);
 
 // Message is an answer to a sent message yes/no
 static bool messageIsResponseToMessage(const juce::MidiMessage& answer, const juce::MidiMessage& originalMessage);

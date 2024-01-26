@@ -13,11 +13,15 @@
 #include "../lumatone_midi_driver/lumatone_midi_driver.h"
 #include "../lumatone_midi_driver/firmware_sysex.h"
 
-LumatoneEventManager::LumatoneEventManager(LumatoneFirmwareDriver& midiDriverIn, LumatoneState stateIn)
-    : LumatoneState(stateIn)
+#include "../listeners/editor_listener.h"
+
+LumatoneEventManager::LumatoneEventManager(LumatoneFirmwareDriver& midiDriverIn, const LumatoneApplicationState& stateIn)
+    : LumatoneApplicationState("LumatoneEventManager", stateIn)
+    , LumatoneApplicationState::Controller(static_cast<LumatoneApplicationState&>(*this))
     , midiDriver(midiDriverIn)
 {
     midiDriver.addDriverListener(this);
+    addFirmwareListener(this);
 
     juce::MidiMessageCollector::reset(bufferReadTimeoutMs);
 }
@@ -233,7 +237,18 @@ FirmwareSupport::Error LumatoneEventManager::handleFirmwareRevisionResponse(cons
         return errorCode;
 
     auto version = LumatoneFirmware::Version(major, minor, revision);
-    setLumatoneVersion(getFirmwareSupport().getReleaseVersion(version), true);
+    auto releaseVersion = getFirmwareSupport().getReleaseVersion(version);
+    switch (releaseVersion)
+    {
+    case LumatoneFirmware::ReleaseVersion::VERSION_55_KEYS:
+        mappingData->setOctaveBoardSize(55);
+        break;
+    default:
+        mappingData->setOctaveBoardSize(56);
+        break;
+    }
+
+    setLumatoneVersion(releaseVersion, true);
 
     DBG("Firmware version is: " + version.toString());
     firmwareListeners.call(&LumatoneEditor::FirmwareListener::firmwareRevisionReceived, version);
@@ -288,6 +303,11 @@ FirmwareSupport::Error LumatoneEventManager::handleGetPresetFlagsResponse(const 
         presetFlags.sustainPedalInverted
     );
 
+    mappingData->setLightOnKeyStrokes(presetFlags.polyphonicAftertouch);
+    mappingData->setAftertouchEnabled(presetFlags.polyphonicAftertouch);
+    mappingData->setInvertExpression(presetFlags.expressionPedalInverted);
+    mappingData->setInvertSustain(presetFlags.sustainPedalInverted);
+
     firmwareListeners.call(&LumatoneEditor::FirmwareListener::presetFlagsReceived, presetFlags);
 
     return errorCode;
@@ -298,9 +318,29 @@ FirmwareSupport::Error LumatoneEventManager::handleGetExpressionPedalSensitivity
     int sensitivity = 127;
     auto errorCode = LumatoneSysEx::unpackGetExpressionPedalSensitivityResponse(midiMessage, sensitivity);
 
+    mappingData->setExpressionSensitivity(sensitivity);
+
     firmwareListeners.call(&LumatoneEditor::FirmwareListener::expressionPedalSensitivityReceived, sensitivity);
 
     return errorCode;
+}
+
+FirmwareSupport::Error LumatoneEventManager::handleGetMacroLightIntensityResponse(const juce::MidiMessage &midiMessage)
+{
+    juce::Colour activeColour;
+    juce::Colour inactiveColour;
+
+    auto errorCode = LumatoneSysEx::unpackGetMacroLightIntensityResponse(midiMessage, activeColour, inactiveColour);
+    if (errorCode != FirmwareSupport::Error::noError)
+        return errorCode;
+
+    LumatoneState::setActiveMacroButtonColour(activeColour);
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::macroButtonActiveColourChanged, activeColour);
+
+    LumatoneState::setInactiveMacroButtonColour(inactiveColour);
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::macroButtonInactiveColourChanged, inactiveColour);
+
+    return FirmwareSupport::Error::noError;
 }
 
 FirmwareSupport::Error LumatoneEventManager::handlePeripheralCalibrationData(const juce::MidiMessage& midiMessage)
@@ -492,6 +532,9 @@ FirmwareSupport::Error LumatoneEventManager::handleBufferCommand(const juce::Mid
         // loadRandomMapping(1000, 1); // uncomment for test sequence
         return FirmwareSupport::Error::noError;
 
+    case GET_MACRO_LIGHT_INTENSITY:
+        return handleGetMacroLightIntensityResponse(midiMessage);
+
     default:
         jassert(sysExData[MSG_STATUS] == LumatoneFirmware::ReturnCode::ACK);
         if (midiMessage.getRawDataSize() <= 8)
@@ -553,4 +596,113 @@ void LumatoneEventManager::timerCallback()
         startTimer(bufferReadTimeoutMs);
 
     bufferReadRequested = false;
+}
+
+void LumatoneEventManager::octaveColourConfigReceived(int boardId, juce::uint8 rgbFlag, const int* colourData)
+{
+    int boardIndex = boardId - 1;
+
+    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+    {
+        auto newValue = colourData[keyIndex];
+
+        juce::Colour colour = getKey(boardIndex, keyIndex).getColour();
+        if (rgbFlag == 0)
+        {
+            colour = juce::Colour(newValue, colour.getGreen(), colour.getBlue());
+        }
+        else if (rgbFlag == 1)
+        {
+            colour = juce::Colour(colour.getRed(), newValue, colour.getBlue());
+        }
+        else if (rgbFlag == 2)
+        {
+            colour = juce::Colour(colour.getRed(), colour.getGreen(), newValue);
+        }
+        else
+        {
+            jassertfalse;
+        }
+
+        LumatoneState::setKeyColour(colour, boardId, keyIndex);
+    }
+
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::boardChanged, getBoard(boardIndex));
+}
+
+void LumatoneEventManager::octaveChannelConfigReceived(int boardId, const int* channelData)
+{
+    int boardIndex = boardId - 1;
+
+    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+    {
+        juce::uint8 ch = channelData[keyIndex];
+        if (ch == 0 || ch > 16)
+            ch = 1;
+
+        auto key = getKey(boardIndex, keyIndex);
+        key.setChannelNumber(ch);
+        LumatoneState::setKeyConfig(key, boardId, keyIndex);
+    }
+
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::boardChanged, getBoard(boardIndex));
+}
+
+void LumatoneEventManager::octaveNoteConfigReceived(int boardId, const int* noteData)
+{
+    int boardIndex = boardId - 1;
+
+    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+    {
+        int note = noteData[keyIndex];
+        if (note < 0 || note > 127)
+            note = 0;
+
+        auto key = getKey(boardIndex, keyIndex);
+        key.setNoteOrCC(noteData[keyIndex]);
+        LumatoneState::setKeyConfig(key, boardId, keyIndex);
+    }
+
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::boardChanged, getBoard(boardIndex));
+}
+
+void LumatoneEventManager::keyTypeConfigReceived(int boardId, const int* keyTypeData)
+{
+    int boardIndex = boardId - 1;
+
+    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+    {
+        auto type = LumatoneKeyType(keyTypeData[keyIndex]);
+
+        auto key = getKey(boardIndex, keyIndex);
+        key.setKeyType(type);
+        LumatoneState::setKeyConfig(key, boardId, keyIndex);
+    }
+
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::boardChanged, getBoard(boardIndex));
+}
+
+void LumatoneEventManager::macroButtonColoursReceived(juce::Colour inactiveColour, juce::Colour activeColour)
+{
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::macroButtonInactiveColourChanged, inactiveColour);
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::macroButtonActiveColourChanged, activeColour);
+}
+
+void LumatoneEventManager::presetFlagsReceived(LumatoneFirmware::PresetFlags presetFlags)
+{
+    LumatoneState::setLightOnKeyStrokes(presetFlags.lightsOnKeystroke);
+    setStateProperty(LumatoneStateProperty::LightsOnAfterKeystroke, presetFlags.lightsOnKeystroke);
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::lightOnKeyStrokesChanged, presetFlags.lightsOnKeystroke);
+
+    LumatoneState::setAftertouchEnabled(presetFlags.polyphonicAftertouch);
+    setStateProperty(LumatoneStateProperty::AftertouchEnabled, presetFlags.polyphonicAftertouch);
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::aftertouchToggled, presetFlags.polyphonicAftertouch);
+    
+    LumatoneState::setInvertSustain(presetFlags.sustainPedalInverted);
+    setStateProperty(LumatoneStateProperty::InvertSustain, presetFlags.sustainPedalInverted);
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::invertSustainToggled, presetFlags.sustainPedalInverted);
+
+    LumatoneState::setInvertExpression(presetFlags.expressionPedalInverted);
+    setStateProperty(LumatoneStateProperty::InvertExpression, presetFlags.expressionPedalInverted);
+    getEditorListeners()->call(&LumatoneEditor::EditorListener::invertFootControllerChanged, presetFlags.expressionPedalInverted);
 }

@@ -1,14 +1,14 @@
 #include "lumatone_action.h"
-#include "../device/lumatone_controller.h"
+#include "../data/application_state.h"
 
 
-LumatoneAction::LumatoneAction(LumatoneController* controllerIn, juce::String nameIn)
-    : controller(controllerIn)
+LumatoneAction::LumatoneAction(LumatoneApplicationState* stateIn, juce::String nameIn)
+    : state(stateIn)
     , name(nameIn)
 {
-    if (controller)
+    if (state)
     {
-        octaveBoardSize = controller->getOctaveBoardSize();
-        numOctaveBoards = controller->getNumBoards();
+        octaveBoardSize = state->getOctaveBoardSize();
+        numOctaveBoards = state->getNumBoards();
     }
 }

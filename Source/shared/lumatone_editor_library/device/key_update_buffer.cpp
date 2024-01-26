@@ -10,7 +10,7 @@ LumatoneKeyUpdateBuffer::LumatoneKeyUpdateBuffer(LumatoneFirmwareDriver& driverI
 
 LumatoneKeyUpdateBuffer::~LumatoneKeyUpdateBuffer()
 {
-    
+
 }
 
 int LumatoneKeyUpdateBuffer::getKeyNum(int boardIndex, int keyIndex) const
@@ -41,23 +41,26 @@ void LumatoneKeyUpdateBuffer::updateKeyConfig(int boardIndex, int keyIndex, cons
     auto keyNum = getKeyNum(boardIndex, keyIndex);
     MappedLumatoneKey currentUpdateData = keysToUpdate[keyNum];
 
-    auto currentKey = getKey(boardIndex, keyIndex);
-    preUpdateLayout.getBoard(boardIndex)->theKeys[keyIndex] = *currentKey;
+    const LumatoneKey& currentKey = getKey(boardIndex, keyIndex);
+    preUpdateLayout.setKey(currentKey, boardIndex, keyIndex);
 
-    if (*currentKey == config)
+    if (currentKey == config)
     {
         keysToUpdate.set(keyNum, MappedLumatoneKey());
     }
     else if (currentUpdateData.boardIndex < 0 || currentUpdateData.keyIndex < 0)
     {
-        keysToUpdate.set(keyNum, MappedLumatoneKey(config.withColour(currentKey->colour), boardIndex, keyIndex));
+        auto updateKey = MappedLumatoneKey(config, boardIndex, keyIndex);
+        updateKey.setColour(currentKey.getColour());
+        keysToUpdate.set(keyNum, updateKey);
     }
     else if (!currentUpdateData.configIsEqual(config))
     {
-        keysToUpdate.set(keyNum, MappedLumatoneKey(config.withColour(currentUpdateData.colour), boardIndex, keyIndex));
+        auto updateKey = MappedLumatoneKey(config, boardIndex, keyIndex);
+        updateKey.setColour(currentUpdateData.getColour());
+        keysToUpdate.set(keyNum, updateKey);
     }
 
-    
     startTimer(updateMs);
 }
 
@@ -68,23 +71,27 @@ void LumatoneKeyUpdateBuffer::updateKeyColour(int boardIndex, int keyIndex, juce
 
     auto keyNum = getKeyNum(boardIndex, keyIndex);
     MappedLumatoneKey currentUpdateData = keysToUpdate[keyNum];
-    auto currentKey = getKey(boardIndex, keyIndex);
-    preUpdateLayout.getBoard(boardIndex)->theKeys[keyIndex] = *currentKey;
-    
-    if (currentKey->colour == colour && currentKey->configIsEqual(currentUpdateData))
+    const LumatoneKey& currentKey = getKey(boardIndex, keyIndex);
+    preUpdateLayout.setKey(currentKey, boardIndex, keyIndex);
+
+    if (currentKey.getColour() == colour && currentKey.configIsEqual(currentUpdateData))
     {
         keysToUpdate.set(keyNum, MappedLumatoneKey());
     }
     else if (currentUpdateData.boardIndex < 0 || currentUpdateData.keyIndex < 0)
     {
-        keysToUpdate.set(keyNum, MappedLumatoneKey(currentKey->withColour(colour), boardIndex, keyIndex));
+        auto updateKey = MappedLumatoneKey(currentKey, boardIndex, keyIndex);
+        updateKey.setColour(colour);
+        keysToUpdate.set(keyNum, updateKey);
     }
-    else if (currentUpdateData.colour != colour)
+    else if (currentUpdateData.isColour(colour))
     {
-        keysToUpdate.set(keyNum, MappedLumatoneKey(currentUpdateData.withColour(colour), boardIndex, keyIndex));
+        auto updateKey = MappedLumatoneKey(currentUpdateData, boardIndex, keyIndex);
+        updateKey.setColour(colour);
+        keysToUpdate.set(keyNum, updateKey);
     }
 
-    
+
     startTimer(updateMs);
 }
 
@@ -105,13 +112,13 @@ void LumatoneKeyUpdateBuffer::timerCallback()
             if (keyUpdate.boardIndex >= 0 && keyUpdate.keyIndex >= 0)
             {
                 // auto currentKey = getKey(board, keyIndex);
-                auto currentKey = preUpdateLayout.getBoard(board)->theKeys[keyIndex];
+                auto currentKey = preUpdateLayout.getKey(board, keyIndex);
                 if (!currentKey.configIsEqual(keyUpdate))
-                    firmwareDriver.sendKeyFunctionParameters(boardId, keyIndex, keyUpdate.noteNumber, keyUpdate.channelNumber, keyUpdate.keyType, keyUpdate.ccFaderDefault);
-                
+                    firmwareDriver.sendKeyFunctionParameters(boardId, keyIndex, keyUpdate.getMidiNumber(), keyUpdate.getMidiChannel(), keyUpdate.getType(), keyUpdate.isCCFaderDefault());
+
                 if (!currentKey.colourIsEqual(keyUpdate))
                 {
-                    auto colour = keyUpdate.colour;
+                    auto colour = keyUpdate.getColour();
                     if (getLumatoneVersion() >= LumatoneFirmware::ReleaseVersion::VERSION_1_0_11)
                         firmwareDriver.sendKeyLightParameters(boardId, keyIndex, colour.getRed(), colour.getGreen(), colour.getBlue());
                     else
@@ -124,5 +131,5 @@ void LumatoneKeyUpdateBuffer::timerCallback()
         }
     }
 
-    
+
 }

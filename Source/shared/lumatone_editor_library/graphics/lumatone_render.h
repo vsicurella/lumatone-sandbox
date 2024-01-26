@@ -8,10 +8,10 @@
 
 #include "../graphics/resampler/image_resampler.h"
 
-class LumatoneRender
+class LumatoneRender : private LumatoneApplicationState
 {
 public:
-    LumatoneRender(LumatoneApplicationState& stateIn);
+    LumatoneRender(const LumatoneApplicationState& stateIn);
     ~LumatoneRender();
 
     LumatoneGeometry& getLumatoneGeometry() { return lumatoneGeometry; }
@@ -27,8 +27,6 @@ public:
     juce::Image getResizedAsset(LumatoneAssets::ID assetId, int targetWidth, int targetHeight, bool useJuceResize=false);
 
 private:
-
-    LumatoneApplicationState state;
 
     LumatoneGeometry    lumatoneGeometry;
     LumatoneTiling      tilingGeometry;

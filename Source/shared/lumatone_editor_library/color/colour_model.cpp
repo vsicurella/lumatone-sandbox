@@ -24,7 +24,7 @@ LumatoneColourModel::~LumatoneColourModel()
 juce::Colour LumatoneColourModel::getModelColour(juce::Colour colour)
 {
     if (colour.isTransparent())
-        return juce::Colour();
+        colour = juce::Colours::black;
 
     LumatoneEditor::ColourHash hash = LumatoneEditor::getColourHash(colour);
     auto cached = (*cache)[hash];

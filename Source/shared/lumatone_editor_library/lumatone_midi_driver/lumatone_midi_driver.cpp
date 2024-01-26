@@ -742,6 +742,11 @@ void LumatoneFirmwareDriver::sendGetExpressionPedalSensitivity()
     sendSysExRequest(0, GET_EXPRESSION_PEDAL_SENSITIVIY);
 }
 
+void LumatoneFirmwareDriver::sendGetMacroLightIntensity()
+{
+    sendSysExRequest(0, GET_MACRO_LIGHT_INTENSITY);
+}
+
 /*
 ==============================================================================
 Low-level SysEx calls
@@ -885,7 +890,13 @@ void LumatoneFirmwareDriver::sendCurrentMessage()
     sendMessageNow(currentMsgWaitingForAck);        // send it
 
     // Notify listeners
-    DBG("SENT: " + currentMsgWaitingForAck.getDescription());
+    #if JUCE_DEBUG
+    {
+        juce::String msg = "SENT: " + FirmwareSupport::getCommandDescription(currentMsgWaitingForAck);
+        // DBG("SENT: " + currentMsgWaitingForAck.getDescription());
+        DBG(msg);
+    }
+    #endif
     // const juce::MessageManagerLock mmLock;
     // this->listeners.call(&Listener::midiMessageSent, currentMsgWaitingForAck);
     // notifyMessageSent(midiOutput, currentMsgWaitingForAck);
@@ -899,10 +910,11 @@ void LumatoneFirmwareDriver::handleIncomingMidiMessage(juce::MidiInput* source, 
 #if JUCE_DEBUG
     if (message.isSysEx())
     {
+        auto msg = "RCVD: " + FirmwareSupport::getCommandDescription(message);
         if (source)
-            DBG("RCVD: " + message.getDescription() + "; from " + source->getName());
+            DBG(msg + "; from " + source->getName());
         else
-            DBG("RCVD: " + message.getDescription() + "; called by processor");
+            DBG(msg + "; called by processor");
     }
     if (!message.isSysEx() && !message.isMidiClock())
     {

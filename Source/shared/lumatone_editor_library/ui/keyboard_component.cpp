@@ -13,29 +13,26 @@
 #include "../color/colour_model.h"
 #include "../device/lumatone_controller.h"
 
-LumatoneKeyboardComponent::LumatoneKeyboardComponent(LumatoneController* controllerIn)
-    : LumatoneApplicationState("LumatoneKeyboardComponent", *controllerIn)
-    , controller(controllerIn)
-    , lumatoneRender(*controllerIn)
+LumatoneKeyboardComponent::LumatoneKeyboardComponent(const LumatoneApplicationState& stateIn)
+    : LumatoneApplicationState("LumatoneKeyboardComponent", stateIn)
+    , lumatoneRender(stateIn)
 {
     renderMode = LumatoneComponentRenderMode::GraphicInteractive;
     resetOctaveSize(false);
-    completeMappingLoaded(*controller->getMappingData());
+    completeMappingLoaded(*getMappingData());
 
     addMouseListener(this, this);
     addKeyListener(this);
     setWantsKeyboardFocus(true);
 
-    controller->addEditorListener(this);
-    controller->addMidiListener(this);
-    addMidiStateListener(controller);
+    addEditorListener(this);
+    addMidiListener(this);
 }
 
 LumatoneKeyboardComponent::~LumatoneKeyboardComponent()
 {
-    controller->removeMidiListener(this);
-    controller->removeEditorListener(this);
-    controller = nullptr;
+    removeMidiListener(this);
+    removeEditorListener(this);
 }
 
 void LumatoneKeyboardComponent::paint (juce::Graphics& g)
@@ -46,7 +43,7 @@ void LumatoneKeyboardComponent::paint (juce::Graphics& g)
     case LumatoneComponentRenderMode::GraphicInteractive:
         g.drawImageAt(lumatoneGraphic, lumatoneBounds.getX(), lumatoneBounds.getY());
         break;
-    
+
     case LumatoneComponentRenderMode::MaxRes:
         g.drawImageAt(currentRender, lumatoneBounds.getX(), lumatoneBounds.getY());
         break;
@@ -79,7 +76,7 @@ void LumatoneKeyboardComponent::resized()
     // Prepare position helpers for graphics
     lumatoneBounds.setBounds(juce::roundToInt((getWidth() - currentWidth) * 0.5f),
                              juce::roundToInt((getHeight() - currentHeight) * 0.5f),
-                             currentWidth, 
+                             currentWidth,
                              currentHeight);
 
     octaveLineY = lumatoneBounds.getBottom() + juce::roundToInt(getHeight() * octaveLineYRatio);
@@ -148,8 +145,8 @@ void LumatoneKeyboardComponent::resetOctaveSize(bool resetState)
 
             for (int keyIndex = 0; keyIndex < octaveBoardSize; keyIndex++)
             {
-                auto keyData = getKey(subBoardIndex, keyIndex);
-                auto key = board->keyMiniDisplay.add(new LumatoneKeyDisplay(subBoardIndex, keyIndex, *keyData));
+                const LumatoneKey& keyData = getKey(subBoardIndex, keyIndex);
+                auto key = board->keyMiniDisplay.add(new LumatoneKeyDisplay(subBoardIndex, keyIndex, keyData));
                 key->setRenderMode(renderMode);
                 addAndMakeVisible(key);
             }
@@ -192,7 +189,7 @@ void LumatoneKeyboardComponent::setUiMode(LumatoneKeyboardComponent::UiMode mode
     uiMode = modeIn;
 }
 
-void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData)
+void LumatoneKeyboardComponent::completeMappingLoaded(const LumatoneLayout& mappingData)
 {
     for (int boardIndex = 0; boardIndex < octaveBoards.size(); boardIndex++)
     {
@@ -200,25 +197,22 @@ void LumatoneKeyboardComponent::completeMappingLoaded(LumatoneLayout mappingData
 
         for (int keyIndex = 0; keyIndex < board->keyMiniDisplay.size(); keyIndex++)
         {
-            auto keyData = *mappingData.readKey(boardIndex, keyIndex);
+            const LumatoneKey& keyData = mappingData.getKey(boardIndex, keyIndex);
             keyUpdateCallback(boardIndex, keyIndex, keyData, false);
-            
         }
     }
 
     resetLayoutState(&mappingData);
 }
 
-void LumatoneKeyboardComponent::boardChanged(LumatoneBoard boardData)
+void LumatoneKeyboardComponent::boardChanged(const LumatoneBoard& boardData)
 {
-    auto board = octaveBoards[boardData.board_idx];
+    int boardIndex = boardData.getBoardIndex();
 
-    for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
+    for (int keyIndex = 0; keyIndex < octaveBoards[boardIndex]->keyMiniDisplay.size(); keyIndex++)
     {
-        auto key = board->keyMiniDisplay[keyIndex];
-
-        auto keyData = boardData.theKeys[keyIndex];
-        keyUpdateCallback(boardData.board_idx, keyIndex, keyData, false);
+        const LumatoneKey& keyData = boardData.getKey(keyIndex);
+        keyUpdateCallback(boardIndex, keyIndex, keyData, false);
     }
 
     resetLayoutState();
@@ -233,19 +227,19 @@ void LumatoneKeyboardComponent::contextChanged(LumatoneContext *newOrEmptyContex
     // completeMappingLoaded(layout);
 }
 
-void LumatoneKeyboardComponent::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
+void LumatoneKeyboardComponent::keyChanged(int boardIndex, int keyIndex, const LumatoneKey& lumatoneKey)
 {
     keyUpdateCallback(boardIndex, keyIndex, lumatoneKey);
 }
 
-void LumatoneKeyboardComponent::keyConfigChanged(int boardIndex, int keyIndex, LumatoneKey keyData)
+void LumatoneKeyboardComponent::keyConfigChanged(int boardIndex, int keyIndex, const LumatoneKey& keyData)
 {
     keyUpdateCallback(boardIndex, keyIndex, keyData);
 }
 
 void LumatoneKeyboardComponent::keyColourChanged(int boardIndex, int keyIndex, juce::Colour keyColour)
 {
-    keyUpdateCallback(boardIndex, keyIndex, *getKey(boardIndex, keyIndex));
+    keyUpdateCallback(boardIndex, keyIndex, getKey(boardIndex, keyIndex));
 }
 
 void LumatoneKeyboardComponent::selectionChanged(juce::Array<MappedLumatoneKey> selection)
@@ -264,20 +258,16 @@ void LumatoneKeyboardComponent::keyUpdateCallback(int boardIndex, int keyIndex, 
 {
     auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
 
-    key->setLumatoneKey(newKey, boardIndex, keyIndex);
-    updateKeyColour(boardIndex, keyIndex, newKey.colour);
+    applyKeyUpdates(boardIndex, keyIndex, newKey);
 
     if (!doRepaint)
         return;
 
-    if (   key->keyType != newKey.keyType
-        || key->channelNumber != newKey.channelNumber
-        || key->noteNumber != newKey.noteNumber
-        )
+    if (!key->configIsEqual(newKey))
     {
         resetLayoutState();
     }
-    else if (key->colour != newKey.colour)
+    else if (!key->isColour(newKey.getColour()))
     {
         if (renderMode == LumatoneComponentRenderMode::MaxRes)
             rerender();
@@ -297,8 +287,8 @@ void LumatoneKeyboardComponent::mappingUpdateCallback()
 
     if (currentWidth == 0 || currentHeight == 0)
         return;
-    
-    resized();
+
+    // resized();
     repaint(lumatoneBounds);
 }
 
@@ -309,11 +299,11 @@ void LumatoneKeyboardComponent::rerender()
     repaint(lumatoneBounds);
 }
 
-void LumatoneKeyboardComponent::updateKeyColour(int boardIndex, int keyIndex, const juce::Colour& colour)
+void LumatoneKeyboardComponent::applyKeyUpdates(int boardIndex, int keyIndex, const LumatoneKey& keyData)
 {
-    auto modelColour = getColourModel()->getModelColour(colour);
+    auto modelColour = getColourModel()->getModelColour(keyData.getColour());
     auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
-    key->setDisplayColour(modelColour);
+    key->setLumatoneKey(keyData, modelColour);
 }
 
 void LumatoneKeyboardComponent::resetLayoutState(const LumatoneLayout* optionalLayout)
@@ -442,7 +432,7 @@ void LumatoneKeyboardComponent::mouseUp(const juce::MouseEvent& e)
 {
     if (e.mods.isShiftDown())
     {
-        
+
     }
     else if (lastMouseKeyDown)
     {
@@ -475,10 +465,10 @@ void LumatoneKeyboardComponent::mouseDrag(const juce::MouseEvent& e)
     bool validKey = getMappingData()->isKeyCoordValid(keyCoord);
     bool keyChanged = lastDownCoord != keyCoord;
     onNewKey = validKey && (mouseKeyLastDown == nullptr || keyChanged);
-    
+
     bool setLastNoteOff = !e.mods.isShiftDown() && (onNewKey || !validKey);
     if (mouseKeyLastDown != nullptr && setLastNoteOff)
-    {            
+    {
         keyUpInternal(mouseKeyLastDown->boardIndex, mouseKeyLastDown->keyIndex);
     }
 
@@ -500,7 +490,7 @@ void LumatoneKeyboardComponent::mouseDrag(const juce::MouseEvent& e)
     {
         if (validKey)
         {
-            
+
         }
         else
         {
@@ -614,11 +604,11 @@ void LumatoneKeyboardComponent::keyDownInternal(int boardIndex, int keyIndex, ju
         auto keyNum = mappingData->keyCoordToKeyNum(keyIndex, boardIndex);
         listeners.call(&Listener::handleKeyDown, keyNum);
     }
-    else switch (key->keyType)
+    else switch (key->getType())
     {
         case LumatoneKeyType::noteOnNoteOff:
-            controller->sendKeyNoteOn(boardIndex, keyIndex, velocity);
-            noteOn(key->channelNumber, key->noteNumber, velocity);
+            //controller->sendKeyNoteOn(boardIndex, keyIndex, velocity);
+            noteOn(key->getMidiChannel(), key->getMidiNumber(), velocity);
             break;
         default:
             break;
@@ -635,16 +625,16 @@ void LumatoneKeyboardComponent::keyUpInternal(int boardIndex, int keyIndex)
 
     auto key = octaveBoards[boardIndex]->keyMiniDisplay[keyIndex];
     jassert(key != nullptr);
-    
+
     if (uiMode == UiMode::Controller)
     {
         listeners.call(&Listener::handleKeyUp, mappingData->keyCoordToKeyNum(boardIndex, keyIndex));
     }
-    else switch (key->keyType)
+    else switch (key->getType())
     {
     case LumatoneKeyType::noteOnNoteOff:
-        controller->sendKeyNoteOff(boardIndex, keyIndex);
-        noteOff(key->channelNumber, key->noteNumber, 0);
+        //controller->sendKeyNoteOff(boardIndex, keyIndex);
+        noteOff(key->getMidiChannel(), key->getMidiNumber(), 0);
         break;
     default:
         break;

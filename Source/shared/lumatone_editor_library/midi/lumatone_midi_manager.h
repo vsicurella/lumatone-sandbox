@@ -37,7 +37,7 @@ class LumatoneApplicationMidiController : public LumatoneMidiState::Listener
 {
 public:
 
-    LumatoneApplicationMidiController(LumatoneApplicationState state, LumatoneFirmwareDriver& firmwareDriver);
+    LumatoneApplicationMidiController(const LumatoneApplicationState& state, LumatoneFirmwareDriver& firmwareDriver);
     virtual ~LumatoneApplicationMidiController() override;
 
     LumatoneMidiState* getDeviceMidiState() { return &deviceMidiState; }

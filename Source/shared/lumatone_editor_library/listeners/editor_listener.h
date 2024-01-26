@@ -14,41 +14,46 @@ public:
     virtual ~EditorListener() {}
     
     // App Actions
-    virtual void completeMappingLoaded(LumatoneLayout mappingData) {}
-    virtual void boardChanged(LumatoneBoard boardData) {}
-    virtual void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) {}
-
-    virtual void tableChanged(LumatoneConfigTable::TableType type, const juce::uint8* table, int tableSize) {}
+    virtual void completeMappingLoaded(const LumatoneLayout& mappingData) {}
+    virtual void boardChanged(const LumatoneBoard& boardData) {}
+    virtual void keyChanged(int boardIndex, int keyIndex, const LumatoneKey& lumatoneKey) {}
 
     virtual void selectionChanged(juce::Array<MappedLumatoneKey> selection) {}
 
+    virtual void newFileLoaded(juce::File file) {}
+
+    //virtual void tableChanged(LumatoneConfigTable::TableType type, const juce::uint8* table, int tableSize) {}
+
     virtual void contextChanged(LumatoneContext* context) {}
 
+    virtual void configTableChanged(LumatoneConfigTable::TableType type) {}
+
+
     // Firmware Actions
-    virtual void keyConfigChanged(int boardIndex, int keyIndex, LumatoneKey keyData) {}
+    virtual void keyConfigChanged(int boardIndex, int keyIndex, const LumatoneKey& keyData) {}
     virtual void keyColourChanged(int boardIndex, int keyIndex, juce::Colour keyColour) {}
+
     virtual void expressionPedalSensitivityChanged(unsigned char value) {}
     virtual void invertFootControllerChanged(bool inverted) {}
-    virtual void macroButtonActiveColourChagned(juce::Colour colour) {}
+    
+    virtual void macroButtonActiveColourChanged(juce::Colour colour) {}
     virtual void macroButtonInactiveColourChanged(juce::Colour colour) {}
+    
     virtual void lightOnKeyStrokesChanged(bool lightOn) {}
 
-
-    virtual void velocityConfigSaved() {}
-    virtual void velocityConfigReset() {}
+    virtual void velocityConfigChanged() {}
 
     virtual void aftertouchToggled(bool enabled) {}
     virtual void calibrateAftertouchToggled(bool active) {}
 
-    virtual void aftertouchConfigReset() {}
+    virtual void aftertouchConfigChanged() {}
 
-    virtual void serialIdentityRequested() {}
     virtual void calibrateKeysRequested() {}
     virtual void calibratePitchModWheelToggled(bool active) {}
 
-    virtual void lumatouchConfigReset() {}
+    virtual void lumatouchConfigChanged() {}
 
-    virtual void firmwareVersionRequested() {}
+    virtual void firmwareVersionChanged() {}
     virtual void pingSent(juce::uint8 pingId) {}
 
     virtual void peripheralChannelsChanged(int pitchWheelChannel, int modWheelChannel, int expressionChannel, int sustainChannel) {}

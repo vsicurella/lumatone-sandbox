@@ -2,8 +2,9 @@
 #define LUMATONE_ADJUST_LAYOUT_COLOR_H
 
 #include "../actions/edit_actions.h"
-#include "../device/lumatone_controller.h"
 #include "../mapping/lumatone_hex_map.h"
+
+class LumatoneState;
 
 class AdjustLayoutColour 
 {
@@ -40,7 +41,7 @@ public:
 
 public:
 
-    AdjustLayoutColour(LumatoneController* controller);
+    AdjustLayoutColour(LumatoneState* controller);
     ~AdjustLayoutColour();
 
     void replaceColour(juce::Colour oldColour, juce::Colour newColour, bool sendUpdate=true);
@@ -178,7 +179,7 @@ public:
 
 private:
 
-    LumatoneController* controller;
+    LumatoneState* state;
     // LumatonePaletteLibrary* paletteLibrary;
 
     LumatoneHexMap hexMap;

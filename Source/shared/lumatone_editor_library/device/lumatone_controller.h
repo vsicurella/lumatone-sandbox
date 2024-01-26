@@ -14,7 +14,6 @@
 #include "./key_update_buffer.h"
 
 #include "../listeners/status_listener.h"
-#include "../listeners/editor_listener.h"
 #include "../listeners/firmware_listener.h"
 
 #include "../data/application_state.h"
@@ -27,43 +26,28 @@ class LumatoneAction;
 // Helper class for parsing and comparing (todo) firmware versions
 
 
-class LumatoneController :  public LumatoneApplicationState
+class LumatoneController :  private LumatoneApplicationState
+                         ,  private LumatoneApplicationState::DeviceController
                          ,  public LumatoneApplicationMidiController
                          ,  public LumatoneEditor::StatusListener
-                         ,  public LumatoneEditor::StatusEmitter
-                         ,  public LumatoneEditor::EditorEmitter
                          ,  protected LumatoneEditor::FirmwareListener
                         //  , private LumatoneSandboxLogger
 {
 public:
 
-    LumatoneController(LumatoneApplicationState stateIn, LumatoneFirmwareDriver& firmwareDriverIn, juce::UndoManager* undoManager);
+    LumatoneController(const LumatoneApplicationState& stateIn, LumatoneFirmwareDriver& firmwareDriverIn);
     ~LumatoneController() override;
 
     juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
 
-    void setContext(const LumatoneContext& contextIn) override;
-    void clearContext() override;
-    
     //============================================================================
     // Methods to configure firmware communication parameters
 
-    const FirmwareSupport& getFirmwareSupport() const { return firmwareSupport; }
+    void setDriverMidiInput(int deviceIndex, bool test = true);
+    void setDriverMidiOutput(int deviceIndex, bool test = true);
 
-    juce::Array<juce::MidiDeviceInfo> getMidiInputList();
-    juce::Array<juce::MidiDeviceInfo> getMidiOutputList();
-
-    int getMidiInputIndex() const;
-    int getMidiOutputIndex() const;
-
-    void setMidiInput(int deviceIndex, bool test = true);
-    void setMidiOutput(int deviceIndex, bool test = true);
-
-public:
-    bool performAction(LumatoneAction* action, bool undoable = true, bool newTransaction = true);
-
-private:
     bool connectionConfirmed() const;
+private:
     void onConnectionConfirmed();
 
 public:
@@ -82,6 +66,8 @@ public:
     // Send and save a complete key mapping
     void sendCompleteMapping(const LumatoneLayout& mappingData, bool signalEditorListeners=true, bool bufferKeyUpdates=true);
 
+    void sendCurrentCompleteConfig(bool signalEditorListeners=true);
+
     // Send request to receive the current mapping of one sub board on the controller
     void sendGetMappingOfBoardRequest(int boardId);
 
@@ -91,12 +77,9 @@ public:
     // Send parametrization of one key to the device
     void sendKeyParam(int boardId, int keyIndex, LumatoneKey keyData, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
 
-    void sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
-
-    void sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners=true, bool bufferKeyUpdates=false);
-
     // Send configuration of a certain look up table
     void sendTableConfig(LumatoneConfigTable::TableType velocityCurveType, const juce::uint8* table);
+    void sendTableConfig(LumatoneConfigTable::TableType velocityCurveType, const int* table);
 
     // Reset configuration of a certain look up table to factory settings
     void resetVelocityConfig(LumatoneConfigTable::TableType velocityCurveType);
@@ -182,7 +165,7 @@ public:
 	void getFaderTypeConfig(int boardIndex);
 
     // This command is used to read back the serial identification number of the keyboard.
-    void sendGetSerialIdentityRequest(bool confirmConnectionAfterResponse);
+    void sendGetSerialIdentityRequest();
 
     void startCalibrateKeys();
 
@@ -218,9 +201,8 @@ public:
     // Get sensitivity setting of expression pedal
     void requestExpressionPedalSensitivity();
 
-public:
-
-    bool loadLayoutFromFile(const juce::File& file) override;
+    // Get preset button light colours
+    void requestMacroButtonColours();
 
 private:
     // juce::ValueTree::Listener implementation
@@ -229,7 +211,7 @@ private:
 
 protected:
     //============================================================================
-    // LumatoneEditor::FirmwareListener implementation
+    // LumatoneEditor::FirmwareListener implementation - use to establish device connection
 
     void serialIdentityReceived(const int* serialBytes) override;
 
@@ -237,26 +219,20 @@ protected:
 
     void pingResponseReceived(unsigned int pingValue) override;
 
-    void octaveColourConfigReceived(int boardId, juce::uint8 rgbFlag, const int* colourData) override;
-    void octaveChannelConfigReceived(int octaveIndex, const int* channelData) override;
-    void octaveNoteConfigReceived(int octaveIndex, const int* noteData) override;
-    void keyTypeConfigReceived(int boardId, const int* keyTypeData) override;
-
     //============================================================================
     // Test functions
 
     //void loadRandomMapping(int testTimeoutMs, int maxIterations, int i = 0);
 
 private:
-
     LumatoneFirmwareDriver& firmwareDriver;
     LumatoneKeyUpdateBuffer updateBuffer;
 
     std::unique_ptr<LumatoneEventManager>   eventManager;
 
-    bool    waitingForTestResponse      = false;
+    bool    checkingDeviceIsLumatone    = false;
     bool    currentDevicePairConfirmed  = false;
     bool    waitingForFirmwareVersion   = false;
 };
 
-#endif LUMATONE_CONTROLLER_H
+#endif // LUMATONE_CONTROLLER_H

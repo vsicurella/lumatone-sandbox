@@ -90,15 +90,32 @@ juce::MidiMessage LumatoneSysEx::createTableSysEx(juce::uint8 boardIndex, juce::
     return msg;
 }
 
+juce::Colour LumatoneSysEx::parseLedIntensity8Bit(const juce::uint8 *data)
+{
+    return juce::Colour::fromRGB(
+        *data << 4 | *(data + 1),
+        *(data + 3) << 4 | *(data + 2),
+        *(data + 5) << 4 | *(data + 4)
+    );
+}
 
-// Checks if message is a valid Lumatone firmware response and is expected length, then runs supplied unpacking function or returns an error code 
-FirmwareSupport::Error LumatoneSysEx::unpackIfValid(const juce::MidiMessage& response, size_t numBytes, std::function<FirmwareSupport::Error(const juce::uint8*)> unpackFunction)
+FirmwareSupport::Error LumatoneSysEx::isValid(const juce::MidiMessage &response, size_t numBytes)
 {
     auto status = messageIsValidLumatoneResponse(response);
     if (status != FirmwareSupport::Error::noError)
         return status;
 
     status = responseIsExpectedLength(response, numBytes);
+    if (status != FirmwareSupport::Error::noError)
+        return status;
+
+    return FirmwareSupport::Error::noError;
+}
+
+// Checks if message is a valid Lumatone firmware response and is expected length, then runs supplied unpacking function or returns an error code 
+FirmwareSupport::Error LumatoneSysEx::unpackIfValid(const juce::MidiMessage& response, size_t numBytes, std::function<FirmwareSupport::Error(const juce::uint8*)> unpackFunction)
+{
+    auto status = isValid(response, numBytes);
     if (status != FirmwareSupport::Error::noError)
         return status;
 
@@ -185,6 +202,7 @@ FirmwareSupport::Error LumatoneSysEx::unpack12BitDataFrom4Bit(const juce::MidiMe
 
     return unpackIfValid(msg, numBytes, unpack);
 }
+
 bool LumatoneSysEx::messageIsResponseToMessage(const juce::MidiMessage& answer, const juce::MidiMessage& originalMessage)
 {
     // Only for SysEx messages
@@ -634,4 +652,17 @@ FirmwareSupport::Error LumatoneSysEx::unpackGetExpressionPedalSensitivityRespons
     sensitivity = unpackedData[0];
 
     return status;
+}
+
+FirmwareSupport::Error LumatoneSysEx::unpackGetMacroLightIntensityResponse(const juce::MidiMessage &response, juce::Colour &activeColour, juce::Colour &inactiveColour)
+{
+    auto status = isValid(response, 12);
+    if (status != FirmwareSupport::Error::noError)
+        return status;
+
+    const juce::uint8* payload = &response.getSysExData()[PAYLOAD_INIT];
+    activeColour = parseLedIntensity8Bit(payload);
+    inactiveColour = parseLedIntensity8Bit(payload + 6); 
+
+    return FirmwareSupport::Error::noError;
 }

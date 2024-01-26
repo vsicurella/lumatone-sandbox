@@ -97,24 +97,56 @@ public:
     /// </summary>
     /// <param name="fileToSaveTo"></param>
     /// <param name="deleteOldVersion"></param>
-    bool saveToFile(juce::File fileToSaveTo, bool deleteOldVersion = true)
+    bool saveToFile(juce::File fileToSaveTo, juce::File fallbackDirectory = juce::File())
     {
-        // Make sure it has proper extension
-        fileToSaveTo = fileToSaveTo.withFileExtension(PALETTEFILEEXTENSION);
+        juce::File originalFile = pathToFile;
+        bool overwriteFile = originalFile.exists() && fileToSaveTo.withFileExtension(PALETTEFILEEXTENSION) == originalFile;
 
-        if (fileToSaveTo.getFullPathName() == pathToFile)
-            deleteOldVersion = true;
-
-        if (deleteOldVersion)
+        // Make sure directories exist
+        juce::String fileName = fileToSaveTo.getFileNameWithoutExtension();
+        if (fileName.isEmpty())
         {
-            juce::File originalFile = pathToFile;
+            if (name.isNotEmpty())
+                fileName = name;
+            else
+                fileName = "Unnamed Palette";
+        }
 
-            if (originalFile.existsAsFile())
-                originalFile.deleteFile();
+        auto parentDir = fileToSaveTo.getParentDirectory();
+        if (parentDir.getFullPathName().isEmpty())
+        {
+            parentDir = fallbackDirectory;
+
+            if (!parentDir.exists())
+            {
+                parentDir = juce::File::getSpecialLocation(juce::File::SpecialLocationType::userDocumentsDirectory)
+                    .getChildFile("Lumatone Editor")
+                    .getChildFile("Palettes");
+            }
+        }
+
+        if (!parentDir.exists())
+            parentDir.createDirectory();
+
+        fileToSaveTo = parentDir.getChildFile(fileName).withFileExtension(PALETTEFILEEXTENSION);
+
+        if (!overwriteFile)
+        {
+            // Make sure filename is unique since saving happens automatically
+            int nameId = 1;
+            while (fileToSaveTo.existsAsFile() && nameId < 999999)
+            {
+                auto fileNameToSave = fileName + " (" + String(++nameId) + ")";
+                fileToSaveTo = parentDir.getChildFile(fileNameToSave).withFileExtension(PALETTEFILEEXTENSION);
+            }
+
+            fileName = fileToSaveTo.getFileNameWithoutExtension();
         }
 
         if (!fileToSaveTo.existsAsFile())
+        {
             fileToSaveTo.create();
+        }
 
         if (fileToSaveTo.replaceWithText(toValueTree().toXmlString()))
         {
@@ -126,9 +158,20 @@ public:
 
         return false;
     }
+
     bool saveToFile()
     {
         return saveToFile(juce::File(pathToFile));
+    }
+
+    // Delete associated palette file
+    // Returns true if file does not exists anymore
+    bool deleteFile()
+    {
+        juce::File file(pathToFile);
+        if (file.existsAsFile())
+            return file.deleteFile();
+        return true;
     }
 
     juce::ValueTree toValueTree() const

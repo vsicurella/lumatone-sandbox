@@ -9,42 +9,42 @@
 */
 #include "edit_actions.h"
 
-#include "../device/lumatone_controller.h"
+#include "../data/application_state.h"
 
 using namespace LumatoneEditAction;
 
 // ==============================================================================
 // Implementation of SingleNoteAssignAction
 SingleNoteAssignAction::SingleNoteAssignAction(
-    LumatoneController* controller,
+    LumatoneApplicationState* stateIn,
     int boardIndexIn,
     int keyIndexIn,
     bool setKeyType,
-    bool setChannel, 
+    bool setChannel,
     bool setNote,
     bool setColour,
     bool setCCPolarity,
     LumatoneKeyType newKeyType,
     int newChannelNumber,
-    int newNoteNumber, 
+    int newNoteNumber,
     juce::Colour newColour,
     bool newCCFaderIsDefault)
-    : LumatoneAction(controller, "SingleNoteAssign")
+    : LumatoneAction(stateIn, "SingleNoteAssign")
     , boardId(boardIndexIn + 1), keyIndex(keyIndexIn)
     , setKeyType(setKeyType), setChannel(setChannel), setNote(setNote), setColour(setColour), setCCFaderPolarity(setCCPolarity)
     , newData(newKeyType, newChannelNumber, newNoteNumber, newColour, newCCFaderIsDefault)
 {
-    previousData = *controller->getKey(boardIndexIn, keyIndexIn);
+    previousData = state->getKey(boardIndexIn, keyIndexIn);
 }
 
 SingleNoteAssignAction::SingleNoteAssignAction(
-    LumatoneController* controller,
+    LumatoneApplicationState* stateIn,
     int boardIndex,
     int keyIndex,
-    juce::Colour newColour) 
-    : SingleNoteAssignAction(controller, 
-                            boardIndex, keyIndex, 
-                            false, false, false, true, false, 
+    juce::Colour newColour)
+    : SingleNoteAssignAction(state,
+                            boardIndex, keyIndex,
+                            false, false, false, true, false,
                             LumatoneKeyType::disabledDefault, 0, 0, newColour, false) {}
 
 bool SingleNoteAssignAction::isValid() const
@@ -59,43 +59,39 @@ bool SingleNoteAssignAction::perform()
         LumatoneKey resultKey = previousData;
         if (setKeyType || setChannel || setNote || setColour || setCCFaderPolarity)
         {
-            
+
             if (setKeyType)
             {
-                resultKey.keyType = newData.keyType;
+                resultKey.setKeyType(newData.getType());
             }
             if (setChannel)
             {
-                resultKey.channelNumber = newData.channelNumber;
+                resultKey.setChannelNumber(newData.getMidiChannel());
             }
             if (setNote)
             {
-                resultKey.noteNumber = newData.noteNumber;
+                resultKey.setNoteOrCC(newData.getMidiNumber());
             }
             if (setColour)
             {
-                resultKey.colour = newData.colour;
+                resultKey.setColour(newData.getColour());
             }
             if (setCCFaderPolarity)
             {
-                resultKey.ccFaderDefault = newData.ccFaderDefault;
+                resultKey.setDefaultCCFader(newData.isCCFaderDefault());
             }
 
             newData = resultKey;
 
             bool onlyColor = setColour && !(setKeyType || setChannel || setNote || setCCFaderPolarity);
-            
+
             if (onlyColor)
             {
-                controller->sendKeyColourConfig(boardId, keyIndex, newData);
+                state->setKeyColour(newData.getColour(), boardId, keyIndex);
             }
             else
             {
-                // Send to device
-                controller->sendKeyParam(
-                    boardId,
-                    keyIndex,
-                    newData);
+                state->setKey(newData, boardId, keyIndex);
             }
 
             // Notfy that there are changes: in calling function
@@ -125,32 +121,33 @@ bool SingleNoteAssignAction::undo()
 
             if (setKeyType)
             {
-                resultKey.keyType = previousData.keyType;
+                resultKey.setKeyType(previousData.getType());
             }
             if (setChannel)
             {
-                resultKey.channelNumber = previousData.channelNumber;
+                resultKey.setChannelNumber(previousData.getMidiChannel());
             }
             if (setNote)
             {
-                resultKey.noteNumber = previousData.noteNumber;
+                resultKey.setNoteOrCC(previousData.getMidiNumber());
             }
             if (setColour)
             {
-                resultKey.colour = previousData.colour;
+                resultKey.setColour(previousData.getColour());
             }
             if (setCCFaderPolarity)
             {
-                resultKey.ccFaderDefault = previousData.ccFaderDefault;
+                resultKey.setDefaultCCFader(previousData.isCCFaderDefault());
             }
 
             previousData = resultKey;
 
             // Send to device
-            controller->sendKeyParam(
+            state->setKey(
+                previousData,
                 boardId,
-                keyIndex,
-                previousData);
+                keyIndex
+                );
 
             // Notify that there are changes: in calling function
         }
@@ -172,13 +169,13 @@ bool SingleNoteAssignAction::undo()
 // ==============================================================================
 // Implementation of SectionEditAction
 
-SectionEditAction::SectionEditAction(LumatoneController* controller, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates)
-    : LumatoneAction(controller, "SectionEdit")
+SectionEditAction::SectionEditAction(LumatoneApplicationState* stateIn, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates)
+    : LumatoneAction(stateIn, "SectionEdit")
     , boardId(boardIndexIn + 1)
     , newData(newSectionValue)
     , useKeyBuffer(bufferKeyUpdates)
 {
-    previousData = *controller->getBoard(boardIndexIn);
+    previousData = state->getBoard(boardIndexIn);
 }
 
 bool SectionEditAction::isValid() const
@@ -188,10 +185,11 @@ bool SectionEditAction::isValid() const
 
 bool SectionEditAction::perform()
 {
-    if (boardId > 0 && boardId <= controller->getNumBoards())
+    if (boardId > 0 && boardId <= state->getNumBoards())
     {
         // Send to device
-        controller->sendAllParamsOfBoard(boardId, &newData, true, useKeyBuffer);
+        state->setBoard(newData, boardId);
+        //state->sendAllParamsOfBoard(boardId, &newData, true, useKeyBuffer);
 
         // Notify that there are changes: in calling function
         return true;
@@ -208,7 +206,8 @@ bool SectionEditAction::undo()
     if (boardId >= 0 && boardId <= numOctaveBoards)
     {
         // Send to device
-        controller->sendAllParamsOfBoard(boardId, &previousData, true, useKeyBuffer);
+        state->setBoard(previousData, boardId);
+        //state->sendAllParamsOfBoard(boardId, &previousData, true, useKeyBuffer);
 
         // Notify that there are changes: in calling function
         return true;
@@ -222,8 +221,8 @@ bool SectionEditAction::undo()
 }
 
 
-MultiKeyAssignAction::MultiKeyAssignAction(LumatoneController* controller, const juce::Array<MappedLumatoneKey>& updatedKeys, bool setConfigIn, bool setColourIn, bool bufferKeyUpdates)
-    : LumatoneAction(controller, "MultiKeyAssign")
+MultiKeyAssignAction::MultiKeyAssignAction(LumatoneApplicationState* stateIn, const juce::Array<MappedLumatoneKey>& updatedKeys, bool setConfigIn, bool setColourIn, bool bufferKeyUpdates)
+    : LumatoneAction(stateIn, "MultiKeyAssign")
     , useKeyBuffer(bufferKeyUpdates)
     , setConfig(setConfigIn)
     , setColours(setColourIn)
@@ -231,12 +230,12 @@ MultiKeyAssignAction::MultiKeyAssignAction(LumatoneController* controller, const
     for (auto updatedKey : updatedKeys)
     {
         auto coord = updatedKey.getKeyCoord();
-        if (controller->getMappingData()->isKeyCoordValid(coord))
+        if (state->getMappingData()->isKeyCoordValid(coord))
         {
             newData.add(updatedKey);
 
-            auto key = controller->getKey(coord.boardIndex, coord.keyIndex);
-            previousKeys.add(MappedLumatoneKey(*key, coord));
+            auto key = state->getKey(coord.boardIndex, coord.keyIndex);
+            previousKeys.add(MappedLumatoneKey(key, coord));
         }
     }
 }
@@ -249,10 +248,10 @@ bool MultiKeyAssignAction::isValid() const
 void MultiKeyAssignAction::applyMappedKeyData(const juce::Array<MappedLumatoneKey>& newKeys, const juce::Array<MappedLumatoneKey>& oldKeys)
 {
     if (setConfig)
-        controller->sendSelectionParam(newKeys, false, useKeyBuffer);
-        
+        state->sendSelectionParam(newKeys, false, useKeyBuffer);
+
     if (setColours)
-        controller->sendSelectionColours(newKeys, true, useKeyBuffer);
+        state->sendSelectionColours(newKeys, true, useKeyBuffer);
 }
 
 bool MultiKeyAssignAction::perform()
@@ -270,63 +269,62 @@ bool MultiKeyAssignAction::undo()
 // ==============================================================================
 // Implementation of InvertFootControllerEditAction
 
-InvertFootControllerEditAction::InvertFootControllerEditAction(LumatoneController* controller, bool newValue)
-    : LumatoneAction(controller, "InvertFootControllerEdit"), newData(newValue)
+InvertFootControllerEditAction::InvertFootControllerEditAction(LumatoneApplicationState* stateIn, bool newValue)
+    : LumatoneAction(stateIn, "InvertFootControllerEdit"), newData(newValue)
 {
-    previousData = controller->getInvertExpression();
+    previousData = state->getInvertExpression();
 }
 
 bool InvertFootControllerEditAction::perform()
 {
-    controller->invertSustainPedal(newData);
+    state->setInvertSustain(newData);
     return true;
 }
 
 bool InvertFootControllerEditAction::undo()
 {
-    controller->invertSustainPedal(previousData);
+    state->setInvertSustain(previousData);
     return true;
 }
 
 // ==============================================================================
 // Implementation of ExprPedalSensivityEditAction
 
-ExprPedalSensivityEditAction::ExprPedalSensivityEditAction(LumatoneController* controller, int newValue)
-    : LumatoneAction(controller, "ExprPedlSensitivity"), newData(newValue)
+ExprPedalSensivityEditAction::ExprPedalSensivityEditAction(LumatoneApplicationState* stateIn, int newValue)
+    : LumatoneAction(stateIn, "ExprPedlSensitivity"), newData(newValue)
 {
-    previousData = controller->getExpressionSensitivity();
+    previousData = state->getExpressionSensitivity();
 }
 
 bool ExprPedalSensivityEditAction::perform()
 {
-    controller->sendExpressionPedalSensivity(newData);
+    state->setExpressionSensitivity(newData);
     return true;
 }
 
 bool ExprPedalSensivityEditAction::undo()
 {
-    controller->sendExpressionPedalSensivity(previousData);
+    state->setExpressionSensitivity(previousData);
     return true;
 }
 
 // ==============================================================================
 // Implementation of InvertSustainEditAction
 
-InvertSustainEditAction::InvertSustainEditAction(LumatoneController* controller, bool newValue)
-    : LumatoneAction(controller, "InvertSustainEdit"), newData(newValue)
+InvertSustainEditAction::InvertSustainEditAction(LumatoneApplicationState* stateIn, bool newValue)
+    : LumatoneAction(stateIn, "InvertSustainEdit"), newData(newValue)
 {
-    previousData = controller->getInvertSustain();
+    previousData = state->getInvertSustain();
 }
 
 bool InvertSustainEditAction::perform()
 {
-    controller->invertSustainPedal(newData);
+    state->setInvertSustain(newData);
     return true;
 }
 
 bool InvertSustainEditAction::undo()
 {
-    controller->invertSustainPedal(previousData);
+    state->setInvertSustain(previousData);
     return true;
 }
-

@@ -16,7 +16,7 @@ LumatoneConfigTable class
 ==============================================================================
 */
 
-int DefaultVelocityIntervalTable[127] = {
+unsigned int DefaultVelocityIntervalTable[127] = {
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
     21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
     41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 60, 61,
@@ -26,7 +26,7 @@ int DefaultVelocityIntervalTable[127] = {
     280, 285, 290, 295, 300, 305, 310};
 
 // Empty velocity curve config: one to one
-int EmptyVelocityCurveTable[128] = {
+unsigned int EmptyVelocityCurveTable[128] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
     40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
@@ -35,7 +35,7 @@ int EmptyVelocityCurveTable[128] = {
     100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
     120, 121, 122, 123, 124, 125, 126, 127};
 
-int DefaultOnOffVelocityTable[128] = {
+unsigned int DefaultOnOffVelocityTable[128] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
     11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
@@ -44,7 +44,7 @@ int DefaultOnOffVelocityTable[128] = {
     74, 76, 77, 79, 80, 82, 84, 85, 87, 88, 90, 92, 94, 96, 97, 99, 101, 103, 105, 108,
     110, 112, 114, 117, 119, 121, 124, 127};
 
-int DefaultFaderVelocityTable[128] = {
+unsigned int DefaultFaderVelocityTable[128] = {
     1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8,
     9, 9, 9, 10, 10, 10, 11, 11, 12, 12, 12, 13, 13, 14, 14, 14, 15, 15, 16, 16,
     17, 17, 17, 18, 18, 19, 19, 20, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25,
@@ -53,7 +53,7 @@ int DefaultFaderVelocityTable[128] = {
     55, 56, 57, 59, 62, 65, 68, 71, 74, 77, 79, 82, 85, 88, 91, 94, 97, 99, 102, 105,
     108, 111, 114, 117, 119, 122, 125, 127};
 
-int DefaultAfterTouchVelocityTable[128] = {
+unsigned int DefaultAfterTouchVelocityTable[128] = {
     0, 2, 3, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20, 21, 22, 24, 25, 26,
     27, 28, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 47, 48, 49,
     50, 51, 52, 53, 54, 55, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
@@ -62,7 +62,7 @@ int DefaultAfterTouchVelocityTable[128] = {
     106, 107, 108, 108, 109, 110, 111, 112, 112, 113, 114, 115, 116, 116, 117, 118, 119, 120, 120, 121,
     122, 123, 123, 124, 125, 126, 126, 127};
 
-int DefaulLumatouchVelocityTable[128] = {
+unsigned int DefaulLumatouchVelocityTable[128] = {
     0, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 7, 7, 7, 8, 8,
     8, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 15, 16,
     16, 17, 17, 18, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 22, 23, 23, 24, 24, 25,
@@ -197,6 +197,11 @@ juce::String LumatoneConfigTable::toConfigString() const
     }
 }
 
+void LumatoneConfigTable::setValues(const int* values)
+{
+    memmove(velocityValues, values, sizeof(int));
+}
+
 /*
 ==============================================================================
 TerpstraKeyMapping class
@@ -207,39 +212,54 @@ LumatoneLayout::LumatoneLayout(int numBoardsIn, int octaveBoardSizeIn, bool init
     : numBoards(numBoardsIn)
     , octaveBoardSize(octaveBoardSizeIn)
 {
+    state = juce::ValueTree(LumatoneConfigProperty::State);
+
+    for (int i = 0; i < numBoards; i++)
+        boards[i].board_idx = i;
+
     clearAll(initWithNotes);
 }
 
-void LumatoneLayout::clearVelocityIntervalTable()
+LumatoneLayout::LumatoneLayout(juce::ValueTree stateIn)
+{
+    juce::ValueTree stateToCopy(LumatoneConfigProperty::State);
+    if (stateIn.hasType(LumatoneConfigProperty::State))
+        stateToCopy = stateIn;
+
+    state = stateToCopy;
+    refreshFromState();
+}
+
+LumatoneLayout::LumatoneLayout(juce::StringArray stringArray)
+{
+    // Parse string to find sizes first?
+    numBoards = 5;
+    octaveBoardSize = 56;
+
+    state = juce::ValueTree(LumatoneConfigProperty::State);
+    fromStringArray(stringArray);
+}
+
+void LumatoneLayout::clearVelocityIntervalTable(LumatoneConfigTable* table)
 {
     jassert(sizeof(DefaultVelocityIntervalTable) == sizeof(table));
     memmove(table, DefaultVelocityIntervalTable, sizeof(DefaultVelocityIntervalTable));
 }
 
-const LumatoneBoard* LumatoneLayout::readBoard(int index) const
+const LumatoneBoard& LumatoneLayout::getBoard(int index) const
 {
-    return &boards[index];
+    return boards[index];
 }
 
-LumatoneBoard* LumatoneLayout::getBoard(int index)
+void LumatoneLayout::setBoard(const LumatoneBoard &boardIn, int boardIndex)
 {
-    return &boards[index];
+    boards[boardIndex] = boardIn;
+    boards[boardIndex].board_idx = boardIndex;
 }
 
-LumatoneKey *LumatoneLayout::getKey(int boardIndex, int keyIndex)
+const LumatoneKey& LumatoneLayout::getKey(int boardIndex, int keyIndex) const
 {
-    return &boards[boardIndex].theKeys[keyIndex];
-}
-
-const LumatoneKey *LumatoneLayout::readKey(int boardIndex, int keyIndex) const
-{
-    return &boards[boardIndex].theKeys[keyIndex];
-}
-
-const LumatoneKey* LumatoneLayout::readKey(int keyNum) const
-{
-    auto coord = keyNumToKeyCoord(keyNum);
-    return readKey(coord.boardIndex, coord.keyIndex);
+    return boards[boardIndex].theKeys[keyIndex];
 }
 
 MappedLumatoneKey LumatoneLayout::getMappedKey(int boardIndex, int keyIndex) const
@@ -247,7 +267,27 @@ MappedLumatoneKey LumatoneLayout::getMappedKey(int boardIndex, int keyIndex) con
     return MappedLumatoneKey(boards[boardIndex].theKeys[keyIndex], boardIndex, keyIndex);
 }
 
-bool LumatoneLayout::isKeyCoordValid(const LumatoneKeyCoord& coord) const
+void LumatoneLayout::setKey(const LumatoneKey &keyIn, int boardIndex, int keyIndex)
+{
+    boards[boardIndex].setKey(keyIn, keyIndex);
+}
+
+void LumatoneLayout::setKey(MappedLumatoneKey keyIn)
+{
+    boards[keyIn.boardIndex].setKey(keyIn);
+}
+
+void LumatoneLayout::setKeyConfig(const LumatoneKey& keyIn, int boardIndex, int keyIndex)
+{
+    boards[boardIndex].setKeyConfig(keyIn, keyIndex);
+}
+
+void LumatoneLayout::setKeyColour(juce::Colour colour, int boardIndex, int keyIndex)
+{
+    boards[boardIndex].setKeyColour(colour, keyIndex);
+}
+
+bool LumatoneLayout::isKeyCoordValid(const LumatoneKeyCoord &coord) const
 {
     return coord.isInitialized()
         && coord.boardIndex < getNumBoards()
@@ -256,9 +296,9 @@ bool LumatoneLayout::isKeyCoordValid(const LumatoneKeyCoord& coord) const
 
 bool LumatoneLayout::isKeyCoordValid(int keyIndex, int boardIndex) const
 {
-    return keyIndex >= 0 
+    return keyIndex >= 0
         && keyIndex < getOctaveBoardSize()
-        && boardIndex >= 0 
+        && boardIndex >= 0
         && boardIndex < getNumBoards();
 }
 
@@ -281,13 +321,51 @@ LumatoneKeyCoord LumatoneLayout::keyNumToKeyCoord(int keyNum) const
     return LumatoneKeyCoord(keyNum / getOctaveBoardSize(), keyNum % getOctaveBoardSize());
 }
 
+void LumatoneLayout::setOctaveBoardSize(int size)
+{
+    octaveBoardSize = size;
+    state.setProperty(LumatoneBoardProperty::Size, size, nullptr);
+}
+
+void LumatoneLayout::setAftertouchEnabled(bool enabled)
+{
+    afterTouchActive = enabled;
+    state.setProperty(LumatoneConfigProperty::AftertouchEnabled, afterTouchActive, nullptr);
+}
+
+void LumatoneLayout::setLightOnKeyStrokes(bool enabled)
+{
+    lightOnKeyStrokes = enabled;
+    state.setProperty(LumatoneConfigProperty::LightOnKeyStrokes, lightOnKeyStrokes, nullptr);
+}
+
+void LumatoneLayout::setInvertExpression(bool invert)
+{
+    invertExpression = invert;
+    state.setProperty(LumatoneConfigProperty::InvertExpression, invertExpression, nullptr);
+}
+
+void LumatoneLayout::setInvertSustain(bool invert)
+{
+    invertSustain = invert;
+    state.setProperty(LumatoneConfigProperty::InvertSustain, invert, nullptr);
+}
+
+void LumatoneLayout::setExpressionSensitivity(juce::uint8 value)
+{
+    expressionSensitivity = value;
+    state.setProperty(LumatoneConfigProperty::ExpressionSensitivity, (int)expressionSensitivity, nullptr);
+}
+
 void LumatoneLayout::transform(std::function<void(int,int,LumatoneKey&)> transformFnc)
 {
     for (int b = 0; b < getNumBoards(); b++)
     {
         for (int k = 0; k < getOctaveBoardSize(); k++)\
         {
-            transformFnc(b, k, *getKey(b, k));
+            LumatoneKey key = getKey(b, k);
+            transformFnc(b, k, key);
+            setKey(key, b, k);
         }
     }
 }
@@ -305,8 +383,7 @@ void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)
 
     for (int i = 0; i < numBoards; i++)
     {
-        boards[i] = LumatoneBoard(newKeyType, octaveBoardSize);
-        boards[i].board_idx = i;
+        boards[i] = LumatoneBoard(newKeyType, octaveBoardSize, i);
     }
 
     // Default values for options
@@ -314,13 +391,15 @@ void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)
     lightOnKeyStrokes = false;
     invertExpression = false;
     invertSustain = false;
-    expressionControllerSensivity = 0;
+    expressionSensitivity = 0;
 
-    clearVelocityIntervalTable();
+    // clearVelocityIntervalTable();
     velocityTable = LumatoneConfigTable(LumatoneConfigTable::TableType::velocityInterval);
     faderTable = LumatoneConfigTable(LumatoneConfigTable::TableType::fader);
     afterTouchTable = LumatoneConfigTable(LumatoneConfigTable::TableType::afterTouch);
     lumaTouchTable = LumatoneConfigTable(LumatoneConfigTable::TableType::lumaTouch);
+
+    updateState();
 }
 
 bool LumatoneLayout::isEmpty() const
@@ -331,6 +410,28 @@ bool LumatoneLayout::isEmpty() const
     }
 
     return isEmpty;
+}
+
+void LumatoneLayout::operator=(const LumatoneLayout& toCopy)
+{
+    for (int i = 0; i < numBoards; i++)
+    {
+        boards[i] = toCopy.getBoard(i);
+    }
+
+    afterTouchActive = toCopy.afterTouchActive;
+    lightOnKeyStrokes = toCopy.lightOnKeyStrokes;
+    invertExpression = toCopy.invertExpression;
+    invertSustain = toCopy.invertSustain;
+    expressionSensitivity = toCopy.expressionSensitivity;
+
+    // clearVelocityIntervalTable();
+    velocityTable = LumatoneConfigTable(toCopy.velocityTable.toConfigString());
+    faderTable = LumatoneConfigTable(toCopy.faderTable.toConfigString());
+    afterTouchTable = LumatoneConfigTable(toCopy.afterTouchTable.toConfigString());
+    lumaTouchTable = LumatoneConfigTable(toCopy.lumaTouchTable.toConfigString());
+
+    updateState();
 }
 
 void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
@@ -344,35 +445,37 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
     {
         juce::String currentLine = stringArray[i];
         int pos1, pos2;
-        if ((pos1 = currentLine.indexOf("[Board")) >= 0) 
+        if ((pos1 = currentLine.indexOf("[Board")) >= 0)
         {
             pos2 = currentLine.indexOf("]");
-            if (pos2 >= 0 && pos2 > pos1) 
+            if (pos2 >= 0 && pos2 > pos1)
             {
                 boardIndex = currentLine.substring(pos1 + 6, pos2).getIntValue();
-            } 
+            }
             else
                 jassert(false);
-        } 
-        else if ((pos1 = currentLine.indexOf("Key_")) >= 0) 
+        }
+        else if ((pos1 = currentLine.indexOf("Key_")) >= 0)
         {
             pos2 = currentLine.indexOf("=");
-            if (pos2 >= 0 && pos2 > pos1) 
+            if (pos2 >= 0 && pos2 > pos1)
             {
                 int keyIndex = currentLine.substring(pos1 + 4, pos2).getIntValue();
                 int keyValue = currentLine.substring(pos2 + 1).getIntValue();
-                if (boardIndex >= 0 && boardIndex < octaveBoardSize) 
+                if (boardIndex >= 0 && boardIndex < octaveBoardSize)
                 {
                     if (keyIndex >= 0 && keyIndex < 56)
-                        boards[boardIndex].theKeys[keyIndex].noteNumber = keyValue;
+                    {
+                        boards[boardIndex].theKeys[keyIndex].setNoteOrCC(keyValue);
+                    }
                     else
                         jassert(false);
                 }
                 else
                     jassert(false);
             }
-        } 
-        else if ((pos1 = currentLine.indexOf("Chan_")) >= 0) 
+        }
+        else if ((pos1 = currentLine.indexOf("Chan_")) >= 0)
         {
             pos2 = currentLine.indexOf("=");
             if (pos2 >= 0 && pos2 > pos1)
@@ -386,11 +489,12 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
 
                         if (keyValue > 0 && keyValue <= 16)
                         {
-                            boards[boardIndex].theKeys[keyIndex].channelNumber = keyValue;
-                        } else
+                            boards[boardIndex].theKeys[keyIndex].setChannelNumber(keyValue);
+                        }
+                        else
                         {
-                            boards[boardIndex].theKeys[keyIndex].channelNumber = 1;
-                            boards[boardIndex].theKeys[keyIndex].keyType = LumatoneKeyType::disabledDefault;
+                            boards[boardIndex].theKeys[keyIndex].setChannelNumber(1);
+                            boards[boardIndex].theKeys[keyIndex].setKeyType(LumatoneKeyType::disabledDefault);
                         }
 
                         if (keyIndex == 55)
@@ -413,7 +517,7 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
                 if (boardIndex >= 0 && boardIndex < octaveBoardSize)
                 {
                     if (keyIndex >= 0 && keyIndex < 56)
-                        boards[boardIndex].theKeys[keyIndex].colour = juce::Colour(colValue).withAlpha(1.0f);
+                        boards[boardIndex].theKeys[keyIndex].setColour(juce::Colour(colValue).withAlpha(1.0f));
                     else
                         jassert(false);
                 }
@@ -432,11 +536,11 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
                 {
                     if (keyIndex >= 0 && keyIndex < 56)
                     {
-                        auto currentKeyType = boards[boardIndex].theKeys[keyIndex].keyType;
+                        auto currentKeyType = boards[boardIndex].theKeys[keyIndex].getType();
                         if (keyValue < 0 && keyValue >= 5 || currentKeyType == LumatoneKeyType::disabledDefault)
-                            boards[boardIndex].theKeys[keyIndex].keyType = LumatoneKeyType::disabled;
+                            boards[boardIndex].theKeys[keyIndex].setKeyType(LumatoneKeyType::disabled);
                         else
-                            boards[boardIndex].theKeys[keyIndex].keyType = (LumatoneKeyType)keyValue;
+                            boards[boardIndex].theKeys[keyIndex].setKeyType((LumatoneKeyType)keyValue);
                     }
                     else
                         jassert(false);
@@ -451,7 +555,7 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
             if (boardIndex >= 0 && boardIndex < octaveBoardSize)
             {
                 if (keyIndex >= 0 && keyIndex < 56)
-                        boards[boardIndex].theKeys[keyIndex].ccFaderDefault = false;
+                        boards[boardIndex].theKeys[keyIndex].setDefaultCCFader(false);
                 else
                     jassert(false);
             }
@@ -471,7 +575,7 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
             invertSustain = currentLine.substring(pos1 + 14).getIntValue() > 0;
 
         else if ((pos1 = currentLine.indexOf("ExprCtrlSensivity=")) >= 0)
-            expressionControllerSensivity = currentLine.substring(pos1 + 18).getIntValue();
+            expressionSensitivity = currentLine.substring(pos1 + 18).getIntValue();
 
         // Velocity curve config
         else if ((pos1 = currentLine.indexOf("VelocityIntrvlTbl=")) >= 0)
@@ -489,39 +593,39 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
             }
             else
             {
-                clearVelocityIntervalTable();
+                clearVelocityIntervalTable(&velocityTable);
             }
         }
         // Note on/off velocity configuration
-        else if ((pos1 = currentLine.indexOf("NoteOnOffVelocityCrvTbl=")) >= 0) 
+        else if ((pos1 = currentLine.indexOf("NoteOnOffVelocityCrvTbl=")) >= 0)
         {
             velocityTable = LumatoneConfigTable(currentLine.substring(pos1 + 24));
         }
         // Fader configuration
-        else if ((pos1 = currentLine.indexOf("FaderConfig=")) >= 0) 
+        else if ((pos1 = currentLine.indexOf("FaderConfig=")) >= 0)
         {
             faderTable = LumatoneConfigTable(currentLine.substring(pos1 + 12));
         }
         // Aftertouch configuration
-        else if ((pos1 = currentLine.indexOf("afterTouchConfig=")) >= 0) 
+        else if ((pos1 = currentLine.indexOf("afterTouchConfig=")) >= 0)
         {
             afterTouchTable = LumatoneConfigTable(currentLine.substring(pos1 + 17));
         }
         // Lumatouch configuration
-        else if ((pos1 = currentLine.indexOf("LumaTouchConfig=")) >= 0) 
+        else if ((pos1 = currentLine.indexOf("LumaTouchConfig=")) >= 0)
         {
             lumaTouchTable = LumatoneConfigTable(currentLine.substring(pos1 + 17));
         }
     }
 
     // Conversion between 55-key and 56-key layout
-    //if (TerpstraSysExApplication::getApp().getOctaveBoardSize() == 56 && !hasFiftySixKeys) {
+    //if (getOctaveBoardSize() == 56 && !hasFiftySixKeys) {
     //    // Loaded layout has 55-key layout. Adjust geometry to 56-key layout
     //    for (boardIndex = 0; boardIndex < octaveBoardSize; boardIndex++) {
     //        boards[boardIndex].theKeys[55] = boards[boardIndex].theKeys[54];
     //        boards[boardIndex].theKeys[54] = TerpstraKey();
     //    }
-    //} else if (TerpstraSysExApplication::getApp().getOctaveBoardSize() == 55 && hasFiftySixKeys) {
+    //} else if (getOctaveBoardSize() == 55 && hasFiftySixKeys) {
     //    // Loaded layout has 56-key layout. Adjust geometry to 55-key layout
     //    for (boardIndex = 0; boardIndex < octaveBoardSize; boardIndex++) {
     //        boards[boardIndex].theKeys[54] = boards[boardIndex].theKeys[55];
@@ -537,15 +641,15 @@ juce::StringArray LumatoneLayout::toStringArray() const
     for (int boardIndex = 0; boardIndex < numBoards; boardIndex++) {
         result.add("[Board" + juce::String(boardIndex) + "]");
 
-        //for (int keyIndex = 0; keyIndex < TerpstraSysExApplication::getApp().getOctaveBoardSize(); keyIndex++) {
+        //for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++) {
             for (int keyIndex = 0; keyIndex < 56; keyIndex++) {
-            result.add("Key_" + juce::String(keyIndex) + "=" + juce::String(boards[boardIndex].theKeys[keyIndex].noteNumber));
-            result.add("Chan_" + juce::String(keyIndex) + "=" + juce::String(boards[boardIndex].theKeys[keyIndex].channelNumber));
+            result.add("Key_" + juce::String(keyIndex) + "=" + juce::String(boards[boardIndex].theKeys[keyIndex].getMidiNumber()));
+            result.add("Chan_" + juce::String(keyIndex) + "=" + juce::String(boards[boardIndex].theKeys[keyIndex].getMidiChannel()));
             //if (boards[boardIndex].theKeys[keyIndex].colour != juce::Colour())
-            result.add("Col_" + juce::String(keyIndex) + "=" + boards[boardIndex].theKeys[keyIndex].colour.toDisplayString(false));
-            if (boards[boardIndex].theKeys[keyIndex].keyType != LumatoneKeyType::noteOnNoteOff)
-                result.add("KTyp_" + juce::String(keyIndex) + "=" + juce::String(boards[boardIndex].theKeys[keyIndex].keyType));
-            if (boards[boardIndex].theKeys[keyIndex].ccFaderDefault != true)
+            result.add("Col_" + juce::String(keyIndex) + "=" + boards[boardIndex].theKeys[keyIndex].getColour().toDisplayString(false));
+            if (boards[boardIndex].theKeys[keyIndex].getType() != LumatoneKeyType::noteOnNoteOff)
+                result.add("KTyp_" + juce::String(keyIndex) + "=" + juce::String(boards[boardIndex].theKeys[keyIndex].getType()));
+            if (boards[boardIndex].theKeys[keyIndex].isCCFaderDefault() != true)
                 result.add("CCInvert_" + juce::String(keyIndex));
         }
     }
@@ -555,7 +659,7 @@ juce::StringArray LumatoneLayout::toStringArray() const
     result.add("LightOnKeyStrokes=" + juce::String(lightOnKeyStrokes ? 1 : 0));
     result.add("InvertFootController=" + juce::String(invertExpression ? 1 : 0));
     result.add("InvertSustain=" + juce::String(invertSustain ? 1 : 0));
-    result.add("ExprCtrlSensivity=" + juce::String(expressionControllerSensivity));
+    result.add("ExprCtrlSensivity=" + juce::String(expressionSensitivity));
 
     // Velocity curve interval table
     juce::String intervalTableString;
@@ -575,13 +679,12 @@ juce::StringArray LumatoneLayout::toStringArray() const
     return result;
 }
 
-LumatoneConfigTable* LumatoneLayout::getConfigTable(LumatoneConfigTable::TableType velocityCurveType)
+const LumatoneConfigTable* LumatoneLayout::getConfigTable(LumatoneConfigTable::TableType tableType) const
 {
-	switch (velocityCurveType)
+	switch (tableType)
 	{
 	case LumatoneConfigTable::TableType::velocityInterval:
 		return &velocityTable;
-
 	case LumatoneConfigTable::TableType::fader:
 		return &faderTable;
 	case LumatoneConfigTable::TableType::afterTouch:
@@ -594,13 +697,35 @@ LumatoneConfigTable* LumatoneLayout::getConfigTable(LumatoneConfigTable::TableTy
 	}
 }
 
+void LumatoneLayout::setConfigTable(LumatoneConfigTable::TableType tableType, const int* table)
+{
+	switch (tableType)
+	{
+	case LumatoneConfigTable::TableType::velocityInterval:
+		velocityTable.setValues(table);
+        break;
+	case LumatoneConfigTable::TableType::fader:
+		faderTable.setValues(table);
+        break;
+	case LumatoneConfigTable::TableType::afterTouch:
+		afterTouchTable.setValues(table);
+        break;
+	case LumatoneConfigTable::TableType::lumaTouch:
+		lumaTouchTable.setValues(table);
+        break;
+	default:
+		jassertfalse;
+		break;
+    }
+}
+
 juce::Array<juce::Colour> LumatoneLayout::getLayoutColours() const
 {
-    juce::Array<juce::Colour> layoutColours = readBoard(0)->getBoardColours();
+    juce::Array<juce::Colour> layoutColours = getBoard(0).getBoardColours();
 
     for (int i = 1; i < getNumBoards(); i++)
     {
-        auto boardColours = readBoard(i)->getBoardColours();
+        auto boardColours = getBoard(i).getBoardColours();
         for (auto c : boardColours)
         {
             if (!layoutColours.contains(c))
@@ -641,19 +766,76 @@ LumatoneLayout LumatoneLayout::IdentityMapping(int numBoards, int octaveBoardSiz
 
     for (int i = 0; i < layout.getNumBoards(); i++)
     {
-        LumatoneBoard& newBoard = *layout.getBoard(i);
+        LumatoneBoard& newBoard = layout.boards[i];
         newBoard.board_idx = i;
 
         int midiChannel = i + 1;
 
         for (int k = 0; k < layout.getOctaveBoardSize(); k++)
         {
-            newBoard.theKeys[k].channelNumber = midiChannel;
-            newBoard.theKeys[k].noteNumber = k;
-            newBoard.theKeys[k].keyType = keyType;
-            newBoard.theKeys[k].colour = juce::Colours::black;
+            LumatoneKey key(keyType, midiChannel, k, juce::Colours::black);
+            newBoard.setKey(key, k);
         }
     }
 
     return layout;
+}
+
+void LumatoneLayout::updateState()
+{
+    juce::ValueTree newState(LumatoneConfigProperty::State);
+
+    juce::ValueTree newLayout(LumatoneConfigProperty::LayoutState);
+    for (int i = 0; i < numBoards; i++)
+    {
+        newLayout.appendChild(boards[i].getState(), nullptr);
+    }
+    newState.appendChild(newLayout, nullptr);
+
+    // Default values for options
+    newState.setProperty(LumatoneConfigProperty::AftertouchEnabled, afterTouchActive, nullptr);
+    newState.setProperty(LumatoneConfigProperty::LightOnKeyStrokes, lightOnKeyStrokes, nullptr);
+    newState.setProperty(LumatoneConfigProperty::InvertExpression, invertExpression, nullptr);
+    newState.setProperty(LumatoneConfigProperty::InvertSustain, invertSustain, nullptr);
+    newState.setProperty(LumatoneConfigProperty::ExpressionSensitivity, expressionSensitivity, nullptr);
+
+    newState.setProperty(LumatoneConfigProperty::VelocityIntervalTable, velocityTable.toConfigString(), nullptr);
+    newState.setProperty(LumatoneConfigProperty::NoteVelocityTable, faderTable.toConfigString(), nullptr);
+    newState.setProperty(LumatoneConfigProperty::AftertouchTable, afterTouchTable.toConfigString(), nullptr);
+    newState.setProperty(LumatoneConfigProperty::LumatouchTable, lumaTouchTable.toConfigString(), nullptr);
+
+    state.copyPropertiesAndChildrenFrom(newState, nullptr);
+}
+
+void LumatoneLayout::refreshFromState()
+{
+    juce::ValueTree parsedState = state.createCopy();
+
+    parsedState.removeAllChildren(nullptr);
+    juce::ValueTree parsedLayoutState(LumatoneConfigProperty::LayoutState);
+    parsedState.appendChild(parsedLayoutState, nullptr);
+
+    auto layoutState = state.getOrCreateChildWithName(LumatoneConfigProperty::LayoutState, nullptr);
+    for (int i = 0; i < numBoards; i++)
+    {
+        auto boardState = layoutState.getChild(i).createCopy();
+        boardState.setProperty(LumatoneBoardProperty::Id, i + 1, nullptr);
+
+        LumatoneBoard board = LumatoneBoard(boardState);
+        parsedLayoutState.appendChild(board.getState(), nullptr);
+        boards[i] = board;
+    }
+
+    afterTouchActive = (bool)parsedState.getProperty(LumatoneConfigProperty::AftertouchEnabled, false);
+    lightOnKeyStrokes = (bool)parsedState.getProperty(LumatoneConfigProperty::LightOnKeyStrokes, false);
+    invertExpression = (bool)parsedState.getProperty(LumatoneConfigProperty::InvertExpression, false);
+    invertSustain = (bool)parsedState.getProperty(LumatoneConfigProperty::InvertSustain, false);
+    expressionSensitivity = (int)parsedState.getProperty(LumatoneConfigProperty::ExpressionSensitivity, 127);
+
+    velocityTable = LumatoneConfigTable(parsedState.getProperty(LumatoneConfigProperty::VelocityIntervalTable).toString());
+    faderTable = LumatoneConfigTable(parsedState.getProperty(LumatoneConfigProperty::NoteVelocityTable).toString());
+    afterTouchTable = LumatoneConfigTable(parsedState.getProperty(LumatoneConfigProperty::AftertouchTable).toString());
+    lumaTouchTable = LumatoneConfigTable(parsedState.getProperty(LumatoneConfigProperty::LumatouchTable).toString());
+
+    state.copyPropertiesAndChildrenFrom(parsedState, nullptr);
 }

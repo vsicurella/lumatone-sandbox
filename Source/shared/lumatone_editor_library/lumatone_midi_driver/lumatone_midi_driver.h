@@ -343,6 +343,9 @@ public:
 
 	// For CMD 48h response: get expression pedal sensitivity
 	void sendGetExpressionPedalSensitivity();
+
+	// For CMD 49h: Get Macro button colours
+	void sendGetMacroLightIntensity();
 	
 	// TODO CMD 49h-4Eh
 
@@ -391,7 +394,7 @@ protected:
 private:
 
 	HostMode hostMode;
-	juce::PluginHostType host;
+//	juce::PluginHostType host;
 
 	juce::CriticalSection hostLock;
 	juce::MidiBuffer hostQueue;

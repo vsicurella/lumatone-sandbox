@@ -1,21 +1,21 @@
 #include "lumatone_render.h"
 #include "../color/colour_model.h"
 
-LumatoneRender::LumatoneRender(LumatoneApplicationState& stateIn)
-    : state(stateIn) 
+LumatoneRender::LumatoneRender(const LumatoneApplicationState& stateIn)
+    : LumatoneApplicationState("LumatoneRender", stateIn)
 {
     imageProcessor.reset(new ImageProcessor());
 }
 
-LumatoneRender::~LumatoneRender() 
-{ 
+LumatoneRender::~LumatoneRender()
+{
     imageProcessor = nullptr;
 }
 
 void LumatoneRender::resetOctaveSize()
 {
-    lumatoneGeometry = LumatoneGeometry(GetLumatoneBoardSize(state.getOctaveBoardSize()));
-    
+    lumatoneGeometry = LumatoneGeometry(GetLumatoneBoardSize(getOctaveBoardSize()));
+
     // tilingGeometry.setColumnAngle(LUMATONEGRAPHICCOLUMNANGLE);
     // tilingGeometry.setRowAngle(LUMATONEGRAPHICROWANGLE);
 
@@ -24,12 +24,12 @@ void LumatoneRender::resetOctaveSize()
     oct5Key7 = juce::Point<float>(oct5Key7X, oct5Key7Y);
 
     tilingGeometry.fitSkewedTiling(oct1Key1, oct1Key56, 10, oct5Key7, 24, true);
-    keyCentres = tilingGeometry.getHexagonCentresSkewed(lumatoneGeometry, 0, state.getNumBoards());
+    keyCentres = tilingGeometry.getHexagonCentresSkewed(lumatoneGeometry, 0, getNumBoards());
 }
 
 juce::Array<juce::Point<float>> LumatoneRender::getKeyCentres()
 {
-    return tilingGeometry.getHexagonCentresSkewed(lumatoneGeometry, 0, state.getNumBoards());
+    return tilingGeometry.getHexagonCentresSkewed(lumatoneGeometry, 0, getNumBoards());
 }
 
 void LumatoneRender::render(LumatoneAssets::LumatoneGraphicRenderSize maxRenderSize)
@@ -48,14 +48,14 @@ void LumatoneRender::render(LumatoneAssets::LumatoneGraphicRenderSize maxRenderS
     auto shapeLayer = LumatoneAssets::getImage(LumatoneAssets::ID::KeyShape, keyHeight, keyWidth);
     auto shadowLayer = LumatoneAssets::getImage(LumatoneAssets::ID::KeyShadow, keyHeight, keyWidth);
 
-    LumatoneColourModel* colourModel = state.getColourModel();
+    LumatoneColourModel* colourModel = getColourModel();
 
     int keyNum = 0;
-    for (int boardIndex = 0; boardIndex < state.getNumBoards(); boardIndex++)
+    for (int boardIndex = 0; boardIndex < getNumBoards(); boardIndex++)
     {
-        for (int keyIndex = 0; keyIndex < state.getOctaveBoardSize(); keyIndex++)
+        for (int keyIndex = 0; keyIndex < getOctaveBoardSize(); keyIndex++)
         {
-            juce::Colour keyColour = state.getKey(boardIndex, keyIndex)->colour;
+            juce::Colour keyColour = getKey(boardIndex, keyIndex).getColour();
             keyColour = colourModel->getModelColour(keyColour);
 
             juce::Point<int> keyPos = juce::Point<int>(
@@ -117,9 +117,9 @@ juce::Image LumatoneRender::getResizedRender(int targetWidth, int targetHeight)
 {
     if (targetWidth == 0 || targetHeight == 0)
         return juce::Image();
-        
+
     LumatoneAssets::LumatoneGraphicRenderSize size = LumatoneAssets::GetLumatoneRenderSize(targetWidth, targetHeight);
-    
+
     juce::Image baseRender = renders[(int)size];
 
     if (baseRender.isNull())
@@ -127,6 +127,6 @@ juce::Image LumatoneRender::getResizedRender(int targetWidth, int targetHeight)
 
     if (baseRender.getWidth() == targetWidth && baseRender.getHeight() == targetHeight)
         return baseRender;
-    
+
     return imageProcessor->resizeImage(baseRender, targetWidth, targetHeight);
 }

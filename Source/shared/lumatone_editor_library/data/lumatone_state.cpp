@@ -19,6 +19,16 @@ juce::Array<juce::Identifier> LumatoneState::getLumatoneStateProperties()
     properties.add(LumatoneStateProperty::LastConnectedFirmwareVersion);
     properties.add(LumatoneStateProperty::LastConnectedNumBoards);
 
+    properties.add(LumatoneStateProperty::LightsOnAfterKeystroke);
+    properties.add(LumatoneStateProperty::AftertouchEnabled);
+    properties.add(LumatoneStateProperty::InvertExpression);
+    properties.add(LumatoneStateProperty::InvertSustain);
+    
+    properties.add(LumatoneStateProperty::ExpressionSensitivity);
+    
+    properties.add(LumatoneStateProperty::InactiveMacroButtonColour);
+    properties.add(LumatoneStateProperty::ActiveMacroButtonColour);
+
     properties.add(LumatoneStateProperty::MappingData);
 
     return properties;
@@ -27,20 +37,26 @@ juce::Array<juce::Identifier> LumatoneState::getLumatoneStateProperties()
 LumatoneState::LumatoneState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManagerIn)
     : LumatoneStateBase(nameIn)
     , undoManager(undoManagerIn)
-{ 
+{
     state = loadStateProperties(stateIn);
     state.addListener(this);
 
     mappingData = std::make_shared<LumatoneLayout>();
     midiKeyMap = std::make_shared<LumatoneOutputMap>(mappingData.get());
+
+    juce::ValueTree layoutState = juce::ValueTree(juce::Identifier(nameIn));
+    layoutState.appendChild(mappingData->getState(), nullptr);
+    state.appendChild(layoutState, nullptr);
 }
 
-LumatoneState::LumatoneState(juce::String nameIn, const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn)
-    : LumatoneState(nameIn, stateToCopy.state, undoManagerIn)
+LumatoneState::LumatoneState(juce::String nameIn, const LumatoneState& stateToCopy)
+    : LumatoneState(nameIn, stateToCopy.state, stateToCopy.undoManager)
 {
     mappingData = stateToCopy.mappingData;
     midiKeyMap = stateToCopy.midiKeyMap;
 }
+
+LumatoneState::LumatoneState(const LumatoneState &stateIn) : LumatoneState(stateIn.name + "Copy", stateIn) {}
 
 LumatoneState::~LumatoneState()
 {
@@ -78,45 +94,32 @@ void LumatoneState::handleStatePropertyChange(juce::ValueTree stateIn, const juc
             );
         firmwareVersion = LumatoneFirmware::Version::fromReleaseVersion(determinedVersion);
     }
-    else if (property == LumatoneStateProperty::MappingData)
+    else if (property == LumatoneStateProperty::InactiveMacroButtonColour)
     {
-        juce::String mappingString = stateIn.getProperty(property).toString();
-        if (mappingString.isEmpty())
-            return;
+        auto readColour = juce::Colour::fromString(stateIn[property].toString());
+        inactiveMacroButtonColour = readColour;
+    }
+    else if (property == LumatoneStateProperty::ActiveMacroButtonColour)
+    {
+        auto readColour = juce::Colour::fromString(stateIn[property].toString());
+        activeMacroButtonColour = readColour;
+    }
+}
 
-        auto stringArray = juce::StringArray::fromLines(mappingString);
-        LumatoneLayout loadedLayout(getNumBoards(), getOctaveBoardSize());
-        loadedLayout.fromStringArray(stringArray);
-
-        if (!loadedLayout.isEmpty())
-        {
-            mappingData.reset(new LumatoneLayout(loadedLayout));
-        }
-    }
-    else if (property == LumatoneStateProperty::InvertExpression)
-    {
-        invertExpression = (bool)stateIn.getProperty(property, false);
-    }    
-    else if (property == LumatoneStateProperty::InvertSustain)
-    {
-        invertSustain = (bool)stateIn.getProperty(property, false);
-    }
-    else if (property == LumatoneStateProperty::ExpressionSensitivity)
-    {
-        expressionSensitivity = juce::uint8((int)stateIn.getProperty(property, 127));
-    }
+void LumatoneState::loadPropertiesFile(juce::PropertiesFile *properties)
+{
+    // No global properties for now
 }
 
 void LumatoneState::setConnectedSerialNumber(juce::String serialNumberIn)
 {
     connectedSerialNumber = serialNumberIn;
     state.setPropertyExcludingListener(
-        this, 
-        LumatoneStateProperty::LastConnectedSerialNumber, 
-        connectedSerialNumber, 
+        this,
+        LumatoneStateProperty::LastConnectedSerialNumber,
+        connectedSerialNumber,
         undoManager);
 
-    numBoards = 5;
 
     if (connectedSerialNumber == SERIAL_55_KEYS)
     {
@@ -134,36 +137,82 @@ void LumatoneState::setLumatoneVersion(LumatoneFirmware::ReleaseVersion versionI
 {
     determinedVersion = versionIn;
 
-    numBoards = 5;
-
-    switch (determinedVersion)
-    {
-    case LumatoneFirmware::ReleaseVersion::VERSION_55_KEYS:
-        octaveBoardSize = 55;
-        break;
-    default:
-        octaveBoardSize = 56;
-        break;
-    }
-
     if (writeToState)
     {
-        state.setPropertyExcludingListener(
-            this,
-            LumatoneStateProperty::LastConnectedFirmwareVersion,
-            (int)determinedVersion,
-            undoManager);
+        setStateProperty(LumatoneStateProperty::LastConnectedFirmwareVersion, (int)determinedVersion);
     }
+}
+
+void LumatoneState::setCompleteConfig(const LumatoneLayout &layoutIn)
+{
+    if (mappingData.get() != &layoutIn)
+        *mappingData = layoutIn;
+}
+
+void LumatoneState::setLayout(const LumatoneLayout &layoutIn)
+{
+    for (int i = 0; i < layoutIn.getNumBoards(); i++)
+    {
+        mappingData->setBoard(layoutIn.getBoard(i), i);
+    }
+}
+
+void LumatoneState::setBoard(const LumatoneBoard &boardIn, int boardId)
+{
+    mappingData->setBoard(boardIn, boardId-1);
+}
+
+void LumatoneState::setKey(const LumatoneKey &keyIn, int boardId, int keyIndex)
+{
+    mappingData->setKey(keyIn, boardId-1, keyIndex);
+}
+
+void LumatoneState::setKeyConfig(const LumatoneKey& keyIn, int boardId, int keyIndex)
+{
+    mappingData->setKeyConfig(keyIn, boardId-1, keyIndex);
+}
+
+void LumatoneState::setKeyColour(juce::Colour colour, int boardId, int keyIndex)
+{
+    mappingData->setKeyColour(colour, boardId-1, keyIndex);
+}
+
+void LumatoneState::sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners, bool bufferKeyUpdates)
+{
+    for (auto mappedKey : selection)
+    {
+        mappingData->setKey(mappedKey);
+    }
+}
+
+void LumatoneState::sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners, bool bufferKeyUpdates)
+{
+    for (auto mappedKey : selection)
+    {
+        mappingData->setKeyColour(mappedKey.getColour(), mappedKey.boardIndex, mappedKey.keyIndex);
+    }
+}
+
+void LumatoneState::setAftertouchEnabled(bool enabled)
+{
+    mappingData->setAftertouchEnabled(enabled);
+}
+
+void LumatoneState::setLightOnKeyStrokes(bool enabled)
+{
+    mappingData->setLightOnKeyStrokes(enabled);
 }
 
 void LumatoneState::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 {
-    if (treeWhosePropertyHasChanged == state)
-    {
-        DBG("LumatoneStsate::valueTreePropertyChanged(" 
-            + treeWhosePropertyHasChanged.getType().toString() + ", " 
+    //if (treeWhosePropertyHasChanged == state)
+    //{
+        DBG("LumatoneState::valueTreePropertyChanged("
+            + treeWhosePropertyHasChanged.getType().toString() + ", "
             + property.toString() + ")");
 
+    if (treeWhosePropertyHasChanged == state)
+    {
         handleStatePropertyChange(state, property);
     }
 }
@@ -183,30 +232,21 @@ juce::String LumatoneState::getSerialNumber() const
     return connectedSerialNumber;
 }
 
-int LumatoneState::getNumBoards() const
-{
-    return numBoards;
-}
-
-int LumatoneState::getOctaveBoardSize() const
-{
-    return octaveBoardSize;
-}
-
-const LumatoneLayout* LumatoneState::getMappingData() const
+LumatoneLayout* LumatoneState::getMappingData() const
 {
     return mappingData.get();
 }
-const LumatoneBoard* LumatoneState::getBoard(int boardIndex) const
+
+const LumatoneBoard& LumatoneState::getBoard(int boardIndex) const
 {
-    return mappingData->readBoard(boardIndex);
+    return mappingData->getBoard(boardIndex);
 }
-const LumatoneKey* LumatoneState::getKey(int boardIndex, int keyIndex) const
+const LumatoneKey& LumatoneState::getKey(int boardIndex, int keyIndex) const
 {
-    return &mappingData->readBoard(boardIndex)->theKeys[keyIndex];
+    return mappingData->getKey(boardIndex, keyIndex);
 }
 
-const LumatoneKey* LumatoneState::getKey(LumatoneKeyCoord coord) const
+const LumatoneKey& LumatoneState::getKey(LumatoneKeyCoord coord) const
 {
     return getKey(coord.boardIndex, coord.keyIndex);
 }
@@ -216,17 +256,6 @@ const LumatoneOutputMap* LumatoneState::getMidiKeyMap() const
     return midiKeyMap.get();
 }
 
-
-LumatoneBoard* LumatoneState::getEditBoard(int boardIndex)
-{
-    return mappingData->getBoard(boardIndex);
-}
-
-LumatoneKey* LumatoneState::getEditKey(int boardIndex, int keyIndex)
-{
-    return &mappingData->getBoard(boardIndex)->theKeys[keyIndex];
-}
-
 const FirmwareSupport& LumatoneState::getFirmwareSupport() const
 {
     return firmwareSupport;
@@ -234,79 +263,32 @@ const FirmwareSupport& LumatoneState::getFirmwareSupport() const
 
 void LumatoneState::setInvertExpression(bool invert)
 {
-    state.setPropertyExcludingListener(this, LumatoneStateProperty::InvertExpression, invert, undoManager);
-    invertExpression = invert;
+    mappingData->setInvertExpression(invert);
 }
 
 void LumatoneState::setInvertSustain(bool invert)
 {
-    state.setPropertyExcludingListener(this, LumatoneStateProperty::InvertSustain, invert, undoManager);
-    invertSustain = invert;
+    mappingData->setInvertSustain(invert);
 }
 
 void LumatoneState::setExpressionSensitivity(juce::uint8 sensitivity)
 {
-    state.setPropertyExcludingListener(this, LumatoneStateProperty::ExpressionSensitivity, (int)sensitivity, undoManager);
-    expressionSensitivity = sensitivity;
+    mappingData->setExpressionSensitivity(sensitivity);
 }
 
-bool LumatoneState::loadLayoutFromFile(const juce::File& layoutFile)
+void LumatoneState::setConfigTable(LumatoneConfigTable::TableType type, const LumatoneConfigTable& table)
 {
-    bool fileOpened = false;
-    bool fileParsed = false;
+    mappingData->setConfigTable(type, table.velocityValues);
+}
 
-    if (layoutFile.existsAsFile())
-    {
-        fileOpened = true;
+void LumatoneState::setInactiveMacroButtonColour(juce::Colour buttonColour)
+{
+    inactiveMacroButtonColour = buttonColour;
+    setStateProperty(LumatoneStateProperty::InactiveMacroButtonColour, buttonColour.toString());
+}
 
-        juce::StringArray stringArray;
-        layoutFile.readLines(stringArray);
-
-        LumatoneLayout newLayout(getNumBoards(), getOctaveBoardSize(), true);
-        newLayout.fromStringArray(stringArray);
-
-        // TODO: something if boards/size don't match?
-        fileParsed = true;
-
-
-        if (fileParsed)
-        {
-            *mappingData = LumatoneLayout(newLayout);
-
-            auto layoutString = mappingData->toStringArray().joinIntoString(juce::newLine);
-            DBG("Loaded: " + layoutString);
-
-            writeStringProperty(LumatoneStateProperty::MappingData, layoutString, undoManager);
-
-            invertSustain = mappingData->invertSustain;
-            writeBoolProperty(LumatoneStateProperty::InvertSustain, invertSustain, undoManager);
-
-            invertExpression = mappingData->invertExpression;
-            writeBoolProperty(LumatoneStateProperty::InvertExpression, invertExpression, undoManager);
-            
-            expressionSensitivity = mappingData->expressionControllerSensivity;
-            writeIntProperty(LumatoneStateProperty::ExpressionSensitivity, expressionSensitivity, undoManager);
-
-            // Mark file as unchanged
-            //setHasChangesToSave(false);
-
-            // Clear undo history
-            //undoManager.clearUndoHistory();
-
-            // Add file to recent files list
-            //recentFiles.addFile(currentFile);
-
-            return true;
-        }
-    }
-
-    if (fileOpened)
-    {
-        // Show error message
-        juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::AlertIconType::WarningIcon, "Open File Error", "The file " + layoutFile.getFullPathName() + " could not be opened.");
-
-        // XXX Update Window title in any case? Make file name empty/make data empty in case of error?
-    }
-
-    return false;
+void LumatoneState::setActiveMacroButtonColour(juce::Colour buttonColour)
+{
+    activeMacroButtonColour = buttonColour;
+    setStateProperty(LumatoneStateProperty::InactiveMacroButtonColour, buttonColour.toString());
 }

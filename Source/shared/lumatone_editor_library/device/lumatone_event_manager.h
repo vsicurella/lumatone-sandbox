@@ -10,23 +10,21 @@
 
 #pragma once
 
-#include "../listeners/status_listener.h"
-#include "../listeners/firmware_listener.h"
+#include "../data/application_state.h"
 #include "../midi/lumatone_midi_state.h"
-
 #include "../lumatone_midi_driver/firmware_driver_listener.h"
+#include "../listeners/firmware_listener.h"
 
-class LumatoneFirmwareDriver;
-
-class LumatoneEventManager : private LumatoneFirmwareDriverListener,
-                             public LumatoneMidiState,
-                             public LumatoneState,
-                             private juce::Timer
+class LumatoneEventManager : public LumatoneApplicationState
+                           , public LumatoneMidiState
+                           , private LumatoneApplicationState::Controller
+                           , private LumatoneFirmwareDriverListener
+                           , private LumatoneEditor::FirmwareListener
+                           , private juce::Timer
 {
 
 public:
-
-    LumatoneEventManager(LumatoneFirmwareDriver& midiDriver, LumatoneState stateIn);
+    LumatoneEventManager(LumatoneFirmwareDriver& midiDriver, const LumatoneApplicationState& stateIn);
     ~LumatoneEventManager() override;
 
 private:
@@ -42,6 +40,17 @@ protected:
     virtual void midiSendQueueSize(int queueSize) override;
     //virtual void generalLogMessage(juce::String textMessage, HajuErrorVisualizer::ErrorLevel errorLevel) override;
     virtual void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& midiMessage) override;
+
+    //============================================================================
+    // Implementation of LumatoneEditor::FirmwareListener
+    void octaveColourConfigReceived(int boardId, juce::uint8 rgbFlag, const int* colourData) override;
+    void octaveChannelConfigReceived(int octaveIndex, const int* channelData) override;
+    void octaveNoteConfigReceived(int octaveIndex, const int* noteData) override;
+    void keyTypeConfigReceived(int boardId, const int* keyTypeData) override;
+
+    void macroButtonColoursReceived(juce::Colour inactiveColour, juce::Colour activeColour) override;
+
+    void presetFlagsReceived(LumatoneFirmware::PresetFlags presetFlags) override;
 
 private:
     juce::ListenerList<LumatoneEditor::FirmwareListener> firmwareListeners;
@@ -107,23 +116,17 @@ private:
 
     FirmwareSupport::Error handleGetExpressionPedalSensitivityResponse(const juce::MidiMessage& midiMessage);
 
+    FirmwareSupport::Error handleGetMacroLightIntensityResponse(const juce::MidiMessage& midiMessage);
+
     void handleMidiDriverError(FirmwareSupport::Error errorToHandle, int commandReceived = -1);
 
     // Buffer read helpers
     FirmwareSupport::Error getBufferErrorCode(const juce::uint8* sysExData);
     FirmwareSupport::Error handleBufferCommand(const juce::MidiMessage& midiMessage);
 
-private:
-    //void confirmAutoConnection();
-    //void onConnectionConfirm(bool sendChangeSignal);
-    //void onDisconnection();
-    //void onFirmwareUpdateReceived();
 
 private:
-    LumatoneFirmwareDriver&         midiDriver;
-
-    FirmwareSupport             firmwareSupport;
-
+    LumatoneFirmwareDriver&     midiDriver;
 
     const int                   bufferReadTimeoutMs = 30;
     const int                   bufferReadSize = 16;
@@ -132,6 +135,5 @@ private:
     std::atomic<int>            readQueueSize;
     int                         sendQueueSize = 0;
 
-    
     int                         verbose = 0;
 };

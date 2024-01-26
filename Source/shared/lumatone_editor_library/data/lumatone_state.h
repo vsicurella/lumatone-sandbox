@@ -30,17 +30,23 @@ namespace LumatoneStateProperty
 
     static const juce::Identifier MappingData = juce::Identifier("MappingData");
 
+    static const juce::Identifier LightsOnAfterKeystroke = juce::Identifier("LightsOnAfterKeystroke");
+    static const juce::Identifier AftertouchEnabled = juce::Identifier("AftertouchEnabled");
     static const juce::Identifier InvertExpression = juce::Identifier("InvertExpression");
     static const juce::Identifier InvertSustain = juce::Identifier("InvertSustain");
     static const juce::Identifier ExpressionSensitivity = juce::Identifier("ExpressionSensitivity");
+
+    static const juce::Identifier InactiveMacroButtonColour = juce::Identifier("InactiveMacroButtonColour");
+    static const juce::Identifier ActiveMacroButtonColour = juce::Identifier("ActiveMacroButtonColour");
 };
 
 class LumatoneState : public LumatoneStateBase
 {
 public:
 
-    LumatoneState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManager=nullptr);
-    LumatoneState(juce::String nameIn, const LumatoneState& stateToCopy, juce::UndoManager* undoManagerIn=nullptr);
+    LumatoneState(juce::String nameIn, juce::ValueTree stateIn=juce::ValueTree(), juce::UndoManager* undoManager=nullptr);
+    LumatoneState(juce::String nameIn, const LumatoneState& stateToCopy);
+    LumatoneState(const LumatoneState& stateIn);
 
     virtual ~LumatoneState() override;
 
@@ -49,45 +55,71 @@ public:
 
     juce::String getSerialNumber() const;
 
-    int getOctaveBoardSize() const;
-    int getNumBoards() const;
-
-    const LumatoneLayout* getMappingData() const;
-    const LumatoneBoard* getBoard(int boardIndex) const;
-
+    LumatoneLayout* getMappingData() const;
     std::shared_ptr<LumatoneLayout> shareMappingData() { return mappingData; }
-    
-    const LumatoneKey* getKey(int boardIndex, int keyIndex) const;
-    const LumatoneKey* getKey(LumatoneKeyCoord coord) const;
+
+    const LumatoneBoard& getBoard(int boardIndex) const;
+
+    const LumatoneKey& getKey(int boardIndex, int keyIndex) const;
+    const LumatoneKey& getKey(LumatoneKeyCoord coord) const;
 
     const LumatoneOutputMap* getMidiKeyMap() const;
 
     const FirmwareSupport& getFirmwareSupport() const;
 
-    bool getInvertExpression() const { return invertExpression; }
-    bool getInvertSustain() const { return invertSustain; }
-    juce::uint8 getExpressionSensitivity() const { return expressionSensitivity; }
+    // virtual bool loadLayoutFromFile(const juce::File& layoutFile);
 
-    virtual bool loadLayoutFromFile(const juce::File& layoutFile);
+    virtual void setCompleteConfig(const LumatoneLayout& layoutIn);
+    virtual void setLayout(const LumatoneLayout& layoutIn);
+    virtual void setBoard(const LumatoneBoard& boardIn, int boardId);
+
+    virtual void setKey(const LumatoneKey& keyIn, int boardId, int keyIndex);
+    virtual void setKeyConfig(const LumatoneKey& keyIn, int boardId, int keyIndex);
+    virtual void setKeyColour(juce::Colour colour, int boardId, int keyIndex);
+
+    virtual void sendSelectionParam(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners = true, bool bufferKeyUpdates = false);
+    virtual void sendSelectionColours(const juce::Array<MappedLumatoneKey>& selection, bool signalEditorListeners = true, bool bufferKeyUpdates = false);
+
+    virtual void setAftertouchEnabled(bool enabled);
+    virtual void setLightOnKeyStrokes(bool enabled);
+    virtual void setInvertExpression(bool invert);
+    virtual void setInvertSustain(bool invert);
+    virtual void setExpressionSensitivity(juce::uint8 sensitivity);
+
+    virtual void setConfigTable(LumatoneConfigTable::TableType type, const LumatoneConfigTable& table);
+
+    virtual void setInactiveMacroButtonColour(juce::Colour buttonColour);
+    virtual void setActiveMacroButtonColour(juce::Colour buttonColour);
+
+public:
+    // Layout Helpers
+    int getNumBoards() const { return mappingData->getNumBoards(); }
+    int getOctaveBoardSize() const { return mappingData->getOctaveBoardSize(); }
+
+    bool getAftertouchOn() const { return mappingData->getAftertouchOn(); }
+    bool getLightOnKeyStrokes() const { return mappingData->getLightOnKeyStrokes(); }
+    bool getInvertExpression() const { return mappingData->getInvertExpression(); }
+    bool getInvertSustain() const { return mappingData->getInvertSustain(); }
+    int getExpressionSensitivity() const { return mappingData->getExpressionSensitivity(); }
+
+    juce::Colour getInactiveMacroButtonColour() const { return inactiveMacroButtonColour; }
+    juce::Colour getActiveMacroButtonColour() const { return activeMacroButtonColour; }
 
 protected:
-
     void setConnectedSerialNumber(juce::String serialNumberIn);
     void setFirmwareVersion(LumatoneFirmware::Version& versionIn, bool writeToState=false);
 
     void setLumatoneVersion(LumatoneFirmware::ReleaseVersion versionIn, bool writeToState=false);
-
-    void setInvertExpression(bool invert);
-    void setInvertSustain(bool invert);
-    void setExpressionSensitivity(juce::uint8 sensitivity);
 
 protected:
 
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
 
     virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
-    
+
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
+
+    virtual void loadPropertiesFile(juce::PropertiesFile* properties) override;
 
 public:
     static juce::Array<juce::Identifier> getLumatoneStateProperties();
@@ -95,28 +127,23 @@ public:
 protected:
 
     juce::UndoManager* undoManager;
-    
+
     FirmwareSupport firmwareSupport;
 
     std::shared_ptr<LumatoneLayout> mappingData;
     std::shared_ptr<LumatoneOutputMap> midiKeyMap;
 
-    LumatoneBoard* getEditBoard(int boardIndex);
-    LumatoneKey* getEditKey(int boardIndex, int keyIndex);
-
 private:
+    juce::String connectedSerialNumber = juce::String();
 
-    bool    invertExpression = false;
-    bool    invertSustain = false;
-    juce::uint8     expressionSensitivity = 0;
-
-    juce::String                connectedSerialNumber = juce::String();
     LumatoneFirmware::ReleaseVersion     determinedVersion;
     LumatoneFirmware::Version             firmwareVersion;
     LumatoneFirmware::Version             incomingVersion;
 
-    int                         numBoards = 5;
-    int                         octaveBoardSize = 56;
+    juce::Colour    inactiveMacroButtonColour;
+    juce::Colour    activeMacroButtonColour;
 };
 
-#endif LUMATONE_STATE_H
+
+
+#endif // LUMATONE_STATE_H

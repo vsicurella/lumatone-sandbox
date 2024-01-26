@@ -51,6 +51,8 @@ public:
 
     virtual void presetFlagsReceived(LumatoneFirmware::PresetFlags presetFlags) {};
 
+    virtual void macroButtonColoursReceived(juce::Colour inactiveColour, juce::Colour activeColour) {};
+
     virtual void expressionPedalSensitivityReceived(int sensitivity) {};
 
     virtual void noAnswerToCommand(int cmd) {};

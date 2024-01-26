@@ -12,12 +12,13 @@
 
 #include <JuceHeader.h>
 
-class LumatoneController;
+class LumatoneApplicationState;
+
 class LumatoneAction : public juce::UndoableAction
 {
 public:
 
-    LumatoneAction(LumatoneController* controllerIn, juce::String nameIn);
+    LumatoneAction(LumatoneApplicationState* controllerIn, juce::String nameIn);
 
     virtual bool perform() = 0;
     virtual bool undo() = 0;
@@ -30,7 +31,7 @@ protected:
 
     juce::String name;
 
-    LumatoneController* controller = nullptr;
+    LumatoneApplicationState* state = nullptr;
 
     int octaveBoardSize = 56;
     int numOctaveBoards = 5;

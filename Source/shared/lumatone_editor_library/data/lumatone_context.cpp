@@ -29,7 +29,7 @@ LumatoneContext::~LumatoneContext()
 bool LumatoneContext::setMappedMidiChannels(juce::Array<int> midiChannelMap)
 {
     const int expectedSize = getNumBoards() * getOctaveBoardSize(); // TODO cache this
-    
+
     if (midiChannelMap.size() != expectedSize)
         return false;
 
@@ -55,7 +55,7 @@ void LumatoneContext::clearMappedMidiChannels()
 bool LumatoneContext::setMappedMidiNotes(juce::Array<int> midiNoteMap)
 {
     const int expectedSize = getNumBoards() * getOctaveBoardSize(); // TODO cache this
-    
+
     if (midiNoteMap.size() != expectedSize)
         return false;
 
@@ -73,7 +73,7 @@ bool LumatoneContext::setMappedMidiNotes(juce::Array<int> midiNoteMap)
 void LumatoneContext::clearMappedMidiNotes()
 {
     juce::ScopedLock l(mappedMidiNotes.getLock());
-    
+
     mappedMidiNotes.clear();
     midiNotesMapped = false;
 }
@@ -85,16 +85,16 @@ LumatoneKeyContext LumatoneContext::getKeyContext(int boardIndex, int keyIndex) 
         return LumatoneKeyContext();
 
     auto keyNum = keyCoordToKeyNum(coord);
-    MappedLumatoneKey mappedKey = MappedLumatoneKey(*readKey(boardIndex, keyIndex), coord);
+    MappedLumatoneKey mappedKey = MappedLumatoneKey(getKey(boardIndex, keyIndex), coord);
     LumatoneKeyContext keyContext = LumatoneKeyContext(mappedKey);
 
     // TODO make a cache of this
 
     if (midiChannelsMapped)
-        keyContext.channelNumber = mappedMidiChannels[keyNum];
+        keyContext.setChannelNumber(mappedMidiChannels[keyNum]);
 
     if (midiNotesMapped)
-        keyContext.noteNumber = mappedMidiNotes[keyNum];
+        keyContext.setNoteOrCC(mappedMidiNotes[keyNum]);
 
     return keyContext;
 }
