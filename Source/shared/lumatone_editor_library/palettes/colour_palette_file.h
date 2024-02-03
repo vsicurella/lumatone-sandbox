@@ -136,7 +136,7 @@ public:
             int nameId = 1;
             while (fileToSaveTo.existsAsFile() && nameId < 999999)
             {
-                auto fileNameToSave = fileName + " (" + String(++nameId) + ")";
+                auto fileNameToSave = fileName + " (" + juce::String(++nameId) + ")";
                 fileToSaveTo = parentDir.getChildFile(fileNameToSave).withFileExtension(PALETTEFILEEXTENSION);
             }
 
