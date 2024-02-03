@@ -28,7 +28,8 @@ class LumatoneAction;
 
 class LumatoneController :  private LumatoneApplicationState
                          ,  private LumatoneApplicationState::DeviceController
-                         ,  public LumatoneApplicationMidiController
+                         ,  public LumatoneApplicationMidi
+                         ,  public LumatoneApplicationMidi::Controller
                          ,  public LumatoneEditor::StatusListener
                          ,  protected LumatoneEditor::FirmwareListener
                         //  , private LumatoneSandboxLogger

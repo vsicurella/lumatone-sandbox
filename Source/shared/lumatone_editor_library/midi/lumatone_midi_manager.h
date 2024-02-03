@@ -31,26 +31,17 @@ namespace LumatoneEditor
     class MidiListener;
 }
 
-class LumatoneApplicationMidiController : public LumatoneMidiState::Listener
+class LumatoneApplicationMidi : public LumatoneMidiState::Listener
                                         , protected LumatoneFirmwareDriverListener
                                         // , private LumatoneSandboxLogger
 {
 public:
 
-    LumatoneApplicationMidiController(const LumatoneApplicationState& state, LumatoneFirmwareDriver& firmwareDriver);
-    virtual ~LumatoneApplicationMidiController() override;
+    LumatoneApplicationMidi(const LumatoneApplicationState& state, LumatoneFirmwareDriver& firmwareDriver);
+    virtual ~LumatoneApplicationMidi() override;
 
     LumatoneMidiState* getDeviceMidiState() { return &deviceMidiState; }
     LumatoneMidiState* getAppMidiState() { return &appMidiState; }
-
-    void sendMidiMessage(const juce::MidiMessage msg);
-    void sendMidiMessageInContext(const juce::MidiMessage msg, int boardIndex, int keyIndex);
-
-    void sendKeyNoteOn(int boardIndex, int keyIndex, juce::uint8 velocity, bool ignoreContext=false);
-    void sendKeyNoteOff(int boardIndex, int keyIndex, bool ignoreContext=false);
-
-    void allNotesOff(int midiChannel);
-    void allNotesOff();
 
 private:
     juce::ListenerList<LumatoneEditor::MidiListener> listeners;
@@ -76,8 +67,28 @@ protected:
     void midiSendQueueSize(int size) override {}
     void noAnswerToMessage(juce::MidiDeviceInfo expectedDevice, const juce::MidiMessage& message) override {}
 
-private:
+public:
 
+    class Controller
+    {
+    public:
+        Controller(LumatoneApplicationMidi& appMidiIn) : appMidi(appMidiIn) {}
+        Controller(const Controller& copy)=delete;
+        
+        void sendMidiMessage(const juce::MidiMessage msg);
+        void sendMidiMessageInContext(const juce::MidiMessage msg, int boardIndex, int keyIndex);
+
+        void sendKeyNoteOn(int boardIndex, int keyIndex, juce::uint8 velocity, bool ignoreContext=false);
+        void sendKeyNoteOff(int boardIndex, int keyIndex, bool ignoreContext=false);
+
+        void allNotesOff(int midiChannel);
+        void allNotesOff();
+
+    private:
+        LumatoneApplicationMidi& appMidi;
+    };
+
+private:
     LumatoneApplicationState appState;
     LumatoneFirmwareDriver& firmwareDriver;
 
@@ -85,6 +96,8 @@ private:
     LumatoneMidiState appMidiState;
 
     int quarterNoteInterval = 24;
+
+    friend class Controller;
 };
 
 

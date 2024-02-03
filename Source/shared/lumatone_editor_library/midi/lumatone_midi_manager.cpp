@@ -3,30 +3,30 @@
 
 #include "../lumatone_midi_driver/lumatone_midi_driver.h"
 
-LumatoneApplicationMidiController::LumatoneApplicationMidiController(const LumatoneApplicationState& stateIn, LumatoneFirmwareDriver& firmwareDriverIn)
-    : appState("LumatoneApplicationMidiController", stateIn)
+LumatoneApplicationMidi::LumatoneApplicationMidi(const LumatoneApplicationState& stateIn, LumatoneFirmwareDriver& firmwareDriverIn)
+    : appState("LumatoneApplicationMidi", stateIn)
     , firmwareDriver(firmwareDriverIn)
-    // , LumatoneSandboxLogger("LumatoneApplicationMidiController")
+    // , LumatoneSandboxLogger("LumatoneApplicationMidi")
 {
     firmwareDriver.addDriverListener(this);
 }
 
-LumatoneApplicationMidiController::~LumatoneApplicationMidiController()
+LumatoneApplicationMidi::~LumatoneApplicationMidi()
 {
     listeners.clear();
     firmwareDriver.removeDriverListener(this);
 }
 
-void LumatoneApplicationMidiController::sendMidiMessage(const juce::MidiMessage msg)
+void LumatoneApplicationMidi::Controller::sendMidiMessage(const juce::MidiMessage msg)
 {
     // logInfo("sendMidiMessage", msg.getDescription());
-    appMidiState.processNextMidiEvent(msg);
-    firmwareDriver.sendMessageNow(msg);
+    appMidi.appMidiState.processNextMidiEvent(msg);
+    appMidi.firmwareDriver.sendMessageNow(msg);
 }
 
-void LumatoneApplicationMidiController::sendMidiMessageInContext(const juce::MidiMessage msg, int boardIndex, int keyIndex)
+void LumatoneApplicationMidi::Controller::sendMidiMessageInContext(const juce::MidiMessage msg, int boardIndex, int keyIndex)
 {
-    if (! appState.isContextSet())
+    if (! appMidi.appState.isContextSet())
     {
         sendMidiMessage(msg);
         return;
@@ -35,8 +35,8 @@ void LumatoneApplicationMidiController::sendMidiMessageInContext(const juce::Mid
     bool setNote = msg.isNoteOnOrOff() || msg.isAftertouch();
     bool setController = msg.isController();
 
-    // auto key = appState.getKeyContext(msg.getChannel(), setNote ? msg.getNoteNumber() : msg.getControllerNumber());
-    auto key = appState.getKeyContext(boardIndex, keyIndex);
+    // auto key = appMidi.appState.getKeyContext(msg.getChannel(), setNote ? msg.getNoteNumber() : msg.getControllerNumber());
+    auto key = appMidi.appState.getKeyContext(boardIndex, keyIndex);
 
     juce::MidiMessage newMsg = msg;
     newMsg.setChannel(key.getMidiChannel());
@@ -50,25 +50,25 @@ void LumatoneApplicationMidiController::sendMidiMessageInContext(const juce::Mid
     sendMidiMessage(newMsg);
 }
 
-void LumatoneApplicationMidiController::sendKeyNoteOn(int boardIndex, int keyIndex, juce::uint8 velocity, bool ignoreContext)
+void LumatoneApplicationMidi::Controller::sendKeyNoteOn(int boardIndex, int keyIndex, juce::uint8 velocity, bool ignoreContext)
 {
-    bool useContext = !ignoreContext && appState.isContextSet();
+    bool useContext = !ignoreContext && appMidi.appState.isContextSet();
 
-    // const LumatoneKey* keyData = appState.getKey(boardIndex, keyIndex);
-    // LumatoneKeyContext context = appState.getKeyContext(boardIndex, keyIndex);
+    // const LumatoneKey* keyData = appMidi.appState.getKey(boardIndex, keyIndex);
+    // LumatoneKeyContext context = appMidi.appState.getKeyContext(boardIndex, keyIndex);
     // LumatoneKey key = *keyData;
-    // LumatoneKey ctx = appState.getKeyContext(boardIndex, keyIndex);
+    // LumatoneKey ctx = appMidi.appState.getKeyContext(boardIndex, keyIndex);
 
 // #if JUCE_DEBUG
 //     LumatoneKey key;
 //     if (useContext)
-//         key = (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex);
+//         key = (LumatoneKey)appMidi.appState.getKeyContext(boardIndex, keyIndex);
 //     else
-//         key = appState.getKeyContext(boardIndex, keyIndex);
+//         key = appMidi.appState.getKeyContext(boardIndex, keyIndex);
 // #else
 //     LumatoneKey key = (useContext)
-//         ? (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex);
-//         : appState.getKeyContext(boardIndex, keyIndex);
+//         ? (LumatoneKey)appMidi.appState.getKeyContext(boardIndex, keyIndex);
+//         : appMidi.appState.getKeyContext(boardIndex, keyIndex);
 // #endif
 
     LumatoneKey key
@@ -78,14 +78,14 @@ void LumatoneApplicationMidiController::sendKeyNoteOn(int boardIndex, int keyInd
     #else
        = (useContext) ?
     #endif
-        (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex)
+        (LumatoneKey)appMidi.appState.getKeyContext(boardIndex, keyIndex)
     #if JUCE_DEBUG
     ; else
         key =
     #else
         :
     #endif
-        appState.getKey(boardIndex, keyIndex);
+        appMidi.appState.getKey(boardIndex, keyIndex);
 
 
     jassert(key.getMidiChannel() > 0 && key.getMidiChannel() <= 16 && key.getMidiNumber() >= 0 && key.getMidiNumber() < 128);
@@ -94,13 +94,13 @@ void LumatoneApplicationMidiController::sendKeyNoteOn(int boardIndex, int keyInd
     sendMidiMessage(msg);
 }
 
-void LumatoneApplicationMidiController::sendKeyNoteOff(int boardIndex, int keyIndex, bool ignoreContext)
+void LumatoneApplicationMidi::Controller::sendKeyNoteOff(int boardIndex, int keyIndex, bool ignoreContext)
 {
-    bool useContext = !ignoreContext && appState.isContextSet();
+    bool useContext = !ignoreContext && appMidi.appState.isContextSet();
 
     LumatoneKey key = (useContext)
-        ? (LumatoneKey)appState.getKeyContext(boardIndex, keyIndex)
-        : appState.getKey(boardIndex, keyIndex);
+        ? (LumatoneKey)appMidi.appState.getKeyContext(boardIndex, keyIndex)
+        : appMidi.appState.getKey(boardIndex, keyIndex);
 
     jassert(key.getMidiChannel() > 0 && key.getMidiChannel() <= 16 && key.getMidiNumber() >= 0 && key.getMidiNumber() < 128);
 
@@ -108,14 +108,14 @@ void LumatoneApplicationMidiController::sendKeyNoteOff(int boardIndex, int keyIn
     sendMidiMessage(msg);
 }
 
-void LumatoneApplicationMidiController::allNotesOff(int midiChannel)
+void LumatoneApplicationMidi::Controller::allNotesOff(int midiChannel)
 {
     // auto msg = juce::MidiMessage::allNotesOff(midiChannel);
     // sendMidiMessage(msg);
 
     for (int i = 0; i < 128; i++)
     {
-        if (appMidiState.isNoteOn(midiChannel, i))
+        if (appMidi.appMidiState.isNoteOn(midiChannel, i))
         {
             auto msg = juce::MidiMessage::noteOff(midiChannel, i);
             sendMidiMessage(msg);
@@ -124,43 +124,43 @@ void LumatoneApplicationMidiController::allNotesOff(int midiChannel)
     }
 }
 
-void LumatoneApplicationMidiController::allNotesOff()
+void LumatoneApplicationMidi::Controller::allNotesOff()
 {
     for (int ch = 1; ch <=16; ch++)
         allNotesOff(ch);
 }
 
-void LumatoneApplicationMidiController::handleLumatoneMidi(LumatoneMidiState *midiState, const juce::MidiMessage &msg)
+void LumatoneApplicationMidi::handleLumatoneMidi(LumatoneMidiState *midiState, const juce::MidiMessage &msg)
 {
     appMidiState.processNextMidiEvent(msg);
 }
 
-void LumatoneApplicationMidiController::handleNoteOn(LumatoneMidiState *midiState, int midiChannel, int midiNote, juce::uint8 velocity)
+void LumatoneApplicationMidi::handleNoteOn(LumatoneMidiState *midiState, int midiChannel, int midiNote, juce::uint8 velocity)
 {
     listeners.call(&LumatoneEditor::MidiListener::handleNoteOn, midiChannel, midiNote, velocity);
     // listeners.call(&LumatoneEditor::MidiListener::handleKeyDown, midiChannel, midiNote, velocity);
 }
 
-void LumatoneApplicationMidiController::handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote)
+void LumatoneApplicationMidi::handleNoteOff(LumatoneMidiState* midiState, int midiChannel, int midiNote)
 {
     listeners.call(&LumatoneEditor::MidiListener::handleNoteOff, midiChannel, midiNote);
     // listeners.call(&LumatoneEditor::MidiListener::handleKeyUp, midiChannel, midiNote);
 }
 
-void LumatoneApplicationMidiController::handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch)
+void LumatoneApplicationMidi::handleAftertouch(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 aftertouch)
 {
     listeners.call(&LumatoneEditor::MidiListener::handleAftertouch, midiChannel, midiNote, aftertouch);
     // listeners.call(&LumatoneEditor::MidiListener::handleKeyHold, midiChannel, midiNote, aftertouch);
 }
 
-void LumatoneApplicationMidiController::handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 controller)
+void LumatoneApplicationMidi::handleController(LumatoneMidiState* midiState, int midiChannel, int midiNote, juce::uint8 controller)
 {
     listeners.call(&LumatoneEditor::MidiListener::handleController, midiChannel, midiNote, controller);
     // listeners.call(&LumatoneEditor::MidiListener::handleAppController, midiChannel, midiNote, controller);
 }
 
 // Always will be coming from the device
-void LumatoneApplicationMidiController::midiMessageReceived(juce::MidiInput *source, const juce::MidiMessage &message)
+void LumatoneApplicationMidi::midiMessageReceived(juce::MidiInput *source, const juce::MidiMessage &message)
 {
     if (message.isSysEx())
         return;
