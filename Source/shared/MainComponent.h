@@ -2,7 +2,11 @@
 
 #include <JuceHeader.h>
 
-#include "lumatone_editor_library/color/adjust_layout_colour.h"
+#include "SandboxState.h"
+
+#include "./lumatone_editor_library/color/adjust_layout_colour.h"
+#include "./lumatone_editor_library/listeners/status_listener.h"
+
 #include "./game_engine/game_engine.h"
 
 class LumatoneController;
@@ -17,13 +21,14 @@ class LumatoneSandboxGameBase;
     your controls and content.
 */
 class MainComponent  : public juce::Component
+                     , public LumatoneSandboxState
                      , public LumatoneEditor::StatusListener
                      , public LumatoneSandboxGameEngine::Listener
                      , public juce::ApplicationCommandTarget
 {
 public:
     //==============================================================================
-    MainComponent(LumatoneController* controllerIn);
+    MainComponent(const LumatoneSandboxState& stateIn);
     ~MainComponent() override;
 
     //==============================================================================

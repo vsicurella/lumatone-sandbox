@@ -9,22 +9,25 @@
 #include "./games/game_base.h"
 
 //==============================================================================
-MainComponent::MainComponent(LumatoneController* controllerIn)
-    : controller(controllerIn)
-    , colourAdjust(controllerIn)
+MainComponent::MainComponent(const LumatoneSandboxState& stateIn)
+    : LumatoneSandboxState("MainComponent", stateIn)
+    , colourAdjust(*this)
 {
     connectionStatus = std::make_unique<ConnectionStatus>();
-    controller->addStatusListener(connectionStatus.get());
+    addStatusListener(connectionStatus.get());
+
     addAndMakeVisible(*connectionStatus);
-    connectionStatus->handleStatus(controller->getConnectionState());
+    connectionStatus->handleStatus(getConnectionState());
     
-    lumatoneComponent = std::make_unique<LumatoneKeyboardComponent>(controller);
+    lumatoneComponent = std::make_unique<LumatoneKeyboardComponent>(*this);
     addAndMakeVisible(*lumatoneComponent);
+
+    setGameEngine(getGameEngine());
 }
 
 MainComponent::~MainComponent()
 {
-    controller->removeStatusListener(connectionStatus.get());
+    removeStatusListener(connectionStatus.get());
 
     if (gameEngineComponent != nullptr && gameEngineComponent->getGameEngine() != nullptr)
     {

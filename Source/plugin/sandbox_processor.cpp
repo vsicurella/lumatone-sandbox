@@ -1,8 +1,6 @@
 #include "sandbox_processor.h"
 #include "sandbox_editor.h"
 
-#include "../shared/game_engine/game_engine.h"
-
 #include "../shared/lumatone_editor_library/lumatone_midi_driver/lumatone_midi_driver.h"
 #include "../shared/lumatone_editor_library/palettes/palette_library.h"
 #include "../shared/lumatone_editor_library/device/activity_monitor.h"
@@ -22,49 +20,45 @@ LumatoneSandboxProcessor::LumatoneSandboxProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        )
+     , isStandalone(juce::PluginHostType::getPluginLoadedAs() == AudioProcessor::wrapperType_Standalone)
+     , midiDriver(std::make_shared<LumatoneFirmwareDriver>(isStandalone
+                                                            ? LumatoneFirmwareDriver::HostMode::Driver
+                                                            : LumatoneFirmwareDriver::HostMode::Plugin))
+     , state(*midiDriver, &undoManager)
+     , LumatoneSandboxState::Controller(state)
 {
-    treeState = juce::ValueTree(LumatoneStateProperty::StateTree);
-    appState = std::make_unique<LumatoneApplicationState>("LumatoneSandboxProcessor", treeState);
-
     logData = std::make_unique<LumatoneSandboxLogTableModel>();
     juce::Logger::setCurrentLogger(logData.get());
 
-    undoManager = std::make_unique<juce::UndoManager>();
+    // paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
 
-    paletteLibrary = std::make_unique<LumatonePaletteLibrary>();
+    // midiDriver = std::make_unique<LumatoneFirmwareDriver>(isStandalone
+    //            ? LumatoneFirmwareDriver::HostMode::Driver
+    //            : LumatoneFirmwareDriver::HostMode::Plugin);
 
-    isStandalone = (juce::PluginHostType::getPluginLoadedAs() == AudioProcessor::wrapperType_Standalone);
-    // isStandalone = false;
+    // controller = std::make_unique<LumatoneController>(*appState, *midiDriver, undoManager.get());
 
-    midiDriver = std::make_unique<LumatoneFirmwareDriver>(isStandalone
-               ? LumatoneFirmwareDriver::HostMode::Driver
-               : LumatoneFirmwareDriver::HostMode::Plugin);
-
-    controller = std::make_unique<LumatoneController>(*appState, *midiDriver, undoManager.get());
-
-    monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), (LumatoneApplicationState)*controller.get()); 
-    monitor->addStatusListener(controller.get());
-    monitor->startDeviceDetection();
+    // monitor = std::make_unique<DeviceActivityMonitor>(midiDriver.get(), (LumatoneApplicationState)*controller.get()); 
+    // monitor->addStatusListener(controller.get());
+    // monitor->startDeviceDetection();
 
     // commandManager = std::make_unique<juce::ApplicationCommandManager>();
     // commandManager->registerAllCommandsForTarget(this);
     // commandManager->setFirstCommandTarget(nullptr);
-  
-    gameEngine = std::make_unique<LumatoneSandboxGameEngine>(controller.get(), treeState);
 }
 
 LumatoneSandboxProcessor::~LumatoneSandboxProcessor()
 {
-    gameEngine = nullptr;
-    monitor = nullptr;
+    // gameEngine = nullptr;
+    // monitor = nullptr;
     
-    controller = nullptr;
-    midiDriver = nullptr;
+    // controller = nullptr;
+    // midiDriver = nullptr;
 
-    paletteLibrary = nullptr;
+    // paletteLibrary = nullptr;
 
     // commandManager = nullptr;
-    undoManager = nullptr;
+    // undoManager = nullptr;
 
     juce::Logger::setCurrentLogger(nullptr);
     logData = nullptr;
@@ -202,23 +196,23 @@ bool LumatoneSandboxProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* LumatoneSandboxProcessor::createEditor()
 {
-    return new LumatoneSandboxProcessorEditor (*this);
+    return new LumatoneSandboxProcessorEditor (*this, state);
 }
 
 //==============================================================================
 void LumatoneSandboxProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     juce::MemoryOutputStream stream(destData, false);
-    treeState.writeToStream(stream);
-    DBG("Wrote to memory:\n" + treeState.toXmlString());
+    getState().writeToStream(stream);
+    DBG("Wrote to memory:\n" + getState().toXmlString());
 }
 
 void LumatoneSandboxProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    auto state = juce::ValueTree::readFromData(data, sizeInBytes);
-    DBG("Read from memory:\n" + state.toXmlString());
-
-    controller->loadStateProperties(state);
+    auto readState = juce::ValueTree::readFromData(data, sizeInBytes);
+    DBG("Read from memory:\n" + readState.toXmlString());
+    loadStateProperties(readState);
+    // controller->loadStateProperties(state);
 }
 
 //==============================================================================

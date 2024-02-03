@@ -1,5 +1,8 @@
 #include "adjust_colour_panel.h"
 
+#include "./ColourPaletteWindow.h"
+
+
 AdjustColourPanel::Box::Box(juce::Colour colourIn)
     : colour(colourIn)
 {
@@ -49,12 +52,12 @@ void  AdjustColourPanel::Box::setSelected(bool selectedIn)
 }
 
 
-AdjustColourPanel::AdjustColourPanel(LumatoneController* controllerIn,  LumatonePaletteLibrary* libraryIn)
-    : controller(controllerIn)
-    , paletteLibrary(libraryIn)
-    , colourAdjuster(controllerIn)
+AdjustColourPanel::AdjustColourPanel(const LumatoneSandboxState& stateIn)
+    : LumatoneSandboxState("AdjustColourPanel", stateIn)
+    , LumatoneSandboxState::Controller(static_cast<LumatoneSandboxState&>(*this))
+    , colourAdjuster(*this)
 {
-    controller->addEditorListener(this);
+    addEditorListener(this);
     addMouseListener(this, true);
     reconfigureColours(false);
 
@@ -85,7 +88,7 @@ AdjustColourPanel::AdjustColourPanel(LumatoneController* controllerIn,  Lumatone
 
 AdjustColourPanel::~AdjustColourPanel()
 {
-    controller->removeEditorListener(this);
+    removeEditorListener(this);
     palettePanel = nullptr;
 
     brightnessSlider = nullptr;
@@ -134,7 +137,7 @@ void AdjustColourPanel::setSelectedBox(Box* box)
 {
     box->setSelected(true);
     selectedBox = colourBoxes.indexOf(box);
-    keySelection = controller->getMappingData()->getKeysWithColour(box->getColour());
+    keySelection = getMappingData()->getKeysWithColour(box->getColour());
     DBG("select colour");
 }
 
@@ -162,7 +165,7 @@ void AdjustColourPanel::mouseDown(const juce::MouseEvent& e)
     {
         setSelectedBox(box);
 
-        palettePanel = std::make_unique<ColourPaletteWindow>(paletteLibrary->getPalettesReference());
+        palettePanel = std::make_unique<ColourPaletteWindow>(*this);
         palettePanel->setSize(400, 400);
         palettePanel->listenToColourSelection(this);
 
@@ -180,7 +183,7 @@ void AdjustColourPanel::mouseDown(const juce::MouseEvent& e)
 
 void AdjustColourPanel::reconfigureColours(bool doResize)
 {
-    juce::Array<juce::Colour> colourSet = controller->getMappingData()->getLayoutColours();
+    juce::Array<juce::Colour> colourSet = getMappingData()->getLayoutColours();
     
     bool sizeChanged = colourSet.size() != colours.size();
     colours = colourSet;
@@ -212,17 +215,17 @@ void AdjustColourPanel::reconfigureColours(bool doResize)
     }
 }
 
-void AdjustColourPanel::completeMappingLoaded(LumatoneLayout mappingData)
+void AdjustColourPanel::completeMappingLoaded(const LumatoneLayout& mappingData)
 {
     reconfigureColours();
 }
 
-void AdjustColourPanel::boardChanged(LumatoneBoard boardData)
+void AdjustColourPanel::boardChanged(const LumatoneBoard& boardData)
 {
     reconfigureColours();
 }
 
-void AdjustColourPanel::keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey)
+void AdjustColourPanel::keyChanged(int boardIndex, int keyIndex, const LumatoneKey& lumatoneKey)
 {
     reconfigureColours();
 }

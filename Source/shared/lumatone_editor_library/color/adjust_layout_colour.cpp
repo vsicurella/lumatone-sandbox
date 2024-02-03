@@ -1,9 +1,9 @@
 #include "adjust_layout_colour.h"
-#include "../data/lumatone_state.h"
 
-AdjustLayoutColour::AdjustLayoutColour(LumatoneState* stateIn)
-    : state(stateIn)
-    , hexMap(stateIn->shareMappingData())
+AdjustLayoutColour::AdjustLayoutColour(LumatoneApplicationState& stateIn)
+    : LumatoneApplicationState(stateIn)
+    , LumatoneApplicationState::Controller(stateIn)
+    , hexMap(stateIn.shareMappingData())
 {
     endAction();
 }
@@ -37,7 +37,7 @@ bool AdjustLayoutColour::rotateHue(float change, LumatoneKey& key)
         )
         return false;
 
-    key.getColour() = key.getColour().withRotatedHue(change);
+    key.setColour(key.getColour().withRotatedHue(change));
     return true;
 }
 
@@ -58,7 +58,7 @@ void AdjustLayoutColour::rotateHue(float change, const juce::Array<LumatoneKeyCo
     if (currentAction != AdjustLayoutColour::Type::ROTATEHUE)
     {
         beginAction(AdjustLayoutColour::Type::ROTATEHUE);
-        currentLayout = *state->getMappingData();
+        currentLayout = *getMappingData();
     }
 
     juce::Array<MappedLumatoneKey> updateKeys;
@@ -79,7 +79,7 @@ bool AdjustLayoutColour::multiplyBrightness(float change, LumatoneKey& key)
     if (key.getColour().isTransparent())
         return false;
 
-     key.getColour() = key.getColour().withMultipliedBrightness(change);
+     key.setColour(key.getColour().withMultipliedBrightness(change));
      return true;
 }
 
@@ -100,7 +100,7 @@ void AdjustLayoutColour::multiplyBrightness(float change, const juce::Array<Luma
     if (currentAction != AdjustLayoutColour::Type::ADJUSTBRIGHTNESS)
     {
         beginAction(AdjustLayoutColour::Type::ADJUSTBRIGHTNESS);
-        currentLayout = *state->getMappingData();
+        currentLayout = *getMappingData();
     }
 
     juce::Array<MappedLumatoneKey> updateKeys;
@@ -121,7 +121,7 @@ bool AdjustLayoutColour::multiplySaturation(float change, LumatoneKey& key)
     if (key.getColour().isTransparent())
         return false;
 
-    key.getColour() = key.getColour().withMultipliedSaturation(change);
+    key.setColour(key.getColour().withMultipliedSaturation(change));
     return true;
 }
 
@@ -142,7 +142,7 @@ void AdjustLayoutColour::multiplySaturation(float change, const juce::Array<Luma
     if (currentAction != AdjustLayoutColour::Type::ADJUSTSATURATION)
     {
         beginAction(AdjustLayoutColour::Type::ADJUSTSATURATION);
-        currentLayout= *state->getMappingData();
+        currentLayout= *getMappingData();
     }
 
     juce::Array<MappedLumatoneKey> updateKeys;
@@ -175,7 +175,7 @@ void AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, const juce::Array
     if (currentAction != AdjustLayoutColour::Type::ADJUSTWHITE)
     {
         beginAction(AdjustLayoutColour::Type::ADJUSTWHITE);
-        currentLayout= *state->getMappingData();
+        currentLayout= *getMappingData();
     }
 
     juce::Array<MappedLumatoneKey> updateKeys;
@@ -206,9 +206,10 @@ bool AdjustLayoutColour::adjustWhiteBalance(int newWhitePoint, LumatoneKey& key)
 void AdjustLayoutColour::adjustWhiteBalanceRgb(int newWhitePoint, LumatoneKey& key)
 {
     auto newWhiteColour = kelvinToColour(newWhitePoint);
-    key.getColour() = juce::Colour(LumatoneEditor::roundToUint8(key.getColour().getRed() * newWhiteColour.getFloatRed()),
+    key.setColour(juce::Colour(LumatoneEditor::roundToUint8(key.getColour().getRed() * newWhiteColour.getFloatRed()),
                             LumatoneEditor::roundToUint8(key.getColour().getGreen() * newWhiteColour.getFloatGreen()),
-                            LumatoneEditor::roundToUint8(key.getColour().getBlue() * newWhiteColour.getFloatBlue()));
+                            LumatoneEditor::roundToUint8(key.getColour().getBlue() * newWhiteColour.getFloatBlue()))
+        );
 }
 
 void AdjustLayoutColour::adjustWhiteBalanceLab(int newWhitePoint, LumatoneKey& key)
@@ -224,7 +225,7 @@ void AdjustLayoutColour::adjustWhiteBalanceLab(int newWhitePoint, LumatoneKey& k
         colourLab.B + (newWhiteLab.B - oldWhiteLab.B) / 3.0f,
         };
 
-    key.getColour() = labToRgb(adjustedLab);
+    key.setColour(labToRgb(adjustedLab));
 }
 
 void AdjustLayoutColour::setGradient(SetGradientOptions options)
@@ -325,8 +326,8 @@ void AdjustLayoutColour::beginAction(AdjustLayoutColour::Type type)
     {
         if (currentAction == AdjustLayoutColour::Type::NONE)
         {
-            originalLayout = *state->getMappingData();
-        layoutBeforeAdjust = *state->getMappingData();
+            originalLayout = *getMappingData();
+        layoutBeforeAdjust = *getMappingData();
         }
 
     }
@@ -336,7 +337,7 @@ void AdjustLayoutColour::beginAction(AdjustLayoutColour::Type type)
 
 void AdjustLayoutColour::endAction()
 {
-    layoutBeforeAdjust = *state->getMappingData();
+    layoutBeforeAdjust = *getMappingData();
     currentLayout = layoutBeforeAdjust;
     currentAction = AdjustLayoutColour::Type::NONE;
 }
@@ -388,7 +389,7 @@ void AdjustLayoutColour::commitChanges()
 }
 void AdjustLayoutColour::resetChanges()
 {
-    state->setLayout(originalLayout);
+    setLayout(originalLayout);
     endAction();
 
     hueRotateValue = 0.0f;
@@ -400,15 +401,15 @@ void AdjustLayoutColour::resetChanges()
 void AdjustLayoutColour::sendSelectionUpdate(const juce::Array<MappedLumatoneKey>& keyUpdates, bool bufferUpdates)
 {
     //auto updateAction = new LumatoneEditAction::MultiKeyAssignAction(state, keyUpdates, false, true, bufferUpdates);
-    //state->performAction(updateAction);
-    state->sendSelectionParam(keyUpdates);
+    //performAction(updateAction);
+    sendSelectionParam(keyUpdates);
 }
 
 void AdjustLayoutColour::sendMappingUpdate(const LumatoneLayout& updatedLayout, bool bufferUpdates)
 {
-    //for (int i = 0; i < state->getNumBoards(); i++)
-    //    state->performAction(new LumatoneEditAction::SectionEditAction(state, i, updatedLayout.getBoard(i), bufferUpdates), true, i == 0);
-    state->setLayout(updatedLayout);
+    //for (int i = 0; i < getNumBoards(); i++)
+    //    performAction(new LumatoneEditAction::SectionEditAction(state, i, updatedLayout.getBoard(i), bufferUpdates), true, i == 0);
+    setLayout(updatedLayout);
 }
 
 // juce::Colour AdjustLayoutColour::inverseSRGB(juce::Colour rgb)

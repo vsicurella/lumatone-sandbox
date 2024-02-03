@@ -12,13 +12,10 @@
 #include "../shared/debug/LumatoneSandboxDebugWindow.h"
 
 //==============================================================================
-LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxProcessor& p)
+LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxProcessor& p, const LumatoneSandboxState& stateIn)
     : AudioProcessorEditor (&p), processor (p)
-    , controller(p.getLumatoneController())
-    , undoManager(p.getUndoManager())
-    // , commandManager(p.getCommandManager())
-    , paletteLibrary(p.getPaletteLibrary())
-    , gameEngine(p.getGameEngine())
+    , LumatoneSandboxState("LumatoneSandboxEditor", stateIn)
+    , LumatoneSandboxState::Controller(static_cast<LumatoneSandboxState&>(*this))
 {
     juce::ignoreUnused (processor);
 
@@ -27,8 +24,7 @@ LumatoneSandboxProcessorEditor::LumatoneSandboxProcessorEditor (LumatoneSandboxP
     debugWindow->addToDesktop();
     debugWindow->setVisible(true);
 
-    mainComponent = std::make_unique<MainComponent>(controller);
-    mainComponent->setGameEngine(gameEngine);
+    mainComponent = std::make_unique<MainComponent>(*this);
     addAndMakeVisible(*mainComponent);
 
     commandManager = std::make_unique<juce::ApplicationCommandManager>();
@@ -248,14 +244,14 @@ bool LumatoneSandboxProcessorEditor::perform(const juce::ApplicationCommandTarge
     {
     case LumatoneSandbox::Menu::commandIDs::openSysExMapping:
     {
-        auto directory = controller->getLastMappingsDirectory();
-        fileChooser.reset(new juce::FileChooser("Open .LTN file", directory, "*.ltn"));
+        fileChooser.reset(new juce::FileChooser("Open .LTN file", getLastOpenedMappingsDirectory(), "*.ltn"));
         fileChooser->launchAsync(
             juce::FileBrowserComponent::FileChooserFlags::canSelectFiles | juce::FileBrowserComponent::FileChooserFlags::openMode,
             [&](const juce::FileChooser& chooser)
             {
                 auto file = chooser.getResult();
-                controller->loadLayoutFromFile(file);
+                setCurrentFile(file);
+                resetToCurrentFile();
                 
             });
         return true;
@@ -263,27 +259,20 @@ bool LumatoneSandboxProcessorEditor::perform(const juce::ApplicationCommandTarge
 
     case LumatoneSandbox::Menu::commandIDs::saveSysExMappingAs:
     {
-        auto directory = controller->getLastMappingsDirectory();
-        fileChooser.reset(new juce::FileChooser("Save .LTN file", directory, "*.ltn"));
+        fileChooser.reset(new juce::FileChooser("Save .LTN file", getLastOpenedMappingsDirectory(), "*.ltn"));
         fileChooser->launchAsync(
             juce::FileBrowserComponent::FileChooserFlags::canSelectFiles | juce::FileBrowserComponent::FileChooserFlags::saveMode,
             [&](const juce::FileChooser& chooser)
             {
                 auto file = chooser.getResult();
-                auto layoutString = controller->getMappingData()
-                                              ->toStringArray()
-                                              .joinIntoString(juce::newLine);
-                
-                auto tempFile = file.createTempFile("ltn.tmp");
-                tempFile.appendText(layoutString);
-                tempFile.moveFileTo(file);
+                saveMappingToFile(file);
             });
         return true;
     }
 
     case LumatoneSandbox::Menu::commandIDs::importSysExMapping:
     {
-        controller->sendGetCompleteMappingRequest();
+        requestMappingFromDevice();
         return true;
     }
 
@@ -291,7 +280,7 @@ bool LumatoneSandboxProcessorEditor::perform(const juce::ApplicationCommandTarge
     {
         juce::DialogWindow::LaunchOptions launch;
         launch.dialogTitle = "Adjust Colours";
-        launch.content.setOwned(new AdjustColourPanel(controller, paletteLibrary));
+        launch.content.setOwned(new AdjustColourPanel(*this));
         launch.content->setSize(600, 400);
 
         launch.componentToCentreAround = mainComponent.get();
@@ -311,21 +300,21 @@ bool LumatoneSandboxProcessorEditor::perform(const juce::ApplicationCommandTarge
     case LumatoneSandbox::Menu::commandIDs::openRandomColorsGame:
     {
         auto gameId = LumatoneSandbox::GameNameToString(LumatoneSandbox::GameName::RandomColors);
-        gameEngine->loadGame(gameId);
+        getGameEngine()->loadGame(gameId);
         return true;
     }
     
     case LumatoneSandbox::Menu::commandIDs::openHexRingsGame:
     {
         auto gameId = LumatoneSandbox::GameNameToString(LumatoneSandbox::GameName::HexRings);
-        gameEngine->loadGame(gameId);
+        getGameEngine()->loadGame(gameId);
         return true;
     }
 
     case LumatoneSandbox::Menu::commandIDs::openHexagonAutomata:
     {
         auto gameId = LumatoneSandbox::GameNameToString(LumatoneSandbox::GameName::HexagonAutomata);
-        gameEngine->loadGame(gameId);
+        getGameEngine()->loadGame(gameId);
         return true;
     }
 

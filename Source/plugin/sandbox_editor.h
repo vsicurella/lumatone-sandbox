@@ -11,9 +11,11 @@ class LumatoneSandboxDebugWindow;
 //==============================================================================
 class LumatoneSandboxProcessorEditor  : public juce::AudioProcessorEditor
                                       , public juce::ApplicationCommandTarget
+                                      , public LumatoneSandboxState
+                                      , public LumatoneSandboxState::Controller
 {
 public:
-    explicit LumatoneSandboxProcessorEditor (LumatoneSandboxProcessor&);
+    explicit LumatoneSandboxProcessorEditor (LumatoneSandboxProcessor&, const LumatoneSandboxState&);
     ~LumatoneSandboxProcessorEditor() override;
 
     //==============================================================================
@@ -38,14 +40,8 @@ private:
     LumatoneSandboxProcessor& processor;
 
     std::unique_ptr<LumatoneSandboxDebugWindow> debugWindow;
-
-    LumatoneController* controller;
-    juce::UndoManager* undoManager;
     
     std::unique_ptr<juce::ApplicationCommandManager> commandManager;
-
-    LumatonePaletteLibrary* paletteLibrary;
-    LumatoneSandboxGameEngine* gameEngine;
 
     std::unique_ptr<MainComponent> mainComponent;
 

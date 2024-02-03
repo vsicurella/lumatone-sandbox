@@ -2,6 +2,8 @@
 
 #include <JuceHeader.h>
 
+#include "../shared/SandboxState.h"
+
 class LumatoneApplicationState;
 class LumatoneFirmwareDriver;
 class DeviceActivityMonitor;
@@ -13,7 +15,7 @@ class LumatoneSandboxLogTableModel;
 
 //==============================================================================
 class LumatoneSandboxProcessor  : public juce::AudioProcessor
-                                // , public juce::ApplicationCommandTarget
+                                , private LumatoneSandboxState::Controller
 {
 public:
     //==============================================================================
@@ -56,46 +58,16 @@ public:
 
     LumatoneSandboxLogTableModel*       getLogData() { return logData.get(); }
 
-    juce::UndoManager*                  getUndoManager() { return undoManager.get(); }
-    // juce::ApplicationCommandManager*    getCommandManager() { return commandManager.get(); }
-
-    LumatonePaletteLibrary*         getPaletteLibrary() { return paletteLibrary.get(); }
-    
-    LumatoneController*             getLumatoneController() { return controller.get(); }
-    DeviceActivityMonitor*          getDeviceMonitor() { return monitor.get(); }
-
-    LumatoneSandboxGameEngine*      getGameEngine() { return gameEngine.get(); }
-
     //==============================================================================
-
-    // juce::ApplicationCommandTarget* getNextCommandTarget() override;
-
-    // void getAllCommands(juce::Array<juce::CommandID>& commands) override;
-
-    // void getCommandInfo(juce::CommandID commandID, juce::ApplicationCommandInfo &result) override;
-
-    // bool perform(const juce::ApplicationCommandTarget::InvocationInfo &info) override;
-
-
 private:
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LumatoneSandboxProcessor)
-
     bool isStandalone = false;
 
+	std::shared_ptr<LumatoneFirmwareDriver>	midiDriver;
+	juce::UndoManager 		undoManager;
+
+	LumatoneSandboxState		state;
+
     std::unique_ptr<LumatoneSandboxLogTableModel> logData;
-    
-    std::unique_ptr<juce::UndoManager> undoManager;
-    // std::unique_ptr<juce::ApplicationCommandManager> commandManager;
 
-    juce::ValueTree treeState;
-    std::unique_ptr<LumatoneApplicationState> appState;
-
-    std::unique_ptr<LumatonePaletteLibrary> paletteLibrary;
-
-    std::unique_ptr<LumatoneFirmwareDriver> midiDriver;
-    std::unique_ptr<LumatoneController> controller;
-    std::unique_ptr<DeviceActivityMonitor> monitor;
-
-    std::unique_ptr<LumatoneSandboxGameEngine> gameEngine;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LumatoneSandboxProcessor)
 };

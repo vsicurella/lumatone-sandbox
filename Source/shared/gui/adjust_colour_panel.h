@@ -1,16 +1,24 @@
 #pragma once
 
+#include "../SandboxState.h"
+
 #include "../lumatone_editor_library/device/lumatone_controller.h"
-#include "../lumatone_editor_library/palettes/colour_palette_window.h"
 #include "../lumatone_editor_library/palettes/palette_library.h"
 
 #include "../lumatone_editor_library/actions/edit_actions.h"
 
 #include "../lumatone_editor_library/color/adjust_layout_colour.h"
 
-class AdjustColourPanel : public juce::Component,
-                          public LumatoneEditor::EditorListener,
-                          public ColourSelectionListener
+#include "../lumatone_editor_library/listeners/editor_listener.h"
+#include "../lumatone_editor_library/palettes/colour_selection_group.h"
+
+
+class ColourPaletteWindow;
+class AdjustColourPanel : public juce::Component
+                        , public LumatoneSandboxState
+                        , private LumatoneSandboxState::Controller
+                        , public LumatoneEditor::EditorListener
+                        , public ColourSelectionListener
 {
 private:
     class Box : public juce::Component
@@ -36,7 +44,7 @@ private:
 
 public:
 
-    AdjustColourPanel(LumatoneController* controller, LumatonePaletteLibrary* paletteLibrary);
+    AdjustColourPanel(const LumatoneSandboxState& stateIn);
     ~AdjustColourPanel();
 
 public:
@@ -48,9 +56,9 @@ public:
     void mouseDown(const juce::MouseEvent& e) override;
 
 private:
-    void completeMappingLoaded(LumatoneLayout mappingData) override;
-    void boardChanged(LumatoneBoard boardData) override;
-    void keyChanged(int boardIndex, int keyIndex, LumatoneKey lumatoneKey) override;
+    void completeMappingLoaded(const LumatoneLayout& mappingData) override;
+    void boardChanged(const LumatoneBoard& boardData) override;
+    void keyChanged(int boardIndex, int keyIndex, const LumatoneKey& lumatoneKey) override;
 
 private:
     void colourChangedCallback(ColourSelectionBroadcaster* source, juce::Colour newColour) override;
