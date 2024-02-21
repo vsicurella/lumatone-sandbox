@@ -10,6 +10,8 @@
 
 #include "connection_status.h"
 
+using namespace LumatoneEditor;
+
 //==============================================================================
 ConnectionStatus::ConnectionStatus()
 {

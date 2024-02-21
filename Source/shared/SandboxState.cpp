@@ -300,16 +300,16 @@ void LumatoneSandboxState::Controller::loadColourPalettesFromFile()
 // 	return success;
 // }
 
-bool LumatoneSandboxState::Controller::performAction(LumatoneAction *action, bool undoable, bool newTransaction)
-{
-    if (LumatoneApplicationState::Controller::performAction(action, undoable, newTransaction))
-    {
-        // setHasChangesToSave(true);
-        return true;
-    }
+// bool LumatoneSandboxState::Controller::performAction(LumatoneAction *action, bool undoable, bool newTransaction)
+// {
+//     if (LumatoneApplicationState::Controller::performAction(action, undoable, newTransaction))
+//     {
+//         // setHasChangesToSave(true);
+//         return true;
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
 // Open a SysEx mapping from the file specified in currentFile
 bool LumatoneSandboxState::Controller::resetToCurrentFile()

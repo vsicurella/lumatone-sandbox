@@ -97,7 +97,7 @@ public:
 
         juce::ValueTree getState() { return sandboxState.state; }
 
-        bool performAction(LumatoneAction* action, bool undoable=true, bool newTransaction=true) override;
+        // bool performAction(LumatoneAction* action, bool undoable=true, bool newTransaction=true) override;
 
         bool resetToCurrentFile();
         bool openRecentFile(int recentFileIndex);

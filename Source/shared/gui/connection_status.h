@@ -17,8 +17,8 @@
 //==============================================================================
 /*
 */
-class ConnectionStatus : public juce::Component,
-    public LumatoneEditor::StatusListener
+class ConnectionStatus : public juce::Component
+                       , public LumatoneEditor::StatusListener
 {
 public:
     ConnectionStatus();
@@ -27,20 +27,20 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
-    void handleStatus(ConnectionState state);
+    void handleStatus(LumatoneEditor::ConnectionState state);
 
     //==============================================================================
     // LumatoneEditor::StatusListener
 
     // virtual void connectionFailed() override;
-    void connectionStateChanged(ConnectionState newState) override;
+    void connectionStateChanged(LumatoneEditor::ConnectionState newState) override;
     // virtual void connectionEstablished(juce::String inputDeviceId, juce::String outputDeviceId) override;
     // virtual void connectionLost() override;
 
 private:
 
-    juce::String stateToMessage(ConnectionState state);
-    juce::Colour stateToColour(ConnectionState state);
+    juce::String stateToMessage(LumatoneEditor::ConnectionState state);
+    juce::Colour stateToColour(LumatoneEditor::ConnectionState state);
 
 private:
 
