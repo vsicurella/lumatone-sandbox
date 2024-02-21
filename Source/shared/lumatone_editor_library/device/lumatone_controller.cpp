@@ -14,6 +14,8 @@
 #include "../lumatone_midi_driver/lumatone_midi_driver.h"
 #include "../listeners/editor_listener.h"
 
+using namespace LumatoneEditor;
+
 LumatoneController::LumatoneController(const LumatoneApplicationState& stateIn, LumatoneFirmwareDriver& driverIn)
     : LumatoneApplicationState("LumatoneController", stateIn)
     , LumatoneApplicationState::DeviceController(static_cast<LumatoneApplicationState&>(*this))

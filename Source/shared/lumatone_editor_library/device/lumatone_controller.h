@@ -20,7 +20,6 @@
 #include "../midi/lumatone_midi_manager.h"
 
 class LumatoneEventManager;
-class LumatoneAction;
 
 //==============================================================================
 // Helper class for parsing and comparing (todo) firmware versions
@@ -55,7 +54,7 @@ public:
     //============================================================================
     // Status Listener implementation
 
-    void connectionStateChanged(ConnectionState newState) override;
+    void connectionStateChanged(LumatoneEditor::ConnectionState newState) override;
 
 public:
     //============================================================================

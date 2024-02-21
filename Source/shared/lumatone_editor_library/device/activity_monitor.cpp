@@ -14,6 +14,7 @@
 #include "../lumatone_midi_driver/firmware_sysex.h"
 #include "../listeners/status_listener.h"
 
+using namespace LumatoneEditor;
 
 DeviceActivityMonitor::DeviceActivityMonitor(const LumatoneApplicationState& stateIn, LumatoneFirmwareDriver* midiDriverIn)
     :   LumatoneApplicationState("DeviceActivityMonitor", stateIn)
@@ -285,7 +286,7 @@ void DeviceActivityMonitor::checkDetectionStatus()
             waitingForResponse = false;
             startTimer(detectRoutineTimeoutMs);
 
-            getStatusListeners()->call(&LumatoneEditor::StatusListener::connectionFailed);
+            getStatusListeners()->call(&StatusListener::connectionFailed);
         }
         else
         {
@@ -339,7 +340,7 @@ void DeviceActivityMonitor::checkDetectionStatus()
                 waitingForResponse = false;
                 startTimer(detectRoutineTimeoutMs);
 
-                getStatusListeners()->call(&LumatoneEditor::StatusListener::connectionFailed);
+                getStatusListeners()->call(&StatusListener::connectionFailed);
             }
         }
 
@@ -569,7 +570,7 @@ void DeviceActivityMonitor::onDisconnection()
 
     waitingForResponse = false;
 
-    getStatusListeners()->call(&LumatoneEditor::StatusListener::connectionStateChanged, ConnectionState::DISCONNECTED);
+    getStatusListeners()->call(&StatusListener::connectionStateChanged, ConnectionState::DISCONNECTED);
 
     if (detectDevicesIfDisconnected)
     {
@@ -583,7 +584,7 @@ void DeviceActivityMonitor::onDisconnection()
 }
 
 //==============================================================================
-// LumatoneEditor::StatusListener
+// StatusListener
 
 void DeviceActivityMonitor::establishConnection(int inputIndex, int outputIndex)
 {
