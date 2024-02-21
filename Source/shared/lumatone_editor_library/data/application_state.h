@@ -4,6 +4,8 @@
 #include "lumatone_state.h"
 #include "lumatone_context.h"
 
+namespace LumatoneEditor
+{
 enum class ConnectionState
 {
     DISCONNECTED = 0,
@@ -14,12 +16,14 @@ enum class ConnectionState
     ERROR
 };
 
-namespace LumatoneEditor
-{
+//======================================
     class StatusListener;
     class EditorListener;
     class FirmwareListener;
     class MidiListener;
+//======================================
+    class Action;
+    class UndoableAction;
 }
 
 namespace LumatoneApplicationProperty
@@ -47,7 +51,6 @@ juce::Array<juce::Identifier> getLumatoneApplicationProperties();
 class LumatoneFirmwareDriver;
 class LumatoneController;
 class LumatoneColourModel;
-class LumatoneAction;
 class DeviceActivityMonitor;
 
 class LumatoneApplicationState : public LumatoneState
@@ -56,13 +59,16 @@ public:
     LumatoneApplicationState(juce::String nameIn, LumatoneFirmwareDriver& driverIn, juce::ValueTree stateIn=juce::ValueTree(), juce::UndoManager* undoManager=nullptr);
     LumatoneApplicationState(juce::String nameIn, const LumatoneApplicationState& stateIn);
 
+    // Create a copy but point to a child node
+    LumatoneApplicationState(juce::String nameIn, LumatoneApplicationState& stateIn, juce::Identifier childId);
+
     virtual ~LumatoneApplicationState() override;
 
     LumatoneController* getLumatoneController() const;
     LumatoneColourModel* getColourModel() const;
 
     // Connection Methods
-    ConnectionState getConnectionState() const;
+    LumatoneEditor::ConnectionState getConnectionState() const;
     int getMidiInputIndex() const;
     int getMidiOutputIndex() const;
 
@@ -99,9 +105,9 @@ public:
     
     virtual void setConfigTable(LumatoneConfigTable::TableType type, const LumatoneConfigTable& table) override;
 
-private:
-    bool performLumatoneAction(LumatoneAction* action, bool undoable = true, bool newTransaction = true);
-
+public:
+    bool performAction(LumatoneEditor::Action* action);
+    bool performUndoableAction(LumatoneEditor::UndoableAction* action, bool newTransaction = true);
 
 protected:
     virtual void setInactiveMacroButtonColour(juce::Colour buttonColour) override;
@@ -112,10 +118,10 @@ protected:
 
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
-    virtual void loadPropertiesFile(juce::PropertiesFile* properties) override;
+    virtual void loadPropertiesFile(juce::PropertiesFile* properties);
 
 private:
-    ConnectionState connectionState = ConnectionState::DISCONNECTED;
+    LumatoneEditor::ConnectionState connectionState = LumatoneEditor::ConnectionState::DISCONNECTED;
 
 private:
     std::shared_ptr<juce::ListenerList<LumatoneEditor::StatusListener>> statusListeners;
@@ -167,7 +173,8 @@ public:
     void setInactiveMacroButtonColour(juce::Colour buttonColour);
     void setActiveMacroButtonColour(juce::Colour buttonColour);
 
-    virtual bool performAction(LumatoneAction* action, bool undoable=true, bool newTransaction=true);
+    // virtual bool performAction(LumatoneEditor::Action* action);
+    // virtual bool performUndoableAction(LumatoneEditor::UndoableAction* action, bool newTransaction = true);
 
     protected:
         juce::ListenerList<LumatoneEditor::EditorListener>* getEditorListeners() const { return appState.editorListeners.get(); }
@@ -193,7 +200,7 @@ public:
         virtual void setMidiInput(int deviceIndex, bool test = true);
         virtual void setMidiOutput(int deviceIndex, bool test = true);
 
-        void setConnectionState(ConnectionState newState, bool sendNotification=true);
+        void setConnectionState(LumatoneEditor::ConnectionState newState, bool sendNotification=true);
 
         void setAutoConnectionEnabled(bool enabled);
 
