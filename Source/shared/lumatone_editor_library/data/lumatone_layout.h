@@ -102,6 +102,7 @@ public:
 
 	int getNumBoards() const { return numBoards; }
 	int getOctaveBoardSize() const { return octaveBoardSize; }
+	int getNumKeys() const;
 
 	bool getAftertouchOn() const { return afterTouchActive; }
 	bool getLightOnKeyStrokes() const { return lightOnKeyStrokes; }
@@ -120,7 +121,10 @@ public:
 	virtual void setBoard(const LumatoneBoard& boardIn, int boardIndex);
 
 	const LumatoneKey& getKey(int boardIndex, int keyIndex) const;
+	// const LumatoneKey* getKey(int keyIndex) const;
+
 	MappedLumatoneKey getMappedKey(int boardIndex, int keyIndex) const;
+	MappedLumatoneKey getMappedKey(int keyIndex) const;
 
 	virtual void setKey(const LumatoneKey& keyIn, int boardIndex, int keyIndex);
 	virtual void setKey(MappedLumatoneKey keyIn);
@@ -155,13 +159,16 @@ public:
 	static LumatoneLayout IdentityMapping(int numBoards=MAXNUMBOARDS, int octaveBoardSize=56, LumatoneKeyType keyType=LumatoneKeyType::noteOnNoteOff);
 
 private:
-
 	void updateState();
 	void refreshFromState();
+
+	void updateNumKeys();
 
 private:
 	int numBoards = 0;
 	int octaveBoardSize = 0;
+
+	int numKeys = 0;
 
 	// General options
 	bool afterTouchActive;

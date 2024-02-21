@@ -255,6 +255,7 @@ void LumatoneLayout::setBoard(const LumatoneBoard &boardIn, int boardIndex)
 {
     boards[boardIndex] = boardIn;
     boards[boardIndex].board_idx = boardIndex;
+    updateNumKeys();
 }
 
 const LumatoneKey& LumatoneLayout::getKey(int boardIndex, int keyIndex) const
@@ -262,9 +263,54 @@ const LumatoneKey& LumatoneLayout::getKey(int boardIndex, int keyIndex) const
     return boards[boardIndex].theKeys[keyIndex];
 }
 
+// const LumatoneKey* LumatoneLayout::getKey(int keyIndex) const
+// {
+//     int boardKeyIndex = keyIndex;
+//     for (int b = 0; b < getNumBoards(); b++)
+//     {
+//         const LumatoneBoard& board = getBoard(b);
+//         if (boardKeyIndex < board.getNumKeys())
+//         {
+//             return &board.getKey(boardKeyIndex);
+//         }
+
+//         boardKeyIndex -= board.getNumKeys();
+//         if (boardKeyIndex < 0)
+//             break;
+//     }
+
+//     return nullptr;
+// }
+
 MappedLumatoneKey LumatoneLayout::getMappedKey(int boardIndex, int keyIndex) const
 {
     return MappedLumatoneKey(boards[boardIndex].theKeys[keyIndex], boardIndex, keyIndex);
+}
+
+MappedLumatoneKey LumatoneLayout::getMappedKey(int keyIndex) const
+{
+    const LumatoneKey* key = nullptr;
+    int boardIndex = 0;
+    int boardKeyIndex = keyIndex;
+
+    for (; boardIndex < getNumBoards(); boardIndex++)
+    {
+        const LumatoneBoard& board = getBoard(boardIndex);
+        if (boardKeyIndex < board.getNumKeys())
+        {
+            key = &board.getKey(boardKeyIndex);
+            break;
+        }
+
+        boardKeyIndex -= board.getNumKeys();
+        if (boardKeyIndex < 0)
+            break;
+    }
+
+    if (key == nullptr)
+        return MappedLumatoneKey();
+
+    return MappedLumatoneKey(*key, boardIndex, boardKeyIndex);
 }
 
 void LumatoneLayout::setKey(const LumatoneKey &keyIn, int boardIndex, int keyIndex)
@@ -386,6 +432,8 @@ void LumatoneLayout::clearAll(bool initializeWithNoteKeyType)
         boards[i] = LumatoneBoard(newKeyType, octaveBoardSize, i);
     }
 
+    updateNumKeys();
+
     // Default values for options
     afterTouchActive = false;
     lightOnKeyStrokes = false;
@@ -418,6 +466,8 @@ void LumatoneLayout::operator=(const LumatoneLayout& toCopy)
     {
         boards[i] = toCopy.getBoard(i);
     }
+
+    updateNumKeys();
 
     afterTouchActive = toCopy.afterTouchActive;
     lightOnKeyStrokes = toCopy.lightOnKeyStrokes;
@@ -618,6 +668,8 @@ void LumatoneLayout::fromStringArray(const juce::StringArray& stringArray)
         }
     }
 
+    updateNumKeys();
+
     // Conversion between 55-key and 56-key layout
     //if (getOctaveBoardSize() == 56 && !hasFiftySixKeys) {
     //    // Loaded layout has 55-key layout. Adjust geometry to 56-key layout
@@ -677,6 +729,11 @@ juce::StringArray LumatoneLayout::toStringArray() const
     result.add("LumaTouchConfig=" + lumaTouchTable.toConfigString());
 
     return result;
+}
+
+int LumatoneLayout::getNumKeys() const
+{
+    return numKeys;
 }
 
 const LumatoneConfigTable* LumatoneLayout::getConfigTable(LumatoneConfigTable::TableType tableType) const
@@ -826,6 +883,8 @@ void LumatoneLayout::refreshFromState()
         boards[i] = board;
     }
 
+    updateNumKeys();
+
     afterTouchActive = (bool)parsedState.getProperty(LumatoneConfigProperty::AftertouchEnabled, false);
     lightOnKeyStrokes = (bool)parsedState.getProperty(LumatoneConfigProperty::LightOnKeyStrokes, false);
     invertExpression = (bool)parsedState.getProperty(LumatoneConfigProperty::InvertExpression, false);
@@ -838,4 +897,16 @@ void LumatoneLayout::refreshFromState()
     lumaTouchTable = LumatoneConfigTable(parsedState.getProperty(LumatoneConfigProperty::LumatouchTable).toString());
 
     state.copyPropertiesAndChildrenFrom(parsedState, nullptr);
+}
+
+void LumatoneLayout::updateNumKeys()
+{
+    int num = 0;
+    for (int b = 0; b < getNumBoards(); b++)
+    {
+        const LumatoneBoard& board = getBoard(b);
+        num += board.getNumKeys();
+    }
+
+    numKeys = num;
 }
