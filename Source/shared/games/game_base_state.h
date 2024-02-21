@@ -11,7 +11,7 @@
 
 #include "../game_engine/game_engine_state.h"
 
-class LumatoneGameBaseState : protected LumatoneStateBase
+class LumatoneGameBaseState : protected LumatoneGameEngineState
 {
 public:
     struct ID
@@ -26,21 +26,32 @@ public:
 public:
     LumatoneGameBaseState(LumatoneSandbox::GameName name, juce::Identifier gameId, LumatoneGameEngineState& gameEngineStateIn);
 
-    juce::ValueTree getNode() const { return state; };
+    // juce::ValueTree getNode() const { return state; }
 
     int getNumTicks() const { return ticks; }
 
-protected:    
+    LumatoneKeyContext getKeyAt(int boardIndex, int keyIndex) const;
+
+    const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
+
+protected:
+    void updateSavedLayout();
+
+public:
+    LumatoneLayout getIdentityLayout(bool resetColors=true, juce::Colour boardColour={});
+    LumatoneContext getIdentityWithLayoutContext(bool resetColors);
+
+protected:
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override = 0;
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 protected:
     juce::Identifier gameId;
     
-    LumatoneGameEngineState engineState;
-
     int ticks = 0;
     int maxUpdatesPerFrame = 30;
+
+    LumatoneLayout layoutBeforeStart;
 };
 
 #endif

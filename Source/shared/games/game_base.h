@@ -15,15 +15,20 @@
 
 #include "../lumatone_editor_library/data/lumatone_context.h"
 
+#include "../lumatone_editor_library/actions/edit_actions.h"
+
 #include "../lumatone_editor_library/listeners/midi_listener.h"
 #include "../lumatone_editor_library/listeners/editor_listener.h"
 
 #include "../lumatone_editor_library/ui/keyboard_component.h"
 
+#include "../lumatone_editor_library/midi/lumatone_midi_manager.h"
+
 #include "../debug/LumatoneSandboxLogger.h"
 
-class LumatoneAction;
-class LumatoneController;
+
+// class LumatoneAction;
+class LumatoneSandboxState;
 
 class LumatoneSandboxGameComponent;
 
@@ -45,19 +50,18 @@ public:
 class LumatoneSandboxGameBase : public LumatoneEditor::MidiListener
                               , public LumatoneEditor::EditorListener
                               , public LumatoneKeyboardComponent::Listener
+                              , protected LumatoneApplicationMidi::Controller
                               , protected LumatoneSandboxLogger
 {
 public:
 
-    LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String gameName);
-    virtual ~LumatoneSandboxGameBase()
+    LumatoneSandboxGameBase(juce::String gameName, const LumatoneApplicationState& stateIn);
+    virtual ~LumatoneSandboxGameBase() override
     {
         reset(true);
     }
 
     void queueLayout(const LumatoneLayout& layout);
-    LumatoneLayout getIdentityLayout(bool resetColors=true, juce::Colour boardColour={});
-    LumatoneContext getIdentityWithLayoutContext(bool resetColors);
 
     // currently unused return statement
     virtual bool reset(bool clearActionQueue);
@@ -67,7 +71,7 @@ public:
     virtual bool pauseTick() { return true; }
 
     virtual void clearQueue();
-    void readQueue(LumatoneAction** buffer, int& numActions);
+    void readQueue(LumatoneEditor::LayoutAction* buffer, int& numActions);
 
     virtual void requestQuit() { quitGame = true; }
     virtual void end();
@@ -76,39 +80,31 @@ public:
 
     juce::String getName() const { return name; }
 
-    const LumatoneLayout& getLayoutBeforeStart() const { return layoutBeforeStart; }
-    void updateSavedLayout();
-
 public:
     virtual LumatoneSandboxGameComponent* createController() { return nullptr; }
 
 protected:
-    LumatoneKeyContext getKeyAt(int boardIndex, int keyIndex) const;
-
     virtual void quit() { quitGame = false; }
 
 private:
     int getQueuePtr() const { return (queuePtr + queueSize - 1) % MAX_QUEUE_SIZE; }
 
 protected:
-    void completeMappingLoaded(LumatoneLayout layout) override;
+    void completeMappingLoaded(const LumatoneLayout& layout) override;
 
 protected:
-    LumatoneLayout layoutBeforeStart;
+    virtual void addToQueue(const LumatoneEditor::LayoutAction& action);
+    virtual LumatoneEditor::LayoutAction renderFrame() const = 0;
 
-    virtual void addToQueue(LumatoneAction* action);
-    virtual LumatoneAction* renderFrame() const { return nullptr; }
-
-    LumatoneAction* queuedActions[MAX_QUEUE_SIZE];
+    LumatoneEditor::LayoutAction queuedActions[MAX_QUEUE_SIZE];
     int queueSize = 0;
     int queuePtr = 0;
-
-    LumatoneController* controller;
 
     bool quitGame;
 
 private:
     juce::String name;
+    const LumatoneApplicationState& appState;
 };
 
-#endif LUMATONE_GAME_BASE_H
+#endif // LUMATONE_GAME_BASE_H

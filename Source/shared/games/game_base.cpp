@@ -13,11 +13,12 @@
 #include "../lumatone_editor_library/actions/edit_actions.h"
 #include "../lumatone_editor_library/device/lumatone_controller.h"
 
-LumatoneSandboxGameBase::LumatoneSandboxGameBase(LumatoneController* controllerIn, juce::String nameIn)
-    : controller(controllerIn)
-    , layoutBeforeStart(*controllerIn->getMappingData())
-    , name(nameIn)
+LumatoneSandboxGameBase::LumatoneSandboxGameBase(juce::String nameIn, const LumatoneApplicationState& stateIn)
+    // : LumatoneApplicationState(nameIn, stateIn)
+    : LumatoneApplicationMidi::Controller(static_cast<LumatoneApplicationMidi&>(*stateIn.getLumatoneController()))
     , LumatoneSandboxLogger(nameIn)
+    , name(nameIn)
+    , appState(stateIn)
 {
     reset(true);
 }
@@ -35,18 +36,18 @@ bool LumatoneSandboxGameBase::reset(bool clearActionQueue)
 
 void LumatoneSandboxGameBase::clearQueue()
 {
-    for (int i = 0; i < queueSize; i++)
-    {
-        int ptr = (queuePtr + i) % MAX_QUEUE_SIZE;
-        if (queuedActions[ptr] != nullptr)
-            delete queuedActions[ptr];
-    }
+    // for (int i = 0; i < queueSize; i++)
+    // {
+    //     int ptr = (queuePtr + i) % MAX_QUEUE_SIZE;
+    //     if (queuedActions[ptr] != nullptr)
+    //         queuedActions[ptr] = nullptr;
+    // }
 
     queueSize = 0;
     queuePtr = 0;
 }
 
-void LumatoneSandboxGameBase::readQueue(LumatoneAction** buffer, int& numActions)
+void LumatoneSandboxGameBase::readQueue(LumatoneEditor::LayoutAction* buffer, int& numActions)
 {
     if (queueSize < 0)
     {
@@ -59,7 +60,7 @@ void LumatoneSandboxGameBase::readQueue(LumatoneAction** buffer, int& numActions
     {
         int ptr = (queuePtr + i) % MAX_QUEUE_SIZE;
         buffer[i] = queuedActions[ptr];
-        queuedActions[ptr] = nullptr;
+        // queuedActions[ptr] = nullptr;
     }
 
     queuePtr = 0;
@@ -69,98 +70,41 @@ void LumatoneSandboxGameBase::readQueue(LumatoneAction** buffer, int& numActions
 void LumatoneSandboxGameBase::end()
 {
     reset(true);
-    queueLayout(layoutBeforeStart);
+    // queueLayout(layoutBeforeStart);
 }
 
-void LumatoneSandboxGameBase::updateSavedLayout()
-{
-    layoutBeforeStart = *controller->getMappingData();
-}
-
-LumatoneKeyContext LumatoneSandboxGameBase::getKeyAt(int boardIndex, int keyIndex) const
-{
-    return controller->getKeyContext(boardIndex, keyIndex);
-}
-
-void LumatoneSandboxGameBase::addToQueue(LumatoneAction* action)
+void LumatoneSandboxGameBase::addToQueue(const LumatoneEditor::LayoutAction& action)
 {
     // jassert(action != nullptr);
-    if (action == nullptr)
-        return;
+    // if (action == nullptr)
+    //     return;
 
     if (queueSize < 0)
         queueSize = 1;
     else if (queueSize < MAX_QUEUE_SIZE)
         queueSize += 1;
-    else
-        delete queuedActions[getQueuePtr()];
+    // else
+        // queuedActions[getQueuePtr()] = nullptr;
 
     queuedActions[getQueuePtr()] = action;
 }
 
 void LumatoneSandboxGameBase::queueLayout(const LumatoneLayout& layout)
 {
-    for (int i = 0; i < controller->getNumBoards(); i++)
+    for (int i = 0; i < appState.getNumBoards(); i++)
     {
-        const LumatoneBoard* newBoard = layout.readBoard(i);
-        addToQueue(new LumatoneEditAction::SectionEditAction(controller, i, *newBoard));
+        auto action = LumatoneEditor::LayoutAction();
+        action.setData(layout.getBoard(i), i);
+        addToQueue(action);
     }
+    // addToQueue(new LumatoneGame::LayoutUpdateAction(layout));
 }
 
-LumatoneLayout LumatoneSandboxGameBase::getIdentityLayout(bool resetColors, juce::Colour boardColour)
-{
-    LumatoneLayout identity = LumatoneLayout::IdentityMapping(controller->getNumBoards(), controller->getOctaveBoardSize());
-
-    for (int b = 0; b < layoutBeforeStart.getNumBoards(); b++)
-    {
-        for (int k = 0; k < layoutBeforeStart.getOctaveBoardSize(); k++)
-        {
-            auto idKey = identity.getKey(b, k);
-            if (resetColors)
-            {
-                idKey->colour = boardColour;
-            }
-            else
-            {
-                auto layoutKey = layoutBeforeStart.readKey(b, k);
-                idKey->colour = layoutKey->colour;
-            }
-        }
-    }
-
-    return identity;
-}
-
-LumatoneContext LumatoneSandboxGameBase::getIdentityWithLayoutContext(bool resetColors)
-{
-    LumatoneLayout identityLayout = getIdentityLayout(resetColors);
-    LumatoneContext layoutContext = LumatoneContext(layoutBeforeStart);
-
-    juce::Array<int> midiChannelContextMap;
-    juce::Array<int> midiNoteContextMap;
-
-    for (int b = 0; b < layoutBeforeStart.getNumBoards(); b++)
-    {
-        for (int k = 0; k < layoutBeforeStart.getOctaveBoardSize(); k++)
-        {
-            auto layoutKey = layoutBeforeStart.readKey(b, k);
-            midiChannelContextMap.add(layoutKey->channelNumber);
-            midiNoteContextMap.add(layoutKey->noteNumber);
-        }
-    }
-
-    LumatoneContext context = LumatoneContext(identityLayout);
-    context.setMappedMidiChannels(midiChannelContextMap);
-    context.setMappedMidiNotes(midiNoteContextMap);
-
-    return context;
-}
-
-void LumatoneSandboxGameBase::completeMappingLoaded(LumatoneLayout layout)
+void LumatoneSandboxGameBase::completeMappingLoaded(const LumatoneLayout& layout)
 {
     // this is fine because we update via section update actions
     // so this should only be triggered by loading a new layout
 
     logInfo("completeMappingLoaded", "Backing up current layout.");
-    updateSavedLayout();
+    // updateSavedLayout();
 }
