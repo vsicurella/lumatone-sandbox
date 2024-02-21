@@ -16,11 +16,11 @@
 #include "../../lumatone_editor_library/device/lumatone_controller.h"
 #include "../../lumatone_editor_library/actions/edit_actions.h"
 
-HexRings::HexRings(LumatoneGameEngineState& gameEngineState, LumatoneController* controller)
-    : LumatoneSandboxGameBase(controller, "HexRings")
+HexRings::HexRings(LumatoneGameEngineState& gameEngineState)
+    : LumatoneSandboxGameBase("HexRings", gameEngineState)
     , LumatoneGameBaseState(LumatoneSandbox::GameName::HexRings, HexRings::ID::GameId, gameEngineState)
 {
-    hexMap.reset(new LumatoneHexMap(controller->shareMappingData()));
+    hexMap.reset(new LumatoneHexMap(gameEngineState.shareMappingData()));
     reset(true);
 }
 
@@ -39,14 +39,16 @@ bool HexRings::nextTick()
     for (int i = 0; i < limit; i++)
     {
         advanceFrameQueue();
-        addToQueue(renderFrame());
+        auto frame = renderFrame();
+        addToQueue(frame);
     }
 
     return true;
 }
 
-LumatoneAction* HexRings::renderFrame() const
+LumatoneEditor::LayoutAction HexRings::renderFrame() const
 {
+    LumatoneEditor::LayoutAction action;
     juce::Array<MappedLumatoneKey> keyUpdates;
 
     int limit = juce::jmin(currentFrame.size(), maxUpdatesPerFrame);
@@ -60,7 +62,7 @@ LumatoneAction* HexRings::renderFrame() const
                 auto key = static_cast<MappedLumatoneKey>(getKeyAt(frame.origin.boardIndex, frame.origin.keyIndex));
                 key.boardIndex = frame.origin.boardIndex;
                 key.keyIndex = frame.origin.keyIndex;
-                key.colour = frame.colour;
+                key.setColour(frame.colour);
 
                 keyUpdates.add(key);
             }
@@ -68,9 +70,11 @@ LumatoneAction* HexRings::renderFrame() const
     }
 
     if (keyUpdates.size() > 0)
-        return new LumatoneEditAction::MultiKeyAssignAction(controller,  keyUpdates, false, true, false);
+    {
+        action.setData(keyUpdates);
+    }
 
-    return nullptr;
+    return action;
 }
 
 void HexRings::advanceFrameQueue()
@@ -110,7 +114,7 @@ void HexRings::handleNoteOn(int midiChannel, int midiNote, juce::uint8 velocity)
     for (auto point : neighbors)
     {
         auto coord = hexMap->hexToKeyCoords(point);
-        if (!controller->getMappingData()->isKeyCoordValid(coord))
+        if (!getMappingData()->isKeyCoordValid(coord))
             continue;
 
         frameQueue.add({ coord, true, false, false, velocity, colour });

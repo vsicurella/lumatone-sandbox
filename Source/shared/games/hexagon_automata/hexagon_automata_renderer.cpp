@@ -64,7 +64,7 @@ MappedLumatoneKey HexagonAutomata::Renderer::renderCellKey(const MappedHexState&
 {
     auto key = static_cast<const MappedLumatoneKey&>(state);
     // key.colour = getBinaryCellColour(state);
-    key.colour = state.cellColor;
+    key.setColour(state.cellColor);
     return key;
 }
 
@@ -72,8 +72,8 @@ MappedLumatoneKey HexagonAutomata::Renderer::renderSequencerKey(const MappedHexS
 {
     auto key = static_cast<const MappedLumatoneKey&>(cell);
 
-    auto noteKey = noteLayout.readKey(cell.boardIndex, cell.keyIndex);
-    key.colour = noteKey->colour;
+    const LumatoneKey& noteKey = noteLayout.getKey(cell.boardIndex, cell.keyIndex);
+    key.setColour(noteKey.getColour());
 
     if (cell.isAlive())
     {

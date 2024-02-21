@@ -67,7 +67,7 @@ struct State : public LumatoneGameBaseState
              , public HexagonAutomata::BoardState
              , public HexagonAutomata::GameOptions
 {
-    State(std::shared_ptr<LumatoneLayout> layoutIn, LumatoneGameEngineState& gameEngineStateIn);
+    State(LumatoneGameEngineState& gameEngineStateIn);
     // State(std::shared_ptr<LumatoneLayout> layoutIn, LumatoneGameEngineState& gameEngineStateIn);
     // State(const State& copy, LumatoneGameEngineState& gameEngineStateIn);
 
@@ -101,7 +101,7 @@ struct State : public LumatoneGameBaseState
     virtual void setNeighborDistance(int distance);
 
     float getGenerationMs() const { return generationMs; }
-    float getGenerationBpm() const { return engineState.msecToBpm(generationMs); }
+    float getGenerationBpm() const { return msecToBpm(generationMs); }
     virtual void setGenerationMs(float msecValue);
     virtual void setGenerationBpm(float bpmValue);
     

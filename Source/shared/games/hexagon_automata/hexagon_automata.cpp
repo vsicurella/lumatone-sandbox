@@ -9,9 +9,9 @@
 
 #include "../../lumatone_editor_library/color/adjust_layout_colour.h"
 
-HexagonAutomata::Game::Game(LumatoneGameEngineState& gameEngineStateIn, LumatoneController* controller)
-    : LumatoneSandboxGameBase(controller, "Hexagon Automata")
-    , HexagonAutomata::State(controller->shareMappingData(), gameEngineStateIn)
+HexagonAutomata::Game::Game(LumatoneGameEngineState& gameEngineStateIn)
+    : LumatoneSandboxGameBase("Hexagon Automata", gameEngineStateIn)
+    , HexagonAutomata::State(gameEngineStateIn)
 {
     initialize();
 }
@@ -28,7 +28,7 @@ void HexagonAutomata::Game::initialize()
         setBornSurviveRules(bornRules, surviveRules);
     }
 
-    numCells = controller->getNumBoards() * controller->getOctaveBoardSize();
+    numCells = getNumBoards() * getOctaveBoardSize();
     
     cells.resize(numCells);
 
@@ -67,7 +67,7 @@ bool HexagonAutomata::Game::reset(bool clearQueue)
         });
 
         queueLayout(newLayoutContext);
-        controller->setContext(newLayoutContext);
+        setContext(newLayoutContext);
         break;
     }
 
@@ -188,29 +188,30 @@ bool HexagonAutomata::Game::applyUpdatedCell(const HexagonAutomata::MappedHexSta
 
 bool HexagonAutomata::Game::triggerCellMidi(const MappedHexState& cell)
 {
-    auto configKey = layoutBeforeStart.readKey(cell.boardIndex, cell.keyIndex);
-    if ((configKey->keyType & 0x3) == LumatoneKeyType::disabledDefault)
+    auto configKey = &layoutBeforeStart.getKey(cell.boardIndex, cell.keyIndex);
+    if ((configKey->getType() & 0x3) == LumatoneKeyType::disabledDefault)
         return false;
 
     if (cell.isAlive())
     {
-        controller->sendKeyNoteOn(cell.boardIndex, cell.keyIndex, 0x70);
+        sendKeyNoteOn(cell.boardIndex, cell.keyIndex, 0x70);
     }
     else
     {
-        controller->sendKeyNoteOff(cell.boardIndex, cell.keyIndex, 0x0);
+        sendKeyNoteOff(cell.boardIndex, cell.keyIndex, 0x0);
     }
 
     return true;
 }
 
-LumatoneAction* HexagonAutomata::Game::renderFrame() const
+LumatoneEditor::LayoutAction HexagonAutomata::Game::renderFrame() const
 {
+    auto action = LumatoneEditor::LayoutAction();
     juce::ScopedTryLock fl(frameLock);
     if (!fl.isLocked())
     {
         logSkippedFrame("renderFrame");
-        return nullptr;
+        return action;
     }
 
     juce::Array<MappedLumatoneKey> keyUpdates;
@@ -244,9 +245,11 @@ LumatoneAction* HexagonAutomata::Game::renderFrame() const
     }
 
     if (keyUpdates.size())
-        return new LumatoneEditAction::MultiKeyAssignAction(controller, keyUpdates, false);
+    {
+        action.setData(keyUpdates);
+    }
 
-    return nullptr;
+    return action;
 }
 
 void HexagonAutomata::Game::addSeed(int cellNum, float healthIn, bool triggerMidi)
@@ -669,7 +672,8 @@ void HexagonAutomata::Game::addFramesToQueue()
 {
     if (currentFrameCells.size() > 0)
     {
-        addToQueue(renderFrame());
+        auto frame = renderFrame();
+        addToQueue(frame);
         // logInfo("nextTick", "added " + juce::String(juce::jmin(currentFrameCells.size(), maxUpdatesPerFrame)) + " cell updates to queue;");
     
         currentFrameCells.removeRange(0, numUpdatesInFrame);
@@ -751,7 +755,7 @@ void HexagonAutomata::Game::handleKeyUp(int keyNum)
     }
 }
 
-void HexagonAutomata::Game::completeMappingLoaded(LumatoneLayout layout)
+void HexagonAutomata::Game::completeMappingLoaded(const LumatoneLayout& layout)
 {
     LumatoneSandboxGameBase::completeMappingLoaded(layout);
     quitGame = true;

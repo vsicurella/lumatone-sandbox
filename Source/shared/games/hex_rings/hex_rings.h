@@ -13,7 +13,8 @@
 #include "../game_base_state.h"
 #include "../../lumatone_editor_library/mapping/lumatone_hex_map.h"
 
-class HexRings : public LumatoneSandboxGameBase, protected LumatoneGameBaseState
+class HexRings : public LumatoneSandboxGameBase
+                , protected LumatoneGameBaseState
 {
 public:
     struct ID
@@ -37,14 +38,14 @@ public:
 
 public:
 
-    HexRings(LumatoneGameEngineState& gameEngineState, LumatoneController* controllerIn);
+    HexRings(LumatoneGameEngineState& gameEngineState);
 
     bool reset(bool clearQueue) override;
 
     bool nextTick() override;
 
 protected:
-    LumatoneAction* renderFrame() const override;
+    LumatoneEditor::LayoutAction renderFrame() const override;
 
 private:
     void advanceFrameQueue();

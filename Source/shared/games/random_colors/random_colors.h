@@ -10,8 +10,10 @@
 
 #pragma once
 #include "../game_base.h"
+#include "../game_base_state.h"
 
 class RandomColors : public LumatoneSandboxGameBase
+                    , protected LumatoneGameBaseState
 {
 public:
 
@@ -32,7 +34,7 @@ public:
 
 public:
 
-    RandomColors(LumatoneGameEngineState& gameEngineState, LumatoneController* controllerIn, RandomColors::Options options=RandomColors::Options());
+    RandomColors(LumatoneGameEngineState& gameEngineState, RandomColors::Options options=RandomColors::Options());
 
     bool reset(bool clearQueue) override;
 
@@ -43,12 +45,15 @@ public:
     RandomColors::Options getOptions() const;
 
 private:
-    LumatoneAction* renderFrame() const override;
+    LumatoneEditor::LayoutAction renderFrame() const override;
 
     void nextRandomKey();
 
 public:
-    virtual LumatoneSandboxGameComponent* createController() override;
+    LumatoneSandboxGameComponent* createController() override;
+
+private:
+    juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override { }
 
 private:
 

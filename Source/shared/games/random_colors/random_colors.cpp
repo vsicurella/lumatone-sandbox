@@ -11,11 +11,14 @@
 #include "random_colors.h"
 #include "random_colors_launcher.h"
 
+#include "../games_index.h"
+
 #include "../../lumatone_editor_library/actions/edit_actions.h"
 #include "../../lumatone_editor_library/device/lumatone_controller.h"
 
-RandomColors::RandomColors(LumatoneGameEngineState& gameEngineState, LumatoneController* controllerIn, RandomColors::Options options)
-    : LumatoneSandboxGameBase(controllerIn, "Random Colors")
+RandomColors::RandomColors(LumatoneGameEngineState& gameEngineState, RandomColors::Options options)
+    : LumatoneSandboxGameBase("Random Colors", gameEngineState)
+    , LumatoneGameBaseState(LumatoneSandbox::GameName::RandomColors, juce::Identifier("RandomColours"), gameEngineState)
 {
     setOptions(options);
 }
@@ -51,16 +54,17 @@ bool RandomColors::nextTick()
     return true;
 }
 
-LumatoneAction* RandomColors::renderFrame() const
+LumatoneEditor::LayoutAction RandomColors::renderFrame() const
 {
-    auto action = new LumatoneEditAction::SingleNoteAssignAction(controller, nextKeyState.boardIndex, nextKeyState.keyIndex, nextKeyState.colour);
+    LumatoneEditor::LayoutAction action;
+    action.setData(nextKeyState.colour, nextKeyState.boardIndex, nextKeyState.keyIndex);
     return action;
 }
 
 void RandomColors::nextRandomKey()
 {
-    nextKeyState.boardIndex = random.nextInt(controller->getNumBoards());
-    nextKeyState.keyIndex = random.nextInt(controller->getOctaveBoardSize());
+    nextKeyState.boardIndex = random.nextInt(getNumBoards());
+    nextKeyState.keyIndex = random.nextInt(getOctaveBoardSize());
 
     auto colour = juce::Colour(
         (juce::uint8)random.nextInt(255),

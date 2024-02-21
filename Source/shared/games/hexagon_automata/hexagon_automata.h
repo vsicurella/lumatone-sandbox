@@ -15,7 +15,7 @@ class Game : public LumatoneSandboxGameBase
 {
 public:
 
-    Game(LumatoneGameEngineState& gameEngineStateIn, LumatoneController* controller);
+    Game(LumatoneGameEngineState& gameEngineStateIn);
     ~Game() override;
     
     bool reset(bool clearQueue) override;
@@ -23,7 +23,7 @@ public:
     bool nextTick() override;
     bool pauseTick() override;
 
-    LumatoneAction* renderFrame() const override;
+    LumatoneEditor::LayoutAction renderFrame() const override;
 
 public:
     void addSeed(int cellNum, float healthIn=1.0f, bool triggerMidi=true);
@@ -69,7 +69,7 @@ private:
     void handleKeyUp(int keyNum) override;
 
     // Editor Listener
-    void completeMappingLoaded(LumatoneLayout layout) override;
+    void completeMappingLoaded(const LumatoneLayout& layout) override;
 
 private:
     void handleCellNoteOn(int cellNum, juce::uint8 velocity);
