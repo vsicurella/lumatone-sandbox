@@ -8,189 +8,161 @@
   ==============================================================================
 */
 
-#pragma once
+#ifndef LUMATONE_EDITOR_UNDOABLE_ACTIONS_H
+#define LUMATONE_EDITOR_UNDOABLE_ACTIONS_H
+
 #include "./lumatone_action.h"
 #include "../data/lumatone_layout.h"
 
-namespace LumatoneEditAction {
+#define MAX_KEY_FLAGS 280
 
-    class SingleNoteAssignAction : public LumatoneAction
+class LumatoneApplicationState;
+
+namespace LumatoneEditor 
+{
+
+using KeyUpdateFlag = unsigned short;
+enum KeyUpdateFlagName : KeyUpdateFlag
+{
+    None = 0b0,
+    Note = 0b1,
+    Chnl = 0b10,
+    Type = 0b100,
+    CCIn = 0b1000,
+    Colr = 0b10000,
+
+    Prm  = 0b01111,
+    All  = 0b11111
+};
+
+//======================================+
+class LayoutAction : public Action
+{
+public:
+    enum class Type
     {
-    public:
-        SingleNoteAssignAction(
-            LumatoneApplicationState* state,
-            int boardIndexIn,
-            int keyIndexIn,
-            bool setKeyType,
-            bool setChannel, 
-            bool setNote,
-            bool setColour,
-            bool ccFaderDefault,
-            LumatoneKeyType newKeyType = LumatoneKeyType::noteOnNoteOff,
-            int newChannelNumber = 0, 
-            int newNoteNumber = 0,
-            juce::Colour newColour = juce::Colour(),
-            bool newCCFaderDefault = true);
-
-        SingleNoteAssignAction(const SingleNoteAssignAction& second)
-            : LumatoneAction(second.state, "SingleNoteAssign")
-            , boardId(second.boardId)
-            , keyIndex(second.keyIndex)
-            , setKeyType(second.setKeyType)
-            , setChannel(second.setChannel)
-            , setNote(second.setNote)
-            , setColour(second.setColour)
-            , setCCFaderPolarity(second.setCCFaderPolarity)
-            , previousData(second.previousData)
-            , newData(second.newData)
-        {}
-
-        SingleNoteAssignAction(
-            LumatoneApplicationState* state,
-            int boardId,
-            int keyIndex,
-            juce::Colour newColour
-        );
-
-        bool isValid() const;
-
-        bool perform() override;
-        bool undo() override;
-        
-        int getSizeInUnits() override { return sizeof(SingleNoteAssignAction); }
-
-    private:
-        int boardId = - 1;
-        int keyIndex = -1;
-
-        bool setKeyType = false;
-        bool setChannel = false;
-        bool setNote = false;
-        bool setColour = false;
-        bool setCCFaderPolarity = false;
-
-        LumatoneKey previousData;
-        LumatoneKey newData;
+        None,
+        KeyParamUpdate,
+        KeyColourUpdate,
+        KeyConfigUpdate,
+        MultiKeyUpdate,
+        BoardUpdate,
+        // LayoutUpdate
     };
 
-    class SectionEditAction : public LumatoneAction
-    {
-    public:
-        SectionEditAction(LumatoneApplicationState* state, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates=false);
+public:
+    Type type;
+    LayoutAction(Type typeIn=Type::None, int boardIndexIn = -1, int keyIndexIn = -1);
+    LayoutAction(const LayoutAction& other);
+    ~LayoutAction() {}
 
-        SectionEditAction(const SectionEditAction& second)
-            : LumatoneAction(second.state, "SectionEditAction")
-            , boardId(second.boardId)
-            , previousData(second.previousData)
-            , newData(second.newData)
-            , useKeyBuffer(second.useKeyBuffer)
-        {}
+    void operator=(const LayoutAction& other);
 
-        bool isValid() const;
+    // void setData(const LumatoneLayout& layout, Type typeIn, int boardIndexIn = -1, int keyIndexIn = -1);
+    void setData(const LumatoneKey& keyData, Type typeIn, int boardIndexIn = -1, int keyIndexIn = -1);
+    void setData(juce::Colour newColour, int boardIndexIn, int keyIndexIn);
+    void setData(const LumatoneBoard& boardData, int boardIndexIn);
+    void setData(const juce::Array<MappedLumatoneKey>&);
 
-        bool perform() override;
-        bool undo() override;
-        int getSizeInUnits() override { return sizeof(SectionEditAction); }
+    void setFlags(const KeyUpdateFlag* newFlags, int numNewFlags, int flagStartIndex=0);
+    
+    bool perform(LumatoneApplicationState*) override;
+    
+    bool isValid(LumatoneApplicationState*) const;
 
-    private:
-        int boardId = -1;
+protected:
+    LumatoneLayout layout;
+    int boardIndex = -1;
+    int keyIndex = -1;
 
-        LumatoneBoard previousData;
-        LumatoneBoard newData;
+    LumatoneEditor::KeyUpdateFlag flags[MAX_KEY_FLAGS];
+};
 
-        bool useKeyBuffer;
-    };
+class SingleNoteAssignAction : public LumatoneEditor::LayoutAction 
+                             , public LumatoneEditor::UndoableAction
+{
+public:
+    SingleNoteAssignAction(
+        LumatoneApplicationState* state,
+        int boardIndexIn,
+        int keyIndexIn,
+        const LumatoneKey& newKeyData,
+        bool setKeyType,
+        bool setChannel, 
+        bool setNote,
+        bool setColour,
+        bool setCCPolarity
+    );
 
-    class MultiKeyAssignAction : public LumatoneAction
-    {
-    public:
-        MultiKeyAssignAction(LumatoneApplicationState* state, const juce::Array<MappedLumatoneKey>& updatedKeys, bool setConfig=true, bool setColour=true, bool bufferKeyUpdates=false);
-        MultiKeyAssignAction(const MultiKeyAssignAction& copy)
-            : LumatoneAction(copy.state, "MultiKeyAssign")
-			, previousKeys(copy.previousKeys)
-            , newData(copy.newData)
-            , setConfig(copy.setConfig)
-            , setColours(copy.setColours)
-            , useKeyBuffer(copy.useKeyBuffer)
-        {}
+    SingleNoteAssignAction(const SingleNoteAssignAction& second)
+        : LumatoneEditor::LayoutAction(second)
+        // : LumatoneEditor::LayoutAction(static_cast<const LumatoneEditor::LayoutAction&>(second))
+        , LumatoneEditor::UndoableAction(second.state, "SingleNoteAssign")
+        , previousData(second.previousData)
+    {}
 
-        bool isValid() const;
+    SingleNoteAssignAction(
+        LumatoneApplicationState* state,
+        int boardId,
+        int keyIndex,
+        juce::Colour newColour
+    );
 
-        bool perform() override;
-		bool undo() override;
+    bool perform() override;
+    bool undo() override;
+    
+    int getSizeInUnits() override { return sizeof(SingleNoteAssignAction); }
 
-		int getSizeInUnits() override { return sizeof(MultiKeyAssignAction); }
+private:
+    LumatoneKey previousData;
+};
 
-	private:
-		void applyMappedKeyData(const juce::Array<MappedLumatoneKey>& newKeys, const juce::Array<MappedLumatoneKey>& oldKeys);
+class SectionEditAction : public LumatoneEditor::LayoutAction
+                        , public LumatoneEditor::UndoableAction
+{
+public:
+    SectionEditAction(LumatoneApplicationState* state, int boardIndexIn, const LumatoneBoard& newSectionValue, bool bufferKeyUpdates=false);
 
-	private:
-        bool setConfig = true;
-        bool setColours = true;
-        bool useKeyBuffer = false;
+    SectionEditAction(const SectionEditAction& second)
+        : LumatoneEditor::LayoutAction(second)
+        , LumatoneEditor::UndoableAction(second.state, "SectionEditAction")
+        , previousData(second.previousData)
+        , useKeyBuffer(second.useKeyBuffer)
+    {}
 
-		juce::Array<MappedLumatoneKey> previousKeys;
-		juce::Array<MappedLumatoneKey> newData;
-    };
+    bool perform() override;
+    bool undo() override;
+    int getSizeInUnits() override { return sizeof(SectionEditAction); }
 
-    class InvertFootControllerEditAction : public LumatoneAction
-    {
-    public:
-        InvertFootControllerEditAction(LumatoneApplicationState* state, bool newValue);
+private:
+    LumatoneBoard previousData;
 
-        InvertFootControllerEditAction(const InvertFootControllerEditAction& second)
-            : LumatoneAction(second.state, "InvertFootControllerEdit")
-            , previousData(second.previousData)
-            , newData(second.newData)
-        {}
+    bool useKeyBuffer;
+};
 
-        bool perform() override;
-        bool undo() override;
-        int getSizeInUnits() override { return sizeof(InvertFootControllerEditAction); }
+class MultiKeyAssignAction : public LumatoneEditor::LayoutAction 
+                            , public LumatoneEditor::UndoableAction
+{
+public:
+    MultiKeyAssignAction(LumatoneApplicationState* state, const juce::Array<MappedLumatoneKey>& updatedKeys, bool setConfig=true, bool setColour=true, bool bufferKeyUpdates=false);
+    MultiKeyAssignAction(const MultiKeyAssignAction& copy)
+        : LumatoneEditor::LayoutAction(copy)
+        , LumatoneEditor::UndoableAction(copy.state, "MultiKeyAssign")
+        , previousKeys(copy.previousKeys)
+        , useKeyBuffer(copy.useKeyBuffer)
+    {}
 
-    private:
-        bool previousData;
-        bool newData;
-    };
+    bool perform() override;
+    bool undo() override;
 
-    class ExprPedalSensivityEditAction : public LumatoneAction
-    {
-    public:
-        ExprPedalSensivityEditAction(LumatoneApplicationState* state, int newValue);
+    int getSizeInUnits() override { return sizeof(MultiKeyAssignAction); }
 
-        ExprPedalSensivityEditAction(const ExprPedalSensivityEditAction& second)
-            : LumatoneAction(second.state, "ExprPedalSensitivityEdit")
-            , previousData(second.previousData)
-            , newData(second.newData)
-        {}
+private:
+    bool useKeyBuffer = false;
 
-        bool perform() override;
-        bool undo() override;
-        int getSizeInUnits() override { return sizeof(ExprPedalSensivityEditAction); }
-
-    private:
-        int previousData;
-        int newData;
-    };
-
-    class InvertSustainEditAction : public LumatoneAction
-    {
-    public:
-        InvertSustainEditAction(LumatoneApplicationState* state, bool newValue);
-        
-        InvertSustainEditAction(const InvertSustainEditAction& second)
-            : LumatoneAction(second.state, "InvertSustainEdit")
-            , previousData(second.previousData)
-            , newData(second.newData)
-        {}
-        
-        bool perform() override;
-        bool undo() override;
-        int getSizeInUnits() override { return sizeof(InvertSustainEditAction); }
-
-    private:
-        int previousData;
-        int newData;
-    };
+    juce::Array<MappedLumatoneKey> previousKeys;
+};
 
 }
+
+#endif // LUMATONE_EDITOR_UNDOABLE_ACTIONS_H
