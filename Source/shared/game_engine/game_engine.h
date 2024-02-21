@@ -10,7 +10,9 @@
 
 #pragma once
 
-#include "../Lumatone_editor_library/listeners/midi_listener.h"
+#include "../lumatone_editor_library/listeners/midi_listener.h"
+
+#include "../lumatone_editor_library/actions/edit_actions.h"
 
 #include "./game_engine_state.h"
 #include "../debug/LumatoneSandboxLogger.h"
@@ -18,11 +20,13 @@
 #define MAX_QUEUE_SIZE 280
 
 class LumatoneSandboxGameBase;
-class LumatoneAction;
 class LumatoneController;
 class LumatoneKeyboardComponent;
 
+class LumatoneSandboxState;
+
 class LumatoneSandboxGameEngine : public LumatoneGameEngineState
+                                , private LumatoneGameEngineState::Controller
                                 , private LumatoneEditor::MidiListener
                                 , private juce::Timer
                                 , private LumatoneSandboxLogger
@@ -39,13 +43,10 @@ public:
 
 public:
 
-    LumatoneSandboxGameEngine(LumatoneController* controllerIn, juce::ValueTree parentTreeIn);
+    LumatoneSandboxGameEngine(LumatoneSandboxState& stateIn);
     ~LumatoneSandboxGameEngine() override;
-
-    LumatoneController* getController()  { return controller; }
-   
+    
     void loadGame(juce::String gameId);
-    // void setGame(LumatoneSandboxGameBase* newGameIn);
 
     bool startGame();
     void pauseGame();
@@ -83,12 +84,11 @@ private:
 
 private:
     juce::ApplicationCommandManager* commandManager;
-    LumatoneController* controller;
     LumatoneKeyboardComponent* keyboard;
 
     std::unique_ptr<LumatoneSandboxGameBase> game;
 
-    LumatoneAction* actionQueue[MAX_QUEUE_SIZE];
+    LumatoneEditor::LayoutAction actionQueue[MAX_QUEUE_SIZE];
     int numActions = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LumatoneSandboxGameEngine)

@@ -10,10 +10,12 @@
 #define LUMATONE_GAME_ENGINE_STATE_H
 
 #include "../games/games_index.h"
-#include "../lumatone_editor_library/data/lumatone_state.h"
+#include "../lumatone_editor_library/data/application_state.h"
 
+class LumatoneSandboxState;
 class LumatoneGameBaseState;
-class LumatoneGameEngineState : protected LumatoneStateBase
+class LumatoneGameEngineState : public LumatoneApplicationState
+                              , protected LumatoneApplicationState::Controller
 {
 public:
     struct ID
@@ -78,10 +80,10 @@ public:
     static juce::Array<juce::Identifier> GetGameEngineProperties();
 
 public:
-    LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager* undoManager);
-    LumatoneGameEngineState(juce::String nameIn, const LumatoneGameEngineState& stateIn);
+    LumatoneGameEngineState(juce::String nameIn, LumatoneSandboxState& stateIn);
+    LumatoneGameEngineState(juce::String nameIn, LumatoneGameEngineState& stateIn);
 
-    virtual ~LumatoneGameEngineState() {}
+    virtual ~LumatoneGameEngineState() override {} 
 
     float getTimeIntervalMs() const;
     double getFps() const;
@@ -92,22 +94,11 @@ public:
     void addStateListener(LumatoneStateBase* stateIn);
 
 public:
-    void setDefaultFps(double fps);
-private:
-    void setDefaultFps(double fps, bool writeToState);
-
-public:
-    virtual void forceFps(double fps);
-private:
-    virtual void forceFps(double fps, bool writeToState);
-
-public:
     // juce::ValueTree getGameStateTree();
 
     bool isGameLoaded() const { return gameStatus > GameStatus::NoGame; }
     bool isGameRunning() const { return gameStatus == GameStatus::Running; }
     bool isGamePaused() const { return gameStatus == GameStatus::Paused; }
-
 
 public:
     static float bpmToMsec(float bpmValue) { return 6.0e4f / bpmValue; }
@@ -119,20 +110,42 @@ public:
     float bpmToGameTicks(float bpmValue) const { return msecToTicks(bpmToMsec(bpmValue)); }
     float ticksToBpm(float ticksValue) const { return msecToBpm(ticksToMsec(ticksValue)); }
 
-protected:
-    void setGameState(LumatoneGameBaseState* gameStateIn);
+public:
+    class Controller
+    {
+    public:
+        Controller(LumatoneGameEngineState& engineStateIn) : engineState(engineStateIn) {}
+
+    public:
+        void setDefaultFps(double fps);
+    private:
+        void setDefaultFps(double fps, bool writeToState);
+
+    public:
+        virtual void forceFps(double fps);
+    private:
+        virtual void forceFps(double fps, bool writeToState);  
+
+    protected:
+        // void setGameState(LumatoneGameBaseState* gameStateIn);
+
+        virtual void setGameStatus(LumatoneGameEngineState::GameStatus newState, bool writeToState);
+        void setGameName(LumatoneSandbox::GameName gameNameIn, bool writeToState);
+
+    private:
+        LumatoneGameEngineState& engineState;
+    };
 
 protected:
     void updateTimeIntervalMs();
-
-    virtual void setGameStatus(LumatoneGameEngineState::GameStatus newState, bool writeToState);
-    void setGameName(LumatoneSandbox::GameName gameNameIn, bool writeToState);
 
 protected:    
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) override;
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) override;
 
 protected:
+    LumatoneSandboxState& appState;
+
     double defaultFps = 30;
     double runGameFps = 30;
     float timeIntervalMs = 0;
@@ -142,7 +155,8 @@ protected:
     
     bool sentFirstGameMessage = false;
 
-    friend class LumatoneGameBaseState; // preferably shouldn't have to do this?
+    // friend class LumatoneGameBaseState; // preferably shouldn't have to do this?
+    friend class Controller;
 };
 
 #endif // LUMATONE_GAME_ENGINE_STATE_H

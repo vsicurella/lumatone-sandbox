@@ -9,6 +9,8 @@
 #include "game_engine_state.h"
 #include "../games/game_base_state.h"
 
+#include "../SandboxState.h"
+
 #include "../debug/LumatoneSandboxLogger.h"
 
 juce::Array<juce::Identifier> LumatoneGameEngineState::GetGameEngineProperties()
@@ -24,37 +26,46 @@ juce::Array<juce::Identifier> LumatoneGameEngineState::GetGameEngineProperties()
     return properties;
 }
 
-LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, juce::ValueTree stateIn, juce::UndoManager *undoManager)
-    : LumatoneStateBase(nameIn)
+LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, LumatoneSandboxState& stateIn)
+    : LumatoneApplicationState(nameIn, stateIn, LumatoneGameEngineState::ID::GameEngineStateId)
+    , LumatoneApplicationState::Controller(stateIn)
+    , appState(stateIn)
 {
-    state = stateIn.getOrCreateChildWithName(LumatoneGameEngineState::ID::GameEngineStateId, undoManager);
+    // state = appState.getOrCreateChildWithName(LumatoneGameEngineState::ID::GameEngineStateId, nullptr);
     loadStateProperties(state);
-    state.addListener(this);
+    // state.addListener(this);
 }
 
-
-LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, const LumatoneGameEngineState& stateIn)
-    : LumatoneStateBase(nameIn)
+LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, LumatoneGameEngineState &stateIn)
+    : LumatoneApplicationState(nameIn, stateIn)
+    , LumatoneApplicationState::Controller(stateIn.appState)
+    , appState(stateIn.appState)
 {
     state = loadStateProperties(stateIn.state);
-    // state.addListener(this); // we lose callback order certainty with this
+   
 }
 
-void LumatoneGameEngineState::setGameState(LumatoneGameBaseState* gameStateIn)
-{
-    if (gameStateIn == nullptr)
-        return;
+// LumatoneGameEngineState::LumatoneGameEngineState(juce::String nameIn, const LumatoneGameEngineState& stateIn)
+//     : LumatoneStateBase(nameIn)
+// {
+//     state = loadStateProperties(stateIn.state);
+// }
 
-    juce::ValueTree gameState = gameStateIn->getNode();
-    if (gameState.hasType(LumatoneGameEngineState::ID::GameStateId))
-    {
-        auto childState = state.getChildWithName(LumatoneGameEngineState::ID::GameStateId);
-        if (childState.isValid())
-            state.removeChild(childState, nullptr);
+// void LumatoneGameEngineState::Controller::setGameState(LumatoneGameBaseState* gameStateIn)
+// {
+//     if (gameStateIn == nullptr)
+//         return;
 
-        state.addChild(gameState, 0, nullptr);
-    }
-}
+//     juce::ValueTree gameState = gameStateIn->getNode();
+//     if (gameState.hasType(LumatoneGameEngineState::ID::GameStateId))
+//     {
+//         auto childState = state.getChildWithName(LumatoneGameEngineState::ID::GameStateId);
+//         if (childState.isValid())
+//             state.removeChild(childState, nullptr);
+
+//         state.addChild(gameState, 0, nullptr);
+//     }
+// }
 
 void LumatoneGameEngineState::updateTimeIntervalMs()
 {
@@ -86,31 +97,31 @@ void LumatoneGameEngineState::addStateListener(LumatoneStateBase *stateIn)
     state.addListener(stateIn);
 }
 
-void LumatoneGameEngineState::setDefaultFps(double fps)
+void LumatoneGameEngineState::Controller::setDefaultFps(double fps)
 {
     setDefaultFps(fps, true);
 }
 
-void LumatoneGameEngineState::setDefaultFps(double fps, bool writeToState)
+void LumatoneGameEngineState::Controller::setDefaultFps(double fps, bool writeToState)
 {
-    defaultFps = fps;
+    engineState.defaultFps = fps;
 
     if (writeToState)
-        writeIntProperty(LumatoneGameEngineState::ID::DefaultFps, defaultFps, nullptr);
+        engineState.setStateProperty(LumatoneGameEngineState::ID::DefaultFps, engineState.defaultFps);
 }
 
-void LumatoneGameEngineState::forceFps(double fps)
+void LumatoneGameEngineState::Controller::forceFps(double fps)
 {
     forceFps(fps, true);
 }
 
-void LumatoneGameEngineState::forceFps(double fps, bool writeToState)
+void LumatoneGameEngineState::Controller::forceFps(double fps, bool writeToState)
 {
-    runGameFps = fps;
-    updateTimeIntervalMs();
+    engineState.runGameFps = fps;
+    engineState.updateTimeIntervalMs();
 
     if (writeToState)
-        writeStringProperty(LumatoneGameEngineState::ID::RequestedFps, juce::String(runGameFps), nullptr);
+        engineState.setStateProperty(LumatoneGameEngineState::ID::RequestedFps, juce::String(engineState.runGameFps));
 }
 
 // juce::ValueTree LumatoneGameEngineState::getGameStateTree()
@@ -119,18 +130,18 @@ void LumatoneGameEngineState::forceFps(double fps, bool writeToState)
 //     // return state.getOrCreateChildWithName(LumatoneGameEngineState::ID::GameStateId, nullptr);
 // }
 
-void LumatoneGameEngineState::setGameStatus(LumatoneGameEngineState::GameStatus newState, bool writeToState)
+void LumatoneGameEngineState::Controller::setGameStatus(LumatoneGameEngineState::GameStatus newState, bool writeToState)
 {
-    gameStatus = newState;
+    engineState.gameStatus = newState;
     if (writeToState)
-        writeStringProperty(LumatoneGameEngineState::ID::GameStatus, LumatoneGameEngineState::GameStatusToString(newState), nullptr);
+        engineState.setStateProperty(LumatoneGameEngineState::ID::GameStatus, LumatoneGameEngineState::GameStatusToString(newState));
 }
 
-void LumatoneGameEngineState::setGameName(LumatoneSandbox::GameName gameNameIn, bool writeToState)
+void LumatoneGameEngineState::Controller::setGameName(LumatoneSandbox::GameName gameNameIn, bool writeToState)
 {
-    gameName = gameNameIn;
+    engineState.gameName = gameNameIn;
     if (writeToState)
-        writeStringProperty(LumatoneGameEngineState::ID::GameName, LumatoneSandbox::GameNameToString(gameNameIn), nullptr);
+        engineState.setStateProperty(LumatoneGameEngineState::ID::GameName, LumatoneSandbox::GameNameToString(gameNameIn));
 }
 
 // void LumatoneGameEngineState::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier &property)
@@ -161,23 +172,23 @@ void LumatoneGameEngineState::handleStatePropertyChange(juce::ValueTree stateIn,
     if (property == LumatoneGameEngineState::ID::DefaultFps)
     {
         double readFps = static_cast<double>(stateIn.getProperty(property, 30.0));
-        setDefaultFps(readFps, false);
+        defaultFps = readFps;
     }
     else if (property == LumatoneGameEngineState::ID::RequestedFps)
     {
         double readFps = static_cast<double>(stateIn.getProperty(property, defaultFps));
-        forceFps(readFps, false);
+        runGameFps = readFps;
+        updateTimeIntervalMs();
     }
     else if (property == LumatoneGameEngineState::ID::GameName)
     {
         juce::String readName = stateIn.getProperty(property, juce::var(LumatoneSandbox::GameNameToString(LumatoneSandbox::GameName::NoGame))).toString();
-        LumatoneSandbox::GameName gameName = LumatoneSandbox::GameNameFromString(readName);
-        setGameName(gameName, false);
+        gameName = LumatoneSandbox::GameNameFromString(readName);
     }
     else if (property == LumatoneGameEngineState::ID::GameStatus)
     {
         juce::String readStatus = stateIn.getProperty(property, juce::var(GameStatusToString(LumatoneGameEngineState::GameStatus::NoGame))).toString();
         LumatoneGameEngineState::GameStatus status = LumatoneGameEngineState::GameStatusFromString(readStatus);
-        setGameStatus(status, false);
+        gameStatus = status;
     }
 }

@@ -19,7 +19,7 @@ class LumatoneSandboxGameLoader
 {
 public:
 
-    static LumatoneSandboxGameBase* CreateGameInstance(juce::String gameId, LumatoneGameEngineState& gameEngineState, LumatoneController* controller);
+    static LumatoneSandboxGameBase* CreateGameInstance(juce::String gameId, LumatoneGameEngineState& gameEngineState);
 };
 
 #endif

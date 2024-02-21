@@ -16,7 +16,7 @@
 #include "../games/hex_rings/hex_rings.h"
 #include "../games/hexagon_automata/hexagon_automata.h"
 
-LumatoneSandboxGameBase* LumatoneSandboxGameLoader::CreateGameInstance(juce::String gameId, LumatoneGameEngineState& gameEngineState, LumatoneController *controller)
+LumatoneSandboxGameBase* LumatoneSandboxGameLoader::CreateGameInstance(juce::String gameId, LumatoneGameEngineState& gameEngineState)
 {
     LumatoneSandbox::GameName gameName = LumatoneSandbox::GameNameFromString(gameId);
 
@@ -28,12 +28,12 @@ LumatoneSandboxGameBase* LumatoneSandboxGameLoader::CreateGameInstance(juce::Str
 
     // Tried to use static cast but I think the forward declare messes it up
     case LumatoneSandbox::GameName::RandomColors:
-        return dynamic_cast<LumatoneSandboxGameBase*>(new RandomColors(gameEngineState, controller));
+        return dynamic_cast<LumatoneSandboxGameBase*>(new RandomColors(gameEngineState));
 
     case LumatoneSandbox::GameName::HexRings:
-        return dynamic_cast<LumatoneSandboxGameBase*>(new HexRings(gameEngineState, controller));
+        return dynamic_cast<LumatoneSandboxGameBase*>(new HexRings(gameEngineState));
 
     case LumatoneSandbox::GameName::HexagonAutomata:
-        return dynamic_cast<LumatoneSandboxGameBase*>(new HexagonAutomata::Game(gameEngineState, controller));
+        return dynamic_cast<LumatoneSandboxGameBase*>(new HexagonAutomata::Game(gameEngineState));
     }
 }

@@ -10,27 +10,28 @@
 
 #include "game_engine.h"
 
+#include "../SandboxState.h"
+
 #include "./game_loader.h"
 
 #include "../games/game_base.h"
 #include "../games/game_base_state.h"
 
-#include "../lumatone_editor_library/device/lumatone_controller.h"
 #include "../SandboxMenu.h"
 
-LumatoneSandboxGameEngine::LumatoneSandboxGameEngine(LumatoneController* controllerIn, juce::ValueTree parentTreeIn)
-    : LumatoneGameEngineState("LumatoneSandboxGameEngine", parentTreeIn, nullptr)
+LumatoneSandboxGameEngine::LumatoneSandboxGameEngine(LumatoneSandboxState& stateIn)
+    : LumatoneGameEngineState("LumatoneSandboxGameEngine", stateIn)
+    , LumatoneGameEngineState::Controller(static_cast<LumatoneGameEngineState&>(*this))
     , LumatoneSandboxLogger("GameEngine")
-    , controller(controllerIn)
 {
-    controller->addMidiListener(this);
+    appState.addMidiListener(this);
     logInfo("LumatoneSandboxGameEngine", "Game Engine initialized.");
 }
 
 LumatoneSandboxGameEngine::~LumatoneSandboxGameEngine()
 {
-    for (int i = 0; i < numActions; i++)
-        delete actionQueue[i];
+    // for (int i = 0; i < numActions; i++)
+    //     actionQueue[i] = nullptr;
 
     if (keyboard != nullptr && gameStatus != GameStatus::NoGame)
     {
@@ -38,9 +39,9 @@ LumatoneSandboxGameEngine::~LumatoneSandboxGameEngine()
         keyboard = nullptr;
     }
 
+    appState.removeMidiListener(this);
     engineListeners.clear();
     game = nullptr;
-    controller = nullptr;
 }
 
 const LumatoneSandboxGameBase* LumatoneSandboxGameEngine::getGameLoaded() const
@@ -73,7 +74,7 @@ void LumatoneSandboxGameEngine::loadGame(juce::String gameId)
 {
     endGame();
 
-    auto newGame = LumatoneSandboxGameLoader::CreateGameInstance(gameId, *this, controller);
+    auto newGame = LumatoneSandboxGameLoader::CreateGameInstance(gameId, *this);
     if (newGame == nullptr)
     {
         logError("setGame", "Error loading game: " + gameId);
@@ -90,13 +91,13 @@ void LumatoneSandboxGameEngine::loadGame(juce::String gameId)
     game.reset(newGame);
     logInfo("setGame", "New game loaded: " + game->getName());
 
-    setGameState(gameState);
+    // setGameState(gameState);
     setGameStatus(LumatoneGameEngineState::GameStatus::Loaded);
 }
 
 void LumatoneSandboxGameEngine::setGameStatus(LumatoneGameEngineState::GameStatus newStatus, bool writeToState)
 {
-    LumatoneGameEngineState::setGameStatus(newStatus, writeToState);
+    LumatoneGameEngineState::Controller::setGameStatus(newStatus, writeToState);
     
     LumatoneSandboxGameBase* gamePtr = isGameLoaded() ? game.get() : nullptr;
     engineListeners.call(&LumatoneSandboxGameEngine::Listener::gameStatusChanged, gamePtr, newStatus);
@@ -126,14 +127,14 @@ bool LumatoneSandboxGameEngine::startGame()
                 
             else
             {
-                controller->addMidiListener(game.get());
-                controller->addEditorListener(game.get());
+                appState.addMidiListener(game.get());
+                appState.addEditorListener(game.get());
                 if (keyboard)
                 {
                     keyboard->addListener(game.get());
                 }
 
-                game->updateSavedLayout();
+                // game->updateSavedLayout();
                 game->reset(true);
                 logInfo("startGame", "Starting game " + game->getName());
             }
@@ -169,7 +170,7 @@ bool LumatoneSandboxGameEngine::startGame()
 
 void LumatoneSandboxGameEngine::forceFps(double fps)
 {
-    LumatoneGameEngineState::forceFps(fps);
+    LumatoneGameEngineState::Controller::forceFps(fps);
 }
 
 void LumatoneSandboxGameEngine::pauseGame()
@@ -192,8 +193,8 @@ bool LumatoneSandboxGameEngine::endGame()
 
         if (game != nullptr)
         {
-            controller->removeMidiListener(game.get());
-            controller->removeEditorListener(game.get());
+            appState.removeMidiListener(game.get());
+            appState.removeEditorListener(game.get());
             if (keyboard != nullptr)
             {
                 keyboard->removeListener(game.get());
@@ -219,14 +220,13 @@ void LumatoneSandboxGameEngine::resetGame()
     if (isGameLoaded())
     {
         jassert(game != nullptr);
-        writeStringProperty(LumatoneGameEngineState::ID::GameStatus, "STOP", nullptr);
+        setGameStatus(LumatoneGameEngineState::GameStatus::Stopped, true);
+        // setStateProperty(LumatoneGameEngineState::ID::GameStatus, GameStatusToString(Lumatone));
         // game->reset(true);
-
-        setGameStatus(LumatoneGameEngineState::GameStatus::Stopped);
     }
     else if (game != nullptr)
     {
-        controller->addMidiListener(game.get());
+        appState.addMidiListener(game.get());
         game->reset(true);
 
         setGameStatus(LumatoneGameEngineState::GameStatus::Loaded);
@@ -281,8 +281,8 @@ void LumatoneSandboxGameEngine::processGameActionQueue()
     int queueSize = numActions;
     for (int i = 0; i < queueSize; i++)
     {
-        controller->performAction(actionQueue[i], false);
-        actionQueue[i] = nullptr;
+        performAction(&actionQueue[i]);
+        // actionQueue[i] = nullptr;
         numActions--;
     }
 }
