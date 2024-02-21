@@ -106,11 +106,6 @@ void LumatoneState::handleStatePropertyChange(juce::ValueTree stateIn, const juc
     }
 }
 
-void LumatoneState::loadPropertiesFile(juce::PropertiesFile *properties)
-{
-    // No global properties for now
-}
-
 void LumatoneState::setConnectedSerialNumber(juce::String serialNumberIn)
 {
     connectedSerialNumber = serialNumberIn;

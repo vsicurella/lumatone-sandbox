@@ -15,6 +15,11 @@ void LumatoneStateBase::setStateProperty(const juce::Identifier &id, juce::var v
     state.setPropertyExcludingListener(this, id, value, nullptr);
 }
 
+void LumatoneStateBase::addChildState(juce::ValueTree childState)
+{
+    state.appendChild(childState, nullptr);
+}
+
 bool LumatoneStateBase::getBoolProperty(const juce::Identifier key, bool fallback) const
 {
     auto prop = state.getProperty(key, juce::var((bool)fallback));

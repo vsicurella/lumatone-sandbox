@@ -26,12 +26,12 @@ public:
 protected:
     void setStateProperty(const juce::Identifier& id, juce::var value);
 
+    void addChildState(juce::ValueTree childState);
+
     virtual void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
 
     virtual juce::ValueTree loadStateProperties(juce::ValueTree stateIn) = 0;
     virtual void handleStatePropertyChange(juce::ValueTree stateIn, const juce::Identifier& property) = 0;
-    
-    virtual void loadPropertiesFile(juce::PropertiesFile* properties) = 0;
 
 protected:
     juce::ValueTree state;
